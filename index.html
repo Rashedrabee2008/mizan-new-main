@@ -111,6 +111,151 @@
             </div>
         </div>
 
+        <!-- ═══════════════ بيانات الشركة ═══════════════ -->
+        <div id="page-company" class="page-container">
+            <div class="page-content">
+                <h2><i class="fas fa-building"></i> بيانات الشركة</h2>
+                
+                <div class="form-card">
+                    <h3>🏢 المعلومات الأساسية</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>اسم الشركة *</label>
+                            <input type="text" id="companyName" placeholder="مثال: مؤسسة الميزان التجارية" />
+                        </div>
+                        <div class="form-group">
+                            <label>الاسم التجاري</label>
+                            <input type="text" id="companyTradeName" placeholder="الاسم المختصر" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>الهاتف</label>
+                            <input type="text" id="companyPhone" placeholder="01xxxxxxxxx" />
+                        </div>
+                        <div class="form-group">
+                            <label>الهاتف الثاني</label>
+                            <input type="text" id="companyPhone2" placeholder="اختياري" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>البريد الإلكتروني</label>
+                            <input type="email" id="companyEmail" placeholder="info@company.com" />
+                        </div>
+                        <div class="form-group">
+                            <label>الموقع الإلكتروني</label>
+                            <input type="text" id="companyWebsite" placeholder="www.company.com" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>العنوان</label>
+                        <input type="text" id="companyAddress" placeholder="العنوان الكامل" />
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>المدينة</label>
+                            <input type="text" id="companyCity" placeholder="مثال: القاهرة" />
+                        </div>
+                        <div class="form-group">
+                            <label>الدولة</label>
+                            <input type="text" id="companyCountry" value="مصر" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-card">
+                    <h3>📋 البيانات القانونية</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>الرقم الضريبي</label>
+                            <input type="text" id="companyTax" placeholder="xxx-xxx-xxx" />
+                        </div>
+                        <div class="form-group">
+                            <label>السجل التجاري</label>
+                            <input type="text" id="companyCommercial" placeholder="رقم السجل" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>البطاقة الضريبية</label>
+                            <input type="text" id="companyTaxCard" placeholder="رقم البطاقة" />
+                        </div>
+                        <div class="form-group">
+                            <label>رقم البطاقة الشخصية</label>
+                            <input type="text" id="companyNationalId" placeholder="اختياري" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-card">
+                    <h3>🎨 التخصيص</h3>
+                    <div class="form-group">
+                        <label>ملاحظة أسفل الفاتورة</label>
+                        <input type="text" id="companyFooter" placeholder="شكراً لتعاملكم معنا 🌟" />
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>اللون الأساسي</label>
+                            <input type="color" id="companyPrimaryColor" value="#C9A94E" style="height:45px;cursor:pointer;padding:2px;" />
+                        </div>
+                        <div class="form-group">
+                            <label>عملة التعامل</label>
+                            <select id="companyCurrency">
+                                <option value="ج.م">🇪🇬 جنيه مصري (ج.م)</option>
+                                <option value="$">🇺🇸 دولار أمريكي ($)</option>
+                                <option value="ر.س">🇸🇦 ريال سعودي (ر.س)</option>
+                                <option value="د.إ">🇦🇪 درهم إماراتي (د.إ)</option>
+                                <option value="€">🇪🇺 يورو (€)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-card">
+                    <h3>📊 ملخص النظام</h3>
+                    <div class="settings-info-row">
+                        <span>📦 عدد المنتجات</span>
+                        <span id="companyProductsCount">0</span>
+                    </div>
+                    <div class="settings-info-row">
+                        <span>🧾 عدد الفواتير</span>
+                        <span id="companySalesCount">0</span>
+                    </div>
+                    <div class="settings-info-row">
+                        <span>👥 عدد العملاء</span>
+                        <span id="companyCustomersCount">0</span>
+                    </div>
+                    <div class="settings-info-row">
+                        <span>🚚 عدد الموردين</span>
+                        <span id="companySuppliersCount">0</span>
+                    </div>
+                    <div class="settings-info-row">
+                        <span>💰 إجمالي المبيعات</span>
+                        <span id="companySalesTotal">0.00</span>
+                    </div>
+                </div>
+                
+                <div class="form-actions" style="margin-bottom:14px;">
+                    <button class="btn btn-primary" onclick="saveCompanyFullData()" style="flex:1;">
+                        <i class="fas fa-save"></i> حفظ البيانات
+                    </button>
+                    <button class="btn btn-info" onclick="printCompanyData()">
+                        <i class="fas fa-print"></i> طباعة
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetCompanyForm()">
+                        <i class="fas fa-times"></i> إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- ═══════════════ المخزون ═══════════════ -->
         <div id="page-inventory" class="page-container">
             <div class="page-content">
@@ -681,16 +826,10 @@
                 <h2><i class="fas fa-cog"></i> الإعدادات</h2>
                 <div class="settings-section">
                     <h3>🏢 بيانات الشركة</h3>
-                    <div class="form-row">
-                        <div class="form-group"><label>اسم الشركة</label><input type="text" id="setCompanyName" /></div>
-                        <div class="form-group"><label>الهاتف</label><input type="text" id="setCompanyPhone" /></div>
-                    </div>
-                    <div class="form-group"><label>العنوان</label><input type="text" id="setCompanyAddress" /></div>
-                    <div class="form-row">
-                        <div class="form-group"><label>الرقم الضريبي</label><input type="text" id="setCompanyTax" /></div>
-                        <div class="form-group"><label>ملاحظة الفاتورة</label><input type="text" id="setCompanyFooter" /></div>
-                    </div>
-                    <button class="btn btn-primary btn-block" onclick="saveCompanySettings()"><i class="fas fa-save"></i> حفظ</button>
+                    <p class="settings-desc">لإدارة بيانات الشركة بالتفصيل، اذهب إلى صفحة "بيانات الشركة" من قائمة المزيد.</p>
+                    <button class="btn btn-primary btn-block" onclick="navigateTo('company')">
+                        <i class="fas fa-building"></i> فتح صفحة بيانات الشركة
+                    </button>
                 </div>
                 <div class="settings-section">
                     <h3>☁️ السحابة (Firebase)</h3>
@@ -1029,6 +1168,7 @@
         <!-- ═══════════════ قائمة المزيد ═══════════════ -->
         <div id="moreMenu" style="display:none;position:fixed;bottom:85px;left:50%;transform:translateX(-50%);background:#1C1C1C;border:2px solid #C9A94E;border-radius:14px;padding:12px;z-index:100;min-width:280px;max-width:90%;box-shadow:0 -8px 32px rgba(0,0,0,0.7);">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <button class="more-item" onclick="navigateTo('company'); toggleMoreMenu();"><i class="fas fa-building" style="color:#4A8AB5;"></i> بيانات الشركة</button>
                 <button class="more-item" onclick="navigateTo('purchases'); toggleMoreMenu();"><i class="fas fa-shopping-cart" style="color:#E06060;"></i> المشتريات</button>
                 <button class="more-item" onclick="navigateTo('customers'); toggleMoreMenu();"><i class="fas fa-users" style="color:#4A8AB5;"></i> العملاء</button>
                 <button class="more-item" onclick="navigateTo('suppliers'); toggleMoreMenu();"><i class="fas fa-truck" style="color:#E6A830;"></i> الموردين</button>
@@ -1059,10 +1199,6 @@
     <div id="modalOverlay" class="modal-overlay"></div>
     <div id="toast" class="toast"></div>
 
-    <!-- ═══════════════════════════════════════════════════════════════
-         السكريبتات
-         ═══════════════════════════════════════════════════════════════ -->
-    
     <!-- Firebase SDK (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
