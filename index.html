@@ -8,33 +8,24 @@
     <h1>اختبار الميزان v17</h1>
     <div id="results" style="font-family: monospace; padding: 20px; background: #f5f5f5; border-radius: 8px; margin: 20px;"></div>
 
-    <script src="core.js"></script>
-    <script src="app.js"></script>
-    <script src="dashboard.js"></script>  <!-- ✅ ضيف ده -->
-    <script>
-        setTimeout(function() {
-            const r = document.getElementById('results');
-            const tests = [
-                ['core.js محمّل', window.__coreLoaded === true],
-                ['app.js محمّل', window.__appLoaded === true],
-                ['dashboard.js محمّل', window.__dashboardLoaded === true],
-                ['checkLogin', typeof window.checkLogin === 'function'],
-                ['navigateTo', typeof window.navigateTo === 'function'],
-                ['init', typeof window.init === 'function'],
-                ['updateDashboard', typeof window.updateDashboard === 'function'],
-                ['renderLastSales', typeof window.renderLastSales === 'function'],
-                ['getCashBoxBalance', typeof window.getCashBoxBalance === 'function']
-            ];
-            
-            let html = '<h2>نتائج الاختبار:</h2>';
-            tests.forEach(function(t) {
-                const icon = t[1] ? '✅' : '❌';
-                const color = t[1] ? 'green' : 'red';
-                html += '<div style="color:' + color + '; font-size: 18px; padding: 5px 0;">' + icon + ' ' + t[0] + ' = ' + t[1] + '</div>';
-            });
-            
-            r.innerHTML = html;
-        }, 1000);
-    </script>
+<script src="core.js"></script>
+<script src="app.js"></script>
+<script src="dashboard.js"></script>
+<script src="firebase.js"></script>  <!-- ✅ ضيف ده -->
+<script>
+    setTimeout(function() {
+        const tests = [
+            ['core.js', window.__coreLoaded === true],
+            ['app.js', window.__appLoaded === true],
+            ['dashboard.js', window.__dashboardLoaded === true],
+            ['firebase.js', window.__firebaseLoaded === true],
+            ['syncToCloud', typeof window.syncToCloud === 'function'],
+            ['syncFromCloud', typeof window.syncFromCloud === 'function'],
+            ['scheduleAutoSync', typeof window.scheduleAutoSync === 'function'],
+            ['startRealtimeSync', typeof window.startRealtimeSync === 'function']
+        ];
+        // ...
+    }, 1000);
+</script>
 </body>
 </html>
