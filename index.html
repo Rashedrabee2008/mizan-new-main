@@ -10,21 +10,20 @@
 
     <script src="core.js"></script>
     <script src="app.js"></script>
+    <script src="dashboard.js"></script>  <!-- ✅ ضيف ده -->
     <script>
         setTimeout(function() {
             const r = document.getElementById('results');
             const tests = [
                 ['core.js محمّل', window.__coreLoaded === true],
                 ['app.js محمّل', window.__appLoaded === true],
-                ['$ (getElementById)', typeof window.$ === 'function'],
-                ['showToast', typeof window.showToast === 'function'],
-                ['generateSalt', typeof window.generateSalt === 'function'],
-                ['saveSession', typeof window.saveSession === 'function'],
+                ['dashboard.js محمّل', window.__dashboardLoaded === true],
                 ['checkLogin', typeof window.checkLogin === 'function'],
                 ['navigateTo', typeof window.navigateTo === 'function'],
                 ['init', typeof window.init === 'function'],
-                ['ROLES', typeof window.ROLES === 'object'],
-                ['المستخدمين', window.users ? window.users.length : 0]
+                ['updateDashboard', typeof window.updateDashboard === 'function'],
+                ['renderLastSales', typeof window.renderLastSales === 'function'],
+                ['getCashBoxBalance', typeof window.getCashBoxBalance === 'function']
             ];
             
             let html = '<h2>نتائج الاختبار:</h2>';
@@ -34,16 +33,7 @@
                 html += '<div style="color:' + color + '; font-size: 18px; padding: 5px 0;">' + icon + ' ' + t[0] + ' = ' + t[1] + '</div>';
             });
             
-            html += '<br><hr><br>';
-            html += '<div style="color:blue;">عدد الدوال:', Object.keys(window).filter(k => typeof window[k] === 'function').length, '</div>';
-            html += '<div style="color:blue;">عدد المستخدمين:', window.users ? window.users.length : '?', '</div>';
-            
             r.innerHTML = html;
-            
-            // اطبع في console
-            tests.forEach(function(t) {
-                console.log((t[1] ? '✅' : '❌') + ' ' + t[0] + ':', t[1]);
-            });
         }, 1000);
     </script>
 </body>
