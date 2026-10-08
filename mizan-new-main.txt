@@ -1,0 +1,11 @@
+
+**8 ملفات JavaScript فقط** — بدون تعارضات، بدون تكرار.
+
+---
+
+## 🚀 البدء السريع
+
+### 1. استنسخ المشروع
+```bash
+git clone https://github.com/Rashedrabee2008/mizan-new-main.git
+cd mizan-new-main
