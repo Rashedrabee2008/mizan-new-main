@@ -11,7 +11,7 @@ console.log('🚀 تحميل app.js v17.0');
 window.firebaseConfig = {
     apiKey: "AIzaSyB3cnrETONbcrH1d_94w3TzeUEQIF0MSXw",
     authDomain: "mizan-new-main.firebaseapp.com",
-    databaseURL: "https://mizan-new-main-default-rtdb.europe-west1.firebasedatabase.app",
+    databaseURL: "https://mizan-new-main-default-rtdb.europe-west1.firebasedatabase.app",  ← ✅
     projectId: "mizan-new-main",
     storageBucket: "mizan-new-main.firebasestorage.app",
     messagingSenderId: "442192802804",
