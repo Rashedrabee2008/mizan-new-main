@@ -15,7 +15,8 @@ window.firebaseConfig = {
     projectId: "accounting-balance-ab9d3",
     storageBucket: "accounting-balance-ab9d3.firebasestorage.app",
     messagingSenderId: "564321427560",
-    appId: "1:564321427560:web:ae44d18b626ad2e5771bdd"
+    appId: "1:564321427560:web:ae44d18b626ad2e5771bdd",
+    measurementId: "G-MGT87N4TG4"  // ← ضيف السطر ده بس
 };
 
 window.firebaseReady = false;
