@@ -9,14 +9,14 @@ console.log('🚀 تحميل app.js v17.0');
 // Firebase Configuration
 // ═══════════════════════════════════════════════════════════
 window.firebaseConfig = {
-    apiKey: "AIzaSyCP7vpqviR6A11gPkC7cO6MQJBGKWcnVWE",
-    authDomain: "accounting-balance-ab9d3.firebaseapp.com",
-    databaseURL: "https://accounting-balance-ab9d3-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "accounting-balance-ab9d3",
-    storageBucket: "accounting-balance-ab9d3.firebasestorage.app",
-    messagingSenderId: "564321427560",
-    appId: "1:564321427560:web:ae44d18b626ad2e5771bdd",
-    measurementId: "G-MGT87N4TG4"  // ← ضيف السطر ده بس
+    apiKey: "AIzaSyB3cnrETONbcrH1d_94w3TzeUEQIF0MSXw",
+    authDomain: "mizan-new-main.firebaseapp.com",
+    databaseURL: "https://mizan-new-main-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "mizan-new-main",
+    storageBucket: "mizan-new-main.firebasestorage.app",
+    messagingSenderId: "442192802804",
+    appId: "1:442192802804:web:8035c27ab7dcf38a547fa1",
+    measurementId: "G-5Q1X7KZ2C2"
 };
 
 window.firebaseReady = false;
