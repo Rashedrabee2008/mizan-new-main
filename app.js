@@ -90,7 +90,7 @@ window.ROLES = {
 // ═══════════════════════════════════════════════════════════
 // الترجمة
 // ═══════════════════════════════════════════════════════════
-window.currentLang = localStorage.getItem('mizan_lang') || 'ar';
+window.currentLang = 'ar';
 
 const TRANSLATIONS = {
     ar: {
@@ -100,14 +100,6 @@ const TRANSLATIONS = {
         'nav_cashier': 'الكاشير',
         'nav_reports': 'التقارير',
         'nav_more': 'المزيد'
-    },
-    en: {
-        'app_name': 'Mizan',
-        'nav_dashboard': 'Home',
-        'nav_inventory': 'Inventory',
-        'nav_cashier': 'Cashier',
-        'nav_reports': 'Reports',
-        'nav_more': 'More'
     }
 };
 
@@ -117,15 +109,121 @@ window.t = function(key) {
         || key;
 };
 
-window.toggleLanguage = function() {
-    window.currentLang = window.currentLang === 'ar' ? 'en' : 'ar';
-    localStorage.setItem('mizan_lang', window.currentLang);
-    document.documentElement.setAttribute('dir', window.currentLang === 'ar' ? 'rtl' : 'ltr');
-    document.documentElement.setAttribute('lang', window.currentLang);
-    if (typeof window.showToast === 'function') {
-        window.showToast(window.currentLang === 'ar' ? '🌍 تم التحويل للعربية' : '🌍 Switched to English', 'info');
-    }
-};
+// ═══════════════════════════════════════════════════════════
+// أدوات مساعدة محلية (لو مفيش core.js)
+// ═══════════════════════════════════════════════════════════
+if (typeof window.$ !== 'function') {
+    window.$ = function(id) { return document.getElementById(id); };
+}
+
+if (typeof window.getTodayDate !== 'function') {
+    window.getTodayDate = function() { 
+        return new Date().toISOString().split('T')[0]; 
+    };
+}
+
+if (typeof window.getNowTime !== 'function') {
+    window.getNowTime = function() { 
+        const now = new Date();
+        let hours = now.getHours();
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const ampm = hours >= 12 ? 'م' : 'ص';
+        hours = hours % 12 || 12;
+        return hours + ':' + minutes + ' ' + ampm;
+    };
+}
+
+if (typeof window.formatMoney !== 'function') {
+    window.formatMoney = function(n) { 
+        const num = parseFloat(n);
+        if (!isFinite(num) || isNaN(num)) return '0.00';
+        return num.toFixed(2); 
+    };
+}
+
+if (typeof window.toArray !== 'function') {
+    window.toArray = function(data) {
+        if (!data) return [];
+        if (Array.isArray(data)) return data;
+        return Object.values(data).filter(function(item) { 
+            return item !== null && item !== undefined; 
+        });
+    };
+}
+
+if (typeof window.getData !== 'function') {
+    window.getData = function(key, def) {
+        if (def === undefined) def = [];
+        try {
+            const d = localStorage.getItem('mizan_' + key);
+            return d ? JSON.parse(d) : def;
+        } catch (e) { return def; }
+    };
+}
+
+if (typeof window.setData !== 'function') {
+    window.setData = function(key, data) {
+        try { 
+            localStorage.setItem('mizan_' + key, JSON.stringify(data)); 
+            return true;
+        } catch (e) {
+            console.error('❌ خطأ في حفظ ' + key + ':', e.message);
+            return false;
+        }
+    };
+}
+
+if (typeof window.showToast !== 'function') {
+    window.showToast = function(msg, type) {
+        type = type || 'info';
+        const t = document.getElementById('toast');
+        if (!t) { console.log('[' + type + '] ' + msg); return; }
+        t.textContent = msg;
+        t.className = 'toast show ' + type;
+        clearTimeout(t._t);
+        t._t = setTimeout(function() { t.className = 'toast'; }, 3000);
+    };
+}
+
+if (typeof window.openModal !== 'function') {
+    window.openModal = function(html) {
+        const overlay = document.getElementById('modalOverlay');
+        if (!overlay) return;
+        let box = overlay.querySelector('.modal-box');
+        if (!box) {
+            box = document.createElement('div');
+            box.className = 'modal-box';
+            overlay.appendChild(box);
+        }
+        box.innerHTML = html;
+        overlay.classList.add('show');
+        overlay.onclick = function(e) { 
+            if (e.target === overlay) window.closeModal(); 
+        };
+    };
+}
+
+if (typeof window.closeModal !== 'function') {
+    window.closeModal = function() {
+        const overlay = document.getElementById('modalOverlay');
+        if (overlay) overlay.classList.remove('show');
+    };
+}
+
+if (typeof window.getRadioValue !== 'function') {
+    window.getRadioValue = function(name, defaultValue) {
+        defaultValue = defaultValue || '';
+        const el = document.querySelector('input[name="' + name + '"]:checked');
+        return el ? el.value : defaultValue;
+    };
+}
+
+if (typeof window.setRadioValue !== 'function') {
+    window.setRadioValue = function(name, value) {
+        const el = document.querySelector('input[name="' + name + '"][value="' + value + '"]');
+        if (el) el.checked = true;
+    };
+}
 
 // ═══════════════════════════════════════════════════════════
 // Firebase
@@ -270,7 +368,6 @@ window.navigateTo = function(page) {
         'payments': ['populateCollectCustomers', 'populatePaySuppliers', 'populateCashBoxDropdowns', 'updatePaymentsStats', 'renderPayments'],
         'returns': ['toggleReturnParty', 'populateRetProducts', 'populateCashBoxDropdowns', 'populateWarehouseField', 'updateReturnsStats', 'renderReturns'],
         'accounts': ['renderAccounts', 'renderJournalEntries'],
-        'erp': ['renderWarehouses', 'renderBranches', 'renderCurrencies'],
         'warehouses': ['populateWarehouseDropdowns', 'renderWarehouseReceipts', 'renderWarehouseIssues', 'renderWarehouseTransfers', 'renderWarehouseAdjustments', 'renderOpeningBalances'],
         'employees': ['renderEmployees'],
         'reports': ['renderReport'],
@@ -318,7 +415,7 @@ window.populateWarehouseField = function() {
 };
 
 // ═══════════════════════════════════════════════════════════
-// بيانات الشركة (قسم منفصل)
+// بيانات الشركة
 // ═══════════════════════════════════════════════════════════
 window.renderCompany = function() {
     const c = window.companyData || {};
@@ -437,7 +534,6 @@ window.printCompanyData = function() {
         '<h1>⚖️ ' + (c.name || 'الميزان') + '</h1>' +
         '<p>' + (c.address || '') + (c.phone ? ' | 📞 ' + c.phone : '') + '</p>' +
         '</div>' +
-        
         '<div class="section">' +
         '<h2>📋 المعلومات الأساسية</h2>' +
         '<div class="info-grid">' +
@@ -450,7 +546,6 @@ window.printCompanyData = function() {
         '<div class="info-item"><div class="info-label">العنوان</div><div class="info-value">' + (c.address || '-') + '</div></div>' +
         '<div class="info-item"><div class="info-label">المدينة</div><div class="info-value">' + (c.city || '-') + '</div></div>' +
         '</div></div>' +
-        
         '<div class="section">' +
         '<h2>📋 البيانات القانونية</h2>' +
         '<div class="info-grid">' +
@@ -458,11 +553,9 @@ window.printCompanyData = function() {
         '<div class="info-item"><div class="info-label">السجل التجاري</div><div class="info-value">' + (c.commercial || '-') + '</div></div>' +
         '<div class="info-item"><div class="info-label">البطاقة الضريبية</div><div class="info-value">' + (c.taxCard || '-') + '</div></div>' +
         '</div></div>' +
-        
         '<div class="footer">' +
         'طُبع في: ' + new Date().toLocaleString('ar-EG') +
         '</div>' +
-        
         '<script>window.onload=function(){setTimeout(function(){window.print();},500);};<\/script>' +
         '</body></html>';
     
@@ -474,18 +567,59 @@ window.printCompanyData = function() {
 };
 
 // ═══════════════════════════════════════════════════════════
-// تسجيل الدخول
+// ⚡ تسجيل الدخول — النسخة المحسّنة
 // ═══════════════════════════════════════════════════════════
 window.populateLoginUsers = function() {
     const sel = document.getElementById('loginUsername');
-    if (!sel) return;
-    sel.innerHTML = '<option value="">اختر المستخدم...</option>';
-    (window.users || []).forEach(function(u) {
+    if (!sel) {
+        console.warn('⚠️ loginUsername غير موجود');
+        return;
+    }
+    
+    // 1. حاول تحمّل من الذاكرة
+    let users = window.users;
+    
+    // 2. لو فاضي، حاول من localStorage
+    if (!users || users.length === 0) {
+        try {
+            const stored = localStorage.getItem('mizan_users');
+            if (stored) {
+                users = JSON.parse(stored);
+                window.users = users;
+                console.log('✅ تم تحميل', users.length, 'مستخدم من localStorage');
+            }
+        } catch (e) {
+            console.warn('⚠️ خطأ قراءة users:', e.message);
+        }
+    }
+    
+    // 3. لو لسه فاضي، أنشئ المستخدمين الافتراضيين
+    if (!users || users.length === 0) {
+        users = [
+            { id: 1, name: 'المدير',  password: '123456', role: 'admin',   active: true },
+            { id: 2, name: 'محمد',   password: '123456', role: 'manager', active: true },
+            { id: 3, name: 'أحمد',   password: '123456', role: 'cashier', active: true },
+            { id: 4, name: 'علي',    password: '123456', role: 'seller',  active: true },
+            { id: 5, name: 'زائر',   password: '123456', role: 'viewer',  active: true }
+        ];
+        window.users = users;
+        try {
+            localStorage.setItem('mizan_users', JSON.stringify(users));
+        } catch (e) {}
+        console.log('✅ تم إنشاء المستخدمين الافتراضيين');
+    }
+    
+    // 4. املأ القائمة
+    let html = '<option value="">اختر المستخدم...</option>';
+    users.forEach(function(u) {
         if (u.active !== false) {
             const roleInfo = window.ROLES[u.role] || { icon: '❓', name: u.role };
-            sel.innerHTML += '<option value="' + u.id + '">' + roleInfo.icon + ' ' + u.name + ' (' + roleInfo.name + ')</option>';
+            html += '<option value="' + u.id + '">' + roleInfo.icon + ' ' + u.name + ' (' + roleInfo.name + ')</option>';
         }
     });
+    sel.innerHTML = html;
+    
+    console.log('✅ تم تحميل قائمة المستخدمين:', users.length);
 };
 
 window.checkLogin = async function() {
@@ -493,6 +627,7 @@ window.checkLogin = async function() {
     const password = document.getElementById('loginPassword') ? document.getElementById('loginPassword').value : '';
     const error = document.getElementById('loginError');
 
+    // التحقق من قفل الحساب
     if (typeof window.isAccountLocked === 'function') {
         const lockStatus = window.isAccountLocked();
         if (lockStatus.locked) {
@@ -517,6 +652,7 @@ window.checkLogin = async function() {
 
     let isValid = false;
 
+    // محاولة التحقق المشفر أولاً
     if (user.password && user.password.startsWith('pbkdf2_')) {
         try {
             if (typeof window.verifyPasswordPBKDF2 === 'function') {
@@ -528,6 +664,7 @@ window.checkLogin = async function() {
         }
     }
 
+    // Fallback: مقارنة مباشرة
     if (!isValid) {
         isValid = (user.password === password);
         
@@ -558,6 +695,7 @@ window.checkLogin = async function() {
         return;
     }
 
+    // ✅ نجح
     if (typeof window.recordSuccessfulLogin === 'function') {
         window.recordSuccessfulLogin();
     }
@@ -874,22 +1012,6 @@ window.saveAll = function() {
     });
 };
 
-window.clearAllData = function() {
-    if (!window.isAdmin()) { 
-        window.showToast('⚠️ لا تملك صلاحية', 'error'); 
-        return; 
-    }
-    if (!confirm('⚠️ مسح جميع البيانات؟')) return;
-    if (!confirm('⚠️ تأكيد نهائي؟')) return;
-    
-    const keys = ['products','sales','purchases','customers','suppliers','cashBoxes','expenses','treasury','payments','returns','users','accounts','journalEntries','coupons','warehouses','companyData'];
-    keys.forEach(function(k) {
-        localStorage.removeItem(STORAGE_KEY + k);
-    });
-    localStorage.removeItem('mizan_seeded_v3');
-    location.reload();
-};
-
 // ═══════════════════════════════════════════════════════════
 // تحديث كل الواجهة
 // ═══════════════════════════════════════════════════════════
@@ -921,6 +1043,7 @@ window.refreshAllUI = function() {
 window.init = function() {
     console.log('🚀 بدء التهيئة v17.0...');
 
+    // تحميل البيانات
     window.products = window.toArray(window.getData('products', []));
     window.sales = window.toArray(window.getData('sales', []));
     window.purchases = window.toArray(window.getData('purchases', []));
@@ -956,7 +1079,9 @@ window.init = function() {
         currency: 'ج.م'
     });
 
-    // بيانات تجريبية
+    // ═══ بيانات افتراضية ═══
+    
+    // منتجات
     if (window.products.length === 0 && !localStorage.getItem('mizan_seeded_v3')) {
         window.products = [
             { id: 1, name: 'قلم جاف', barcode: '1001', buy: 2, sell: 5, qty: 50, min: 10, warehouseStock: {} },
@@ -967,6 +1092,7 @@ window.init = function() {
         localStorage.setItem('mizan_seeded_v3', 'true');
     }
 
+    // خزائن
     if (window.cashBoxes.length === 0) {
         window.cashBoxes = [
             { id: 1, name: 'نقدي', type: 'cash', icon: '💵', isDefault: true, active: true, openingBalance: 0 },
@@ -977,6 +1103,7 @@ window.init = function() {
         window.setData('cashBoxes', window.cashBoxes);
     }
 
+    // مستخدمين
     if (window.users.length === 0) {
         window.users = [
             { id: 1, name: 'المدير',  password: '123456', role: 'admin',   active: true },
@@ -988,6 +1115,7 @@ window.init = function() {
         window.setData('users', window.users);
     }
 
+    // مستودعات
     if (window.warehouses.length === 0) {
         window.warehouses = [
             { id: 1, name: 'المستودع الرئيسي', type: 'main', location: 'المقر الرئيسي', manager: 'المدير', active: true }
@@ -1001,27 +1129,74 @@ window.init = function() {
     if (document.getElementById('payDate')) document.getElementById('payDate').value = window.getTodayDate();
     if (document.getElementById('headerCompanyName')) document.getElementById('headerCompanyName').textContent = window.companyData.name || 'الميزان';
 
+    // Firebase
     window.initFirebase();
+    
+    // ⚡⚡⚡ الأهم: تحميل المستخدمين (مع محاولات متعددة) ⚡⚡⚡
     window.populateLoginUsers();
+    
+    // محاولات إضافية للتأكد
+    setTimeout(window.populateLoginUsers, 100);
+    setTimeout(window.populateLoginUsers, 500);
+    setTimeout(window.populateLoginUsers, 1500);
+    setTimeout(window.populateLoginUsers, 3000);
 
+    // إظهار شاشة الدخول
     const loginCont = document.getElementById('loginContainer');
     const appCont = document.getElementById('appContent');
     if (loginCont) loginCont.classList.remove('hidden');
     if (appCont) appCont.style.display = 'none';
 
+    // الساعة
     window.updateClock();
+
+    // تحديث الواجهة
     window.refreshAllUI();
 
     console.log('✅ التطبيق جاهز!');
+    console.log('📊 المستخدمين:', window.users.length);
 };
 
 // ═══════════════════════════════════════════════════════════
 // التشغيل التلقائي
 // ═══════════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', function() {
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        window.init();
+        setInterval(window.updateClock, 1000);
+        console.log('✅ app.js v17.0 كامل');
+    });
+} else {
     window.init();
     setInterval(window.updateClock, 1000);
     console.log('✅ app.js v17.0 كامل');
+}
+
+// ═══════════════════════════════════════════════════════════
+// حماية إضافية: تأكد من تحميل المستخدمين بعد كل حاجة
+// ═══════════════════════════════════════════════════════════
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        if (typeof window.populateLoginUsers === 'function') {
+            window.populateLoginUsers();
+        }
+    }, 500);
+    
+    setTimeout(function() {
+        if (typeof window.populateLoginUsers === 'function') {
+            window.populateLoginUsers();
+        }
+    }, 2000);
+    
+    setTimeout(function() {
+        const sel = document.getElementById('loginUsername');
+        if (sel && sel.innerHTML.indexOf('جاري التحميل') > -1) {
+            console.warn('⚠️ القائمة لسه "جاري التحميل" - إعادة المحاولة...');
+            if (typeof window.populateLoginUsers === 'function') {
+                window.populateLoginUsers();
+            }
+        }
+    }, 5000);
 });
 
 window.__appLoaded = true;
