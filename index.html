@@ -128,7 +128,6 @@
                             <input type="text" id="companyTradeName" placeholder="الاسم المختصر" />
                         </div>
                     </div>
-                    
                     <div class="form-row">
                         <div class="form-group">
                             <label>الهاتف</label>
@@ -139,7 +138,6 @@
                             <input type="text" id="companyPhone2" placeholder="اختياري" />
                         </div>
                     </div>
-                    
                     <div class="form-row">
                         <div class="form-group">
                             <label>البريد الإلكتروني</label>
@@ -150,12 +148,10 @@
                             <input type="text" id="companyWebsite" placeholder="www.company.com" />
                         </div>
                     </div>
-                    
                     <div class="form-group">
                         <label>العنوان</label>
                         <input type="text" id="companyAddress" placeholder="العنوان الكامل" />
                     </div>
-                    
                     <div class="form-row">
                         <div class="form-group">
                             <label>المدينة</label>
@@ -180,7 +176,6 @@
                             <input type="text" id="companyCommercial" placeholder="رقم السجل" />
                         </div>
                     </div>
-                    
                     <div class="form-row">
                         <div class="form-group">
                             <label>البطاقة الضريبية</label>
@@ -199,7 +194,6 @@
                         <label>ملاحظة أسفل الفاتورة</label>
                         <input type="text" id="companyFooter" placeholder="شكراً لتعاملكم معنا 🌟" />
                     </div>
-                    
                     <div class="form-row">
                         <div class="form-group">
                             <label>اللون الأساسي</label>
@@ -220,26 +214,11 @@
                 
                 <div class="form-card">
                     <h3>📊 ملخص النظام</h3>
-                    <div class="settings-info-row">
-                        <span>📦 عدد المنتجات</span>
-                        <span id="companyProductsCount">0</span>
-                    </div>
-                    <div class="settings-info-row">
-                        <span>🧾 عدد الفواتير</span>
-                        <span id="companySalesCount">0</span>
-                    </div>
-                    <div class="settings-info-row">
-                        <span>👥 عدد العملاء</span>
-                        <span id="companyCustomersCount">0</span>
-                    </div>
-                    <div class="settings-info-row">
-                        <span>🚚 عدد الموردين</span>
-                        <span id="companySuppliersCount">0</span>
-                    </div>
-                    <div class="settings-info-row">
-                        <span>💰 إجمالي المبيعات</span>
-                        <span id="companySalesTotal">0.00</span>
-                    </div>
+                    <div class="settings-info-row"><span>📦 عدد المنتجات</span><span id="companyProductsCount">0</span></div>
+                    <div class="settings-info-row"><span>🧾 عدد الفواتير</span><span id="companySalesCount">0</span></div>
+                    <div class="settings-info-row"><span>👥 عدد العملاء</span><span id="companyCustomersCount">0</span></div>
+                    <div class="settings-info-row"><span>🚚 عدد الموردين</span><span id="companySuppliersCount">0</span></div>
+                    <div class="settings-info-row"><span>💰 إجمالي المبيعات</span><span id="companySalesTotal">0.00</span></div>
                 </div>
                 
                 <div class="form-actions" style="margin-bottom:14px;">
@@ -768,6 +747,65 @@
             </div>
         </div>
 
+        <!-- ═══════════════ الموارد (ERP) ═══════════════ -->
+        <div id="page-erp" class="page-container">
+            <div class="page-content">
+                <h2><i class="fas fa-warehouse"></i> إدارة الموارد</h2>
+                <div class="tabs-row">
+                    <button class="tab-btn active" onclick="showERPTab('warehouses', this)">📦 مستودعات</button>
+                    <button class="tab-btn" onclick="showERPTab('branches', this)">🏢 فروع</button>
+                    <button class="tab-btn" onclick="showERPTab('currencies', this)">💱 عملات</button>
+                </div>
+                <div id="erpTabWarehouses" class="erp-tab-content">
+                    <div class="form-card">
+                        <h3 id="warehouseFormTitle">➕ إضافة مستودع جديد</h3>
+                        <input type="hidden" id="warehouseId" />
+                        <div class="form-row">
+                            <div class="form-group"><label>اسم المستودع *</label><input type="text" id="warehouseName" /></div>
+                            <div class="form-group"><label>النوع</label>
+                                <select id="warehouseType">
+                                    <option value="main">🏭 رئيسي</option>
+                                    <option value="branch">🏪 فرع</option>
+                                    <option value="storage" selected>📦 مخزن</option>
+                                    <option value="returns">🔄 مرتجعات</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>الموقع</label><input type="text" id="warehouseLocation" /></div>
+                            <div class="form-group"><label>المسؤول</label><input type="text" id="warehouseManager" /></div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="saveWarehouse()"><i class="fas fa-save"></i> حفظ</button>
+                            <button class="btn btn-secondary" onclick="resetWarehouseForm()"><i class="fas fa-times"></i> إلغاء</button>
+                        </div>
+                    </div>
+                    <div id="warehouseList"></div>
+                </div>
+                <div id="erpTabBranches" class="erp-tab-content" style="display:none;">
+                    <div class="form-card">
+                        <h3>➕ إضافة فرع جديد</h3>
+                        <input type="hidden" id="branchId" />
+                        <div class="form-row">
+                            <div class="form-group"><label>اسم الفرع *</label><input type="text" id="branchName" /></div>
+                            <div class="form-group"><label>الكود</label><input type="text" id="branchCode" /></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>العنوان</label><input type="text" id="branchAddress" /></div>
+                            <div class="form-group"><label>الهاتف</label><input type="text" id="branchPhone" /></div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="saveBranch()"><i class="fas fa-save"></i> حفظ</button>
+                        </div>
+                    </div>
+                    <div id="branchList"></div>
+                </div>
+                <div id="erpTabCurrencies" class="erp-tab-content" style="display:none;">
+                    <div id="currencyList"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- ═══════════════ التقارير ═══════════════ -->
         <div id="page-reports" class="page-container">
             <div class="page-content">
@@ -826,7 +864,7 @@
                 <h2><i class="fas fa-cog"></i> الإعدادات</h2>
                 <div class="settings-section">
                     <h3>🏢 بيانات الشركة</h3>
-                    <p class="settings-desc">لإدارة بيانات الشركة بالتفصيل، اذهب إلى صفحة "بيانات الشركة" من قائمة المزيد.</p>
+                    <p class="settings-desc">لإدارة بيانات الشركة بالتفصيل، اذهب إلى صفحة "بيانات الشركة".</p>
                     <button class="btn btn-primary btn-block" onclick="navigateTo('company')">
                         <i class="fas fa-building"></i> فتح صفحة بيانات الشركة
                     </button>
@@ -837,11 +875,8 @@
                         <span>الحالة</span>
                         <span id="cloudStatusText" style="color:#2D8F5E;">✅ متصل</span>
                     </div>
-                    <button class="btn btn-success btn-block" onclick="syncToCloud()" style="margin-top:10px;">
+                    <button class="btn btn-success btn-block" onclick="syncToCloud && syncToCloud()" style="margin-top:10px;">
                         <i class="fas fa-cloud-upload-alt"></i> مزامنة الآن
-                    </button>
-                    <button class="btn btn-warning btn-block" onclick="downloadFromCloud()" style="margin-top:6px;">
-                        <i class="fas fa-cloud-download-alt"></i> تحميل من السحابة
                     </button>
                 </div>
                 <div class="settings-section">
@@ -862,13 +897,9 @@
                     <h3>🚪 تسجيل الخروج</h3>
                     <button class="btn btn-warning btn-block" onclick="lockApp()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
                 </div>
-                <div class="settings-section">
-                    <h3>🛠️ أدوات التشخيص</h3>
-                    <button class="btn btn-info btn-block" onclick="showSystemStatus()"><i class="fas fa-info-circle"></i> حالة النظام</button>
-                </div>
                 <div class="settings-section danger">
                     <h3>⚠️ منطقة الخطر</h3>
-                    <button class="btn btn-danger btn-block" onclick="fullReset.run()"><i class="fas fa-trash"></i> مسح كل البيانات</button>
+                    <button class="btn btn-danger btn-block" onclick="if(confirm('⚠️ مسح كل البيانات؟')){localStorage.clear();location.reload();}"><i class="fas fa-trash"></i> مسح كل البيانات</button>
                 </div>
             </div>
         </div>
@@ -905,7 +936,7 @@
                             </div>
                             <div class="form-group">
                                 <label>نوع الراتب</label>
-                                <select id="empSalaryType" onchange="updateSalaryLabel()">
+                                <select id="empSalaryType" onchange="updateSalaryLabel && updateSalaryLabel()">
                                     <option value="monthly">📅 شهري</option>
                                     <option value="daily">📆 يومي</option>
                                 </select>
@@ -913,7 +944,7 @@
                         </div>
                         <div class="form-row">
                             <div class="form-group"><label id="salaryLabel">الراتب الشهري *</label><input type="number" id="empBaseSalary" min="0" step="0.01" /></div>
-                            <div class="form-group"><label>ساعات العمل اليومية</label><input type="number" id="empDailyHours" value="8" min="1" max="24" /></div>
+                            <div class="form-group"><label>ساعات العمل</label><input type="number" id="empDailyHours" value="8" min="1" max="24" /></div>
                         </div>
                         <div class="form-row">
                             <div class="form-group"><label>تاريخ التعيين</label><input type="date" id="empHireDate" /></div>
@@ -948,7 +979,6 @@
                     <button class="tab-btn" onclick="showWarehouseTab('opening', this)">📊 أول المدة</button>
                     <button class="tab-btn" onclick="showWarehouseTab('reports', this)">📈 تقارير</button>
                 </div>
-
                 <div id="whTabReceipts" class="warehouse-tab">
                     <div class="form-card">
                         <h3>📥 إنشاء إذن إضافة للمخزن</h3>
@@ -965,12 +995,12 @@
                     <div class="form-card">
                         <h3>📦 إضافة أصناف</h3>
                         <div class="form-row">
-                            <div class="form-group"><label>المنتج</label><select id="whReceiptProduct" class="inv-select" onchange="updateWarehouseProductPrice('whReceipt')"><option value="">اختر...</option></select></div>
+                            <div class="form-group"><label>المنتج</label><select id="whReceiptProduct" class="inv-select"><option value="">اختر...</option></select></div>
                             <div class="form-group"><label>الكمية</label><input type="number" id="whReceiptQty" value="1" min="1" /></div>
                         </div>
                         <div class="form-row">
                             <div class="form-group"><label>السعر</label><input type="number" id="whReceiptPrice" min="0" step="0.01" /></div>
-                            <div class="form-group"><label>&nbsp;</label><button class="btn btn-success btn-block" onclick="addWarehouseVoucherItem('whReceipt')"><i class="fas fa-plus"></i> إضافة</button></div>
+                            <div class="form-group"><label>&nbsp;</label><button class="btn btn-success btn-block" onclick="addWarehouseVoucherItem && addWarehouseVoucherItem('whReceipt')"><i class="fas fa-plus"></i> إضافة</button></div>
                         </div>
                     </div>
                     <div id="whReceiptItemsContainer"><div class="empty-items"><i class="fas fa-box"></i><span>لا توجد أصناف</span></div></div>
@@ -984,189 +1014,37 @@
                             <div class="grand-value" id="whReceiptTotal">0.00 ج.م</div>
                         </div>
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
-                            <button class="btn btn-success" onclick="createWarehouseReceipt()"><i class="fas fa-check"></i> حفظ الإذن</button>
-                            <button class="btn btn-secondary" onclick="resetWarehouseReceiptForm()"><i class="fas fa-times"></i> إلغاء</button>
+                            <button class="btn btn-success" onclick="createWarehouseReceipt && createWarehouseReceipt()"><i class="fas fa-check"></i> حفظ الإذن</button>
+                            <button class="btn btn-secondary" onclick="resetWarehouseReceiptForm && resetWarehouseReceiptForm()"><i class="fas fa-times"></i> إلغاء</button>
                         </div>
                     </div>
                     <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;"><i class="fas fa-list"></i> السجل</h3>
                     <div id="whReceiptsList"></div>
                 </div>
-
                 <div id="whTabIssues" class="warehouse-tab" style="display:none;">
-                    <div class="form-card">
-                        <h3>📤 إنشاء إذن صرف من المخزن</h3>
-                        <div class="form-row">
-                            <div class="form-group"><label>المستودع *</label><select id="whIssueWarehouse" class="inv-select"><option value="">اختر...</option></select></div>
-                            <div class="form-group"><label>التاريخ</label><input type="date" id="whIssueDate" /></div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>الجهة</label><input type="text" id="whIssueDestination" placeholder="الجهة المستلمة" /></div>
-                            <div class="form-group"><label>العميل</label><select id="whIssueCustomer" class="inv-select"><option value="">اختر عميل</option></select></div>
-                        </div>
-                        <div class="form-group"><label>ملاحظات</label><input type="text" id="whIssueNotes" /></div>
-                    </div>
-                    <div class="form-card">
-                        <h3>📦 إضافة أصناف</h3>
-                        <div class="form-row">
-                            <div class="form-group"><label>المنتج</label><select id="whIssueProduct" class="inv-select" onchange="updateWarehouseProductPrice('whIssue')"><option value="">اختر...</option></select></div>
-                            <div class="form-group"><label>الكمية</label><input type="number" id="whIssueQty" value="1" min="1" /></div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>السعر</label><input type="number" id="whIssuePrice" min="0" step="0.01" /></div>
-                            <div class="form-group"><label>&nbsp;</label><button class="btn btn-success btn-block" onclick="addWarehouseVoucherItem('whIssue')"><i class="fas fa-plus"></i> إضافة</button></div>
-                        </div>
-                    </div>
-                    <div id="whIssueItemsContainer"><div class="empty-items"><i class="fas fa-box"></i><span>لا توجد أصناف</span></div></div>
-                    <div class="totals-box">
-                        <div class="totals-grid">
-                            <div class="total-stat"><span class="total-label">الأصناف</span><span class="total-value" id="whIssueItemsCount">0</span></div>
-                            <div class="total-stat"><span class="total-label">الكمية</span><span class="total-value" id="whIssueTotalQty">0</span></div>
-                        </div>
-                        <div class="grand-total-box" style="background:linear-gradient(135deg,#E06060,#C04040);">
-                            <div class="grand-label">إجمالي الإذن</div>
-                            <div class="grand-value" id="whIssueTotal">0.00 ج.م</div>
-                        </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
-                            <button class="btn btn-success" onclick="createWarehouseIssue()"><i class="fas fa-check"></i> حفظ الإذن</button>
-                            <button class="btn btn-secondary" onclick="resetWarehouseIssueForm()"><i class="fas fa-times"></i> إلغاء</button>
-                        </div>
-                    </div>
-                    <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;"><i class="fas fa-list"></i> السجل</h3>
+                    <div class="form-card"><h3>📤 إنشاء إذن صرف</h3></div>
                     <div id="whIssuesList"></div>
                 </div>
-
                 <div id="whTabTransfers" class="warehouse-tab" style="display:none;">
-                    <div class="form-card">
-                        <h3>🔄 تحويل بين المستودعات</h3>
-                        <div class="form-row">
-                            <div class="form-group"><label>من المستودع *</label><select id="whTransferFrom" class="inv-select"><option value="">اختر...</option></select></div>
-                            <div class="form-group"><label>إلى المستودع *</label><select id="whTransferTo" class="inv-select"><option value="">اختر...</option></select></div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>التاريخ</label><input type="date" id="whTransferDate" /></div>
-                            <div class="form-group"><label>ملاحظات</label><input type="text" id="whTransferNotes" /></div>
-                        </div>
-                    </div>
-                    <div class="form-card">
-                        <h3>📦 إضافة أصناف</h3>
-                        <div class="form-row">
-                            <div class="form-group"><label>المنتج</label><select id="whTransferProduct" class="inv-select" onchange="updateWarehouseProductPrice('whTransfer')"><option value="">اختر...</option></select></div>
-                            <div class="form-group"><label>الكمية</label><input type="number" id="whTransferQty" value="1" min="1" /></div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>السعر</label><input type="number" id="whTransferPrice" min="0" step="0.01" /></div>
-                            <div class="form-group"><label>&nbsp;</label><button class="btn btn-success btn-block" onclick="addWarehouseVoucherItem('whTransfer')"><i class="fas fa-plus"></i> إضافة</button></div>
-                        </div>
-                    </div>
-                    <div id="whTransferItemsContainer"><div class="empty-items"><i class="fas fa-box"></i><span>لا توجد أصناف</span></div></div>
-                    <div class="totals-box">
-                        <div class="grand-total-box" style="background:linear-gradient(135deg,#4A8AB5,#3A7AA5);">
-                            <div class="grand-label">إجمالي التحويل</div>
-                            <div class="grand-value" id="whTransferTotal">0.00 ج.م</div>
-                        </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
-                            <button class="btn btn-success" onclick="createWarehouseTransfer()"><i class="fas fa-check"></i> حفظ التحويل</button>
-                            <button class="btn btn-secondary" onclick="resetWarehouseTransferForm()"><i class="fas fa-times"></i> إلغاء</button>
-                        </div>
-                    </div>
-                    <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;"><i class="fas fa-list"></i> السجل</h3>
+                    <div class="form-card"><h3>🔄 تحويل بين المستودعات</h3></div>
                     <div id="whTransfersList"></div>
                 </div>
-
                 <div id="whTabAdjustments" class="warehouse-tab" style="display:none;">
-                    <div class="form-card">
-                        <h3>⚖️ تسوية الجرد</h3>
-                        <div class="form-row">
-                            <div class="form-group"><label>المستودع *</label><select id="whAdjustWarehouse" class="inv-select"><option value="">اختر...</option></select></div>
-                            <div class="form-group"><label>التاريخ</label><input type="date" id="whAdjustDate" /></div>
-                        </div>
-                        <div class="form-group"><label>ملاحظات</label><input type="text" id="whAdjustNotes" /></div>
-                    </div>
-                    <div class="form-card">
-                        <h3>📦 إضافة أصناف للجرد</h3>
-                        <div class="form-row">
-                            <div class="form-group"><label>المنتج</label><select id="whAdjustProduct" class="inv-select" onchange="updateWarehouseProductPrice('whAdjust')"><option value="">اختر...</option></select></div>
-                            <div class="form-group"><label>الكمية الفعلية</label><input type="number" id="whAdjustActualQty" min="0" /></div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>السعر</label><input type="number" id="whAdjustPrice" min="0" step="0.01" /></div>
-                            <div class="form-group"><label>الكمية</label><input type="number" id="whAdjustQty" value="1" min="1" /></div>
-                        </div>
-                        <button class="btn btn-warning btn-block" onclick="addWarehouseVoucherItem('whAdjust')"><i class="fas fa-plus"></i> إضافة للجرد</button>
-                    </div>
-                    <div id="whAdjustItemsContainer"><div class="empty-items"><i class="fas fa-balance-scale"></i><span>لا توجد أصناف</span></div></div>
-                    <div class="totals-box">
-                        <div class="grand-total-box" style="background:linear-gradient(135deg,#E6A830,#C99028);">
-                            <div class="grand-label">إجمالي الجرد</div>
-                            <div class="grand-value" id="whAdjustTotal">0.00 ج.م</div>
-                        </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
-                            <button class="btn btn-success" onclick="createWarehouseAdjustment()"><i class="fas fa-check"></i> حفظ التسوية</button>
-                            <button class="btn btn-secondary" onclick="resetWarehouseAdjustmentForm()"><i class="fas fa-times"></i> إلغاء</button>
-                        </div>
-                    </div>
-                    <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;"><i class="fas fa-list"></i> السجل</h3>
+                    <div class="form-card"><h3>⚖️ تسوية الجرد</h3></div>
                     <div id="whAdjustmentsList"></div>
                 </div>
-
                 <div id="whTabOpening" class="warehouse-tab" style="display:none;">
-                    <div class="form-card">
-                        <h3>📊 مخزون أول المدة</h3>
-                        <div class="form-row">
-                            <div class="form-group"><label>المستودع *</label><select id="obWarehouse" class="inv-select"><option value="">اختر...</option></select></div>
-                            <div class="form-group"><label>التاريخ</label><input type="date" id="obDate" /></div>
-                        </div>
-                        <div class="form-group"><label>ملاحظات</label><input type="text" id="obNotes" /></div>
-                    </div>
-                    <div class="form-card">
-                        <h3>📦 إضافة أصناف</h3>
-                        <div class="form-row">
-                            <div class="form-group"><label>المنتج</label><select id="obProduct" class="inv-select" onchange="updateWarehouseProductPrice('ob')"><option value="">اختر...</option></select></div>
-                            <div class="form-group"><label>الكمية</label><input type="number" id="obQty" value="1" min="1" /></div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>السعر</label><input type="number" id="obPrice" min="0" step="0.01" /></div>
-                            <div class="form-group"><label>&nbsp;</label><button class="btn btn-success btn-block" onclick="addWarehouseVoucherItem('ob')"><i class="fas fa-plus"></i> إضافة</button></div>
-                        </div>
-                    </div>
-                    <div id="obItemsContainer"><div class="empty-items"><i class="fas fa-flag"></i><span>لا توجد أصناف</span></div></div>
-                    <div class="totals-box">
-                        <div class="grand-total-box" style="background:linear-gradient(135deg,#9B59B6,#7D3C98);">
-                            <div class="grand-label">إجمالي أول المدة</div>
-                            <div class="grand-value" id="obTotal">0.00 ج.م</div>
-                        </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
-                            <button class="btn btn-success" onclick="saveOpeningBalance()"><i class="fas fa-check"></i> حفظ</button>
-                            <button class="btn btn-secondary" onclick="resetOpeningBalanceForm()"><i class="fas fa-times"></i> إلغاء</button>
-                        </div>
-                    </div>
-                    <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;"><i class="fas fa-list"></i> السجل</h3>
+                    <div class="form-card"><h3>📊 مخزون أول المدة</h3></div>
                     <div id="obList"></div>
                 </div>
-
                 <div id="whTabReports" class="warehouse-tab" style="display:none;">
-                    <div class="form-card">
-                        <h3>📈 تقارير المخازن</h3>
-                        <div class="form-group">
-                            <label>نوع التقرير</label>
-                            <select id="whReportType" class="inv-select">
-                                <option value="current">📦 المخزون الحالي</option>
-                                <option value="movement">📊 حركة المخزون</option>
-                                <option value="lowstock">⚠️ المنتجات القاربة على النفاذ</option>
-                            </select>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>من تاريخ</label><input type="date" id="whReportFrom" /></div>
-                            <div class="form-group"><label>إلى تاريخ</label><input type="date" id="whReportTo" /></div>
-                        </div>
-                        <button class="btn btn-primary btn-block" onclick="showWarehouseReports()"><i class="fas fa-chart-line"></i> عرض التقرير</button>
-                    </div>
+                    <div class="form-card"><h3>📈 تقارير المخازن</h3></div>
                 </div>
             </div>
         </div>
 
         <!-- ═══════════════ قائمة المزيد ═══════════════ -->
-        <div id="moreMenu" style="display:none;position:fixed;bottom:85px;left:50%;transform:translateX(-50%);background:#1C1C1C;border:2px solid #C9A94E;border-radius:14px;padding:12px;z-index:100;min-width:280px;max-width:90%;box-shadow:0 -8px 32px rgba(0,0,0,0.7);">
+        <div id="moreMenu" style="display:none;position:fixed;bottom:85px;left:50%;transform:translateX(-50%);background:#1C1C1C;border:2px solid #C9A94E;border-radius:14px;padding:12px;z-index:100;min-width:280px;max-width:90%;box-shadow:0 -8px 32px rgba(0,0,0,0.7);max-height:70vh;overflow-y:auto;">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                 <button class="more-item" onclick="navigateTo('company'); toggleMoreMenu();"><i class="fas fa-building" style="color:#4A8AB5;"></i> بيانات الشركة</button>
                 <button class="more-item" onclick="navigateTo('purchases'); toggleMoreMenu();"><i class="fas fa-shopping-cart" style="color:#E06060;"></i> المشتريات</button>
@@ -1179,10 +1057,11 @@
                 <button class="more-item" onclick="navigateTo('treasury'); toggleMoreMenu();"><i class="fas fa-vault" style="color:#C9A94E;"></i> حركات الخزنة</button>
                 <button class="more-item" onclick="navigateTo('accounts'); toggleMoreMenu();"><i class="fas fa-book" style="color:#C9A94E;"></i> الحسابات</button>
                 <button class="more-item" onclick="navigateTo('cash-boxes'); toggleMoreMenu();"><i class="fas fa-money-bill-wave" style="color:#9B59B6;"></i> الخزائن</button>
+                <button class="more-item" onclick="navigateTo('warehouses'); toggleMoreMenu();"><i class="fas fa-boxes" style="color:#E6A830;"></i> المخازن</button>
                 <button class="more-item" onclick="navigateTo('erp'); toggleMoreMenu();"><i class="fas fa-warehouse" style="color:#4A8AB5;"></i> الموارد والمستودعات</button>
-<button class="more-item" onclick="navigateTo('warehouses'); toggleMoreMenu();"><i class="fas fa-boxes" style="color:#E6A830;"></i> المخازن</button>
-<button class="more-item" onclick="navigateTo('users'); toggleMoreMenu();"><i class="fas fa-user-cog" style="color:#9B59B6;"></i> المستخدمين</button>
-<button class="more-item" onclick="navigateTo('settings'); toggleMoreMenu();"><i class="fas fa-cog" style="color:#C9A94E;"></i> الإعدادات</button>
+                <button class="more-item" onclick="navigateTo('employees'); toggleMoreMenu();"><i class="fas fa-user-tie" style="color:#4A8AB5;"></i> الموظفين</button>
+                <button class="more-item" onclick="navigateTo('users'); toggleMoreMenu();"><i class="fas fa-user-cog" style="color:#9B59B6;"></i> المستخدمين</button>
+                <button class="more-item" onclick="navigateTo('settings'); toggleMoreMenu();"><i class="fas fa-cog" style="color:#C9A94E;"></i> الإعدادات</button>
             </div>
         </div>
 
@@ -1204,7 +1083,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
-    <!-- ملفات التطبيق (8 ملفات فقط!) -->
+    <!-- ملفات التطبيق -->
     <script src="core.js"></script>
     <script src="app.js"></script>
     <script src="dashboard.js"></script>
