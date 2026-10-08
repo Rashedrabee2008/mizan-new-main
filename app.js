@@ -1,6 +1,6 @@
 // ============================================================
 // الميزان 17.0 - app.js
-// التطبيق الرئيسي: التنقل + تسجيل الدخول + الترجمة + الصلاحيات
+// التطبيق الرئيسي: التنقل + تسجيل الدخول + الترجمة + الصلاحيات + بيانات الشركة
 // ============================================================
 
 console.log('🚀 تحميل app.js v17.0');
@@ -11,7 +11,7 @@ console.log('🚀 تحميل app.js v17.0');
 window.firebaseConfig = {
     apiKey: "AIzaSyB3cnrETONbcrH1d_94w3TzeUEQIF0MSXw",
     authDomain: "mizan-new-main.firebaseapp.com",
-    databaseURL: "https://mizan-new-main-default-rtdb.europe-west1.firebasedatabase.app",  ← ✅
+    databaseURL: "https://mizan-new-main-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "mizan-new-main",
     storageBucket: "mizan-new-main.firebasestorage.app",
     messagingSenderId: "442192802804",
@@ -54,7 +54,24 @@ window.currentReportData = null;
 window.currentCoupon = null;
 window.currentPointsToRedeem = 0;
 window.currentCustomerName = '';
-window.companyData = { name: 'الميزان', phone: '', address: '', tax: '', footer: 'شكراً لتعاملكم معنا 🌟' };
+window.companyData = {
+    name: 'الميزان',
+    tradeName: '',
+    phone: '',
+    phone2: '',
+    email: '',
+    website: '',
+    address: '',
+    city: '',
+    country: 'مصر',
+    tax: '',
+    commercial: '',
+    taxCard: '',
+    nationalId: '',
+    footer: 'شكراً لتعاملكم معنا 🌟',
+    primaryColor: '#C9A94E',
+    currency: 'ج.م'
+};
 window.vatSettings = { defaultVAT: 14 };
 
 const STORAGE_KEY = 'mizan_';
@@ -240,6 +257,7 @@ window.navigateTo = function(page) {
 
     const pageActions = {
         'dashboard': ['updateDashboard'],
+        'company': ['renderCompany'],
         'inventory': ['renderProducts'],
         'cashier': ['populateSaleProducts', 'populateSaleCustomers', 'populateCashBoxDropdowns', 'populateWarehouseField', 'renderCashier', 'updateSaleTotals', 'updateSalePrice'],
         'purchases': ['populatePurProducts', 'populatePurSuppliers', 'populateCashBoxDropdowns', 'populateWarehouseField', 'renderPurItems', 'updatePurTotals', 'renderPurchases', 'updatePurStats'],
@@ -297,6 +315,162 @@ window.populateWarehouseField = function() {
             if (mainWh) sel.value = mainWh.id;
         }
     });
+};
+
+// ═══════════════════════════════════════════════════════════
+// بيانات الشركة (قسم منفصل)
+// ═══════════════════════════════════════════════════════════
+window.renderCompany = function() {
+    const c = window.companyData || {};
+    
+    const setVal = function(id, val) {
+        const el = document.getElementById(id);
+        if (el) el.value = val || '';
+    };
+    
+    setVal('companyName', c.name || '');
+    setVal('companyTradeName', c.tradeName || '');
+    setVal('companyPhone', c.phone || '');
+    setVal('companyPhone2', c.phone2 || '');
+    setVal('companyEmail', c.email || '');
+    setVal('companyWebsite', c.website || '');
+    setVal('companyAddress', c.address || '');
+    setVal('companyCity', c.city || '');
+    setVal('companyCountry', c.country || 'مصر');
+    setVal('companyTax', c.tax || '');
+    setVal('companyCommercial', c.commercial || '');
+    setVal('companyTaxCard', c.taxCard || '');
+    setVal('companyNationalId', c.nationalId || '');
+    setVal('companyFooter', c.footer || 'شكراً لتعاملكم معنا 🌟');
+    
+    const colorEl = document.getElementById('companyPrimaryColor');
+    if (colorEl) colorEl.value = c.primaryColor || '#C9A94E';
+    
+    const currencyEl = document.getElementById('companyCurrency');
+    if (currencyEl) currencyEl.value = c.currency || 'ج.م';
+    
+    const setTxt = function(id, val) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+    
+    setTxt('companyProductsCount', (window.products || []).length);
+    setTxt('companySalesCount', (window.sales || []).length);
+    setTxt('companyCustomersCount', (window.customers || []).length);
+    setTxt('companySuppliersCount', (window.suppliers || []).length);
+    
+    const totalSales = (window.sales || []).reduce(function(s, x) { 
+        return s + (x.total || 0); 
+    }, 0);
+    setTxt('companySalesTotal', window.formatMoney(totalSales) + ' ج.م');
+};
+
+window.saveCompanyFullData = function() {
+    if (!window.isAdmin()) { 
+        window.showToast('⚠️ لا تملك صلاحية', 'error'); 
+        return; 
+    }
+    
+    const getVal = function(id) {
+        const el = document.getElementById(id);
+        return el ? el.value.trim() : '';
+    };
+    
+    window.companyData = {
+        name: getVal('companyName') || 'الميزان',
+        tradeName: getVal('companyTradeName'),
+        phone: getVal('companyPhone'),
+        phone2: getVal('companyPhone2'),
+        email: getVal('companyEmail'),
+        website: getVal('companyWebsite'),
+        address: getVal('companyAddress'),
+        city: getVal('companyCity'),
+        country: getVal('companyCountry') || 'مصر',
+        tax: getVal('companyTax'),
+        commercial: getVal('companyCommercial'),
+        taxCard: getVal('companyTaxCard'),
+        nationalId: getVal('companyNationalId'),
+        footer: getVal('companyFooter') || 'شكراً لتعاملكم معنا 🌟',
+        primaryColor: getVal('companyPrimaryColor') || '#C9A94E',
+        currency: getVal('companyCurrency') || 'ج.م',
+        updatedAt: new Date().toISOString(),
+        updatedBy: window.currentUser ? window.currentUser.name : ''
+    };
+    
+    window.setData('companyData', window.companyData);
+    
+    const headerCompany = document.getElementById('headerCompanyName');
+    if (headerCompany) headerCompany.textContent = window.companyData.name;
+    
+    if (typeof window.scheduleAutoSync === 'function') window.scheduleAutoSync();
+    
+    window.showToast('✅ تم حفظ بيانات الشركة', 'success');
+};
+
+window.resetCompanyForm = function() {
+    if (!confirm('⚠️ هل تريد إلغاء التعديلات؟')) return;
+    window.renderCompany();
+    window.showToast('🔄 تم استرجاع البيانات الأصلية', 'info');
+};
+
+window.printCompanyData = function() {
+    const c = window.companyData || {};
+    
+    const content = '<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">' +
+        '<title>بيانات الشركة - ' + (c.name || 'الميزان') + '</title>' +
+        '<style>' +
+        '*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}' +
+        'body{padding:30px;background:#fff;color:#000;}' +
+        '.header{text-align:center;padding-bottom:20px;border-bottom:3px solid #C9A94E;margin-bottom:25px;}' +
+        '.header h1{color:#C9A94E;font-size:32px;margin-bottom:8px;font-weight:900;}' +
+        '.header p{color:#666;font-size:14px;}' +
+        '.section{background:#f9f9f9;padding:20px;border-radius:10px;margin-bottom:20px;border-right:5px solid #C9A94E;}' +
+        '.section h2{color:#C9A94E;font-size:18px;margin-bottom:15px;}' +
+        '.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;}' +
+        '.info-item{padding:10px;background:#fff;border-radius:8px;border:1px solid #eee;}' +
+        '.info-label{color:#666;font-size:12px;margin-bottom:4px;}' +
+        '.info-value{color:#000;font-size:14px;font-weight:700;}' +
+        '.footer{text-align:center;margin-top:30px;padding-top:20px;border-top:2px dashed #ccc;color:#666;font-size:12px;}' +
+        '@media print{@page{size:A4;margin:15mm;}}' +
+        '</style></head><body>' +
+        '<div class="header">' +
+        '<h1>⚖️ ' + (c.name || 'الميزان') + '</h1>' +
+        '<p>' + (c.address || '') + (c.phone ? ' | 📞 ' + c.phone : '') + '</p>' +
+        '</div>' +
+        
+        '<div class="section">' +
+        '<h2>📋 المعلومات الأساسية</h2>' +
+        '<div class="info-grid">' +
+        '<div class="info-item"><div class="info-label">اسم الشركة</div><div class="info-value">' + (c.name || '-') + '</div></div>' +
+        '<div class="info-item"><div class="info-label">الاسم التجاري</div><div class="info-value">' + (c.tradeName || '-') + '</div></div>' +
+        '<div class="info-item"><div class="info-label">الهاتف</div><div class="info-value">' + (c.phone || '-') + '</div></div>' +
+        '<div class="info-item"><div class="info-label">الهاتف الثاني</div><div class="info-value">' + (c.phone2 || '-') + '</div></div>' +
+        '<div class="info-item"><div class="info-label">البريد الإلكتروني</div><div class="info-value">' + (c.email || '-') + '</div></div>' +
+        '<div class="info-item"><div class="info-label">الموقع الإلكتروني</div><div class="info-value">' + (c.website || '-') + '</div></div>' +
+        '<div class="info-item"><div class="info-label">العنوان</div><div class="info-value">' + (c.address || '-') + '</div></div>' +
+        '<div class="info-item"><div class="info-label">المدينة</div><div class="info-value">' + (c.city || '-') + '</div></div>' +
+        '</div></div>' +
+        
+        '<div class="section">' +
+        '<h2>📋 البيانات القانونية</h2>' +
+        '<div class="info-grid">' +
+        '<div class="info-item"><div class="info-label">الرقم الضريبي</div><div class="info-value">' + (c.tax || '-') + '</div></div>' +
+        '<div class="info-item"><div class="info-label">السجل التجاري</div><div class="info-value">' + (c.commercial || '-') + '</div></div>' +
+        '<div class="info-item"><div class="info-label">البطاقة الضريبية</div><div class="info-value">' + (c.taxCard || '-') + '</div></div>' +
+        '</div></div>' +
+        
+        '<div class="footer">' +
+        'طُبع في: ' + new Date().toLocaleString('ar-EG') +
+        '</div>' +
+        
+        '<script>window.onload=function(){setTimeout(function(){window.print();},500);};<\/script>' +
+        '</body></html>';
+    
+    const w = window.open('', '_blank');
+    if (w) { 
+        w.document.write(content); 
+        w.document.close(); 
+    }
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -588,21 +762,10 @@ window.deleteUser = function(id) {
 // الإعدادات
 // ═══════════════════════════════════════════════════════════
 window.renderSettings = function() {
-    const c = window.companyData;
-    const setVal = function(id, val) {
-        const el = document.getElementById(id);
-        if (el) el.value = val || '';
-    };
     const setTxt = function(id, val) {
         const el = document.getElementById(id);
         if (el) el.textContent = val;
     };
-    
-    setVal('setCompanyName', c.name);
-    setVal('setCompanyPhone', c.phone);
-    setVal('setCompanyAddress', c.address);
-    setVal('setCompanyTax', c.tax);
-    setVal('setCompanyFooter', c.footer);
     
     setTxt('setProductsCount', (window.products || []).length);
     setTxt('setSalesCount', (window.sales || []).length);
@@ -616,11 +779,17 @@ window.saveCompanySettings = function() {
         return; 
     }
     
-    window.companyData.name = document.getElementById('setCompanyName') ? document.getElementById('setCompanyName').value.trim() : 'الميزان';
-    window.companyData.phone = document.getElementById('setCompanyPhone') ? document.getElementById('setCompanyPhone').value.trim() : '';
-    window.companyData.address = document.getElementById('setCompanyAddress') ? document.getElementById('setCompanyAddress').value.trim() : '';
-    window.companyData.tax = document.getElementById('setCompanyTax') ? document.getElementById('setCompanyTax').value.trim() : '';
-    window.companyData.footer = document.getElementById('setCompanyFooter') ? document.getElementById('setCompanyFooter').value.trim() : 'شكراً لتعاملكم معنا 🌟';
+    const nameEl = document.getElementById('setCompanyName');
+    const phoneEl = document.getElementById('setCompanyPhone');
+    const addressEl = document.getElementById('setCompanyAddress');
+    const taxEl = document.getElementById('setCompanyTax');
+    const footerEl = document.getElementById('setCompanyFooter');
+    
+    if (nameEl) window.companyData.name = nameEl.value.trim() || 'الميزان';
+    if (phoneEl) window.companyData.phone = phoneEl.value.trim();
+    if (addressEl) window.companyData.address = addressEl.value.trim();
+    if (taxEl) window.companyData.tax = taxEl.value.trim();
+    if (footerEl) window.companyData.footer = footerEl.value.trim() || 'شكراً لتعاملكم معنا 🌟';
     
     window.setData('companyData', window.companyData);
     
@@ -634,11 +803,21 @@ window.exportData = function() {
     const data = {
         version: '17.0',
         exportDate: new Date().toISOString(),
-        products: window.products, sales: window.sales, purchases: window.purchases,
-        customers: window.customers, suppliers: window.suppliers, cashBoxes: window.cashBoxes,
-        expenses: window.expenses, treasury: window.treasury, payments: window.payments,
-        returns: window.returns, users: window.users, accounts: window.accounts,
-        journalEntries: window.journalEntries, coupons: window.coupons,
+        products: window.products,
+        sales: window.sales,
+        purchases: window.purchases,
+        customers: window.customers,
+        suppliers: window.suppliers,
+        cashBoxes: window.cashBoxes,
+        expenses: window.expenses,
+        treasury: window.treasury,
+        payments: window.payments,
+        returns: window.returns,
+        users: window.users,
+        accounts: window.accounts,
+        journalEntries: window.journalEntries,
+        coupons: window.coupons,
+        warehouses: window.warehouses,
         companyData: window.companyData
     };
     
@@ -665,7 +844,7 @@ window.importData = function(event) {
     reader.onload = function(e) {
         try {
             const data = JSON.parse(e.target.result);
-            const keys = ['products','sales','purchases','customers','suppliers','cashBoxes','expenses','treasury','payments','returns','users','accounts','journalEntries','coupons','companyData'];
+            const keys = ['products','sales','purchases','customers','suppliers','cashBoxes','expenses','treasury','payments','returns','users','accounts','journalEntries','coupons','warehouses','companyData'];
             
             keys.forEach(function(k) {
                 if (data[k]) {
@@ -689,7 +868,7 @@ window.importData = function(event) {
 };
 
 window.saveAll = function() {
-    const keys = ['products','sales','purchases','customers','suppliers','cashBoxes','expenses','treasury','payments','returns','users','accounts','journalEntries','coupons','companyData'];
+    const keys = ['products','sales','purchases','customers','suppliers','cashBoxes','expenses','treasury','payments','returns','users','accounts','journalEntries','coupons','warehouses','companyData'];
     keys.forEach(function(k) {
         window.setData(k, window[k]);
     });
@@ -703,7 +882,7 @@ window.clearAllData = function() {
     if (!confirm('⚠️ مسح جميع البيانات؟')) return;
     if (!confirm('⚠️ تأكيد نهائي؟')) return;
     
-    const keys = ['products','sales','purchases','customers','suppliers','cashBoxes','expenses','treasury','payments','returns','users','accounts','journalEntries','coupons','companyData'];
+    const keys = ['products','sales','purchases','customers','suppliers','cashBoxes','expenses','treasury','payments','returns','users','accounts','journalEntries','coupons','warehouses','companyData'];
     keys.forEach(function(k) {
         localStorage.removeItem(STORAGE_KEY + k);
     });
@@ -758,11 +937,26 @@ window.init = function() {
     window.coupons = window.toArray(window.getData('coupons', []));
     window.warehouses = window.toArray(window.getData('warehouses', []));
     
-    window.companyData = window.getData('companyData', { 
-        name: 'الميزان', phone: '', address: '', tax: '', 
-        footer: 'شكراً لتعاملكم معنا 🌟' 
+    window.companyData = window.getData('companyData', {
+        name: 'الميزان',
+        tradeName: '',
+        phone: '',
+        phone2: '',
+        email: '',
+        website: '',
+        address: '',
+        city: '',
+        country: 'مصر',
+        tax: '',
+        commercial: '',
+        taxCard: '',
+        nationalId: '',
+        footer: 'شكراً لتعاملكم معنا 🌟',
+        primaryColor: '#C9A94E',
+        currency: 'ج.م'
     });
 
+    // بيانات تجريبية
     if (window.products.length === 0 && !localStorage.getItem('mizan_seeded_v3')) {
         window.products = [
             { id: 1, name: 'قلم جاف', barcode: '1001', buy: 2, sell: 5, qty: 50, min: 10, warehouseStock: {} },
@@ -801,6 +995,7 @@ window.init = function() {
         window.setData('warehouses', window.warehouses);
     }
 
+    // تواريخ
     if (document.getElementById('expDate')) document.getElementById('expDate').value = window.getTodayDate();
     if (document.getElementById('collectDate')) document.getElementById('collectDate').value = window.getTodayDate();
     if (document.getElementById('payDate')) document.getElementById('payDate').value = window.getTodayDate();
