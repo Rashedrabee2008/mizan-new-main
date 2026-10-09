@@ -90,7 +90,7 @@ window.ROLES = {
 };
 
 // ═══════════════════════════════════════════════════════════
-// أدوات مساعدة (لو مفيش core.js)
+// أدوات مساعدة
 // ═══════════════════════════════════════════════════════════
 if (typeof window.$ !== 'function') {
     window.$ = function(id) { return document.getElementById(id); };
@@ -333,6 +333,7 @@ window.navigateTo = function(page) {
         el.classList.toggle('active', el.dataset.page === page);
     });
 
+    // ✅ تم إزالة showERPTab من هنا (لإصلاح التحذير)
     const pageActions = {
         'dashboard': ['updateDashboard'],
         'company': ['renderCompany'],
@@ -348,7 +349,7 @@ window.navigateTo = function(page) {
         'payments': ['populateCollectCustomers', 'populatePaySuppliers', 'populateCashBoxDropdowns', 'updatePaymentsStats', 'renderPayments'],
         'returns': ['toggleReturnParty', 'populateRetProducts', 'populateCashBoxDropdowns', 'populateWarehouseField', 'updateReturnsStats', 'renderReturns'],
         'accounts': ['renderAccounts', 'renderJournalEntries'],
-        'erp': ['renderWarehouses', 'renderBranches', 'renderCurrencies', 'showERPTab'],
+        'erp': ['renderWarehouses', 'renderBranches', 'renderCurrencies'],
         'warehouses': ['populateWarehouseDropdowns', 'renderWarehouseReceipts', 'renderWarehouseIssues', 'renderWarehouseTransfers', 'renderWarehouseAdjustments', 'renderOpeningBalances'],
         'employees': ['renderEmployees'],
         'reports': ['renderReport'],
@@ -396,11 +397,12 @@ window.populateWarehouseField = function() {
 };
 
 // ═══════════════════════════════════════════════════════════
-// ⚡ ERP — المستودعات والفروع والعملات (النسخة الاحتياطية)
+// ERP — المستودعات
 // ═══════════════════════════════════════════════════════════
 
-// تبويب ERP
-window.showERPTab = window.showERPTab || function(tab, btn) {
+window.showERPTab = function(tab, btn) {
+    if (!tab || typeof tab !== 'string') tab = 'warehouses';
+    
     ['warehouses', 'branches', 'currencies'].forEach(function(t) {
         const el = document.getElementById('erpTab' + t.charAt(0).toUpperCase() + t.slice(1));
         if (el) el.style.display = 'none';
@@ -419,7 +421,6 @@ window.showERPTab = window.showERPTab || function(tab, btn) {
     if (tab === 'currencies') window.renderCurrencies();
 };
 
-// أنواع المستودعات
 window.WAREHOUSE_TYPES = {
     'main':     { name: 'رئيسي',   icon: '🏭' },
     'branch':   { name: 'فرع',     icon: '🏪' },
@@ -427,8 +428,7 @@ window.WAREHOUSE_TYPES = {
     'returns':  { name: 'مرتجعات', icon: '🔄' }
 };
 
-// حفظ مستودع
-window.saveWarehouse = window.saveWarehouse || function() {
+window.saveWarehouse = function() {
     const idEl = document.getElementById('warehouseId');
     const nameEl = document.getElementById('warehouseName');
     const typeEl = document.getElementById('warehouseType');
@@ -473,8 +473,7 @@ window.saveWarehouse = window.saveWarehouse || function() {
     if (typeof window.populateWarehouseDropdowns === 'function') window.populateWarehouseDropdowns();
 };
 
-// إعادة تعيين نموذج المستودع
-window.resetWarehouseForm = window.resetWarehouseForm || function() {
+window.resetWarehouseForm = function() {
     ['warehouseId', 'warehouseName', 'warehouseLocation', 'warehouseManager'].forEach(function(id) {
         const el = document.getElementById(id);
         if (el) el.value = '';
@@ -485,8 +484,7 @@ window.resetWarehouseForm = window.resetWarehouseForm || function() {
     if (titleEl) titleEl.textContent = '➕ إضافة مستودع جديد';
 };
 
-// تعديل مستودع
-window.editWarehouse = window.editWarehouse || function(id) {
+window.editWarehouse = function(id) {
     const w = (window.warehouses || []).find(function(x) { return x.id == id; });
     if (!w) return;
     
@@ -505,8 +503,7 @@ window.editWarehouse = window.editWarehouse || function(id) {
     if (titleEl) titleEl.textContent = '✏️ تعديل المستودع';
 };
 
-// حذف مستودع
-window.deleteWarehouse = window.deleteWarehouse || function(id) {
+window.deleteWarehouse = function(id) {
     if (!confirm('⚠️ حذف هذا المستودع؟')) return;
     window.warehouses = (window.warehouses || []).filter(function(w) { return w.id != id; });
     window.setData('warehouses', window.warehouses);
@@ -515,8 +512,7 @@ window.deleteWarehouse = window.deleteWarehouse || function(id) {
     window.showToast('🗑️ تم الحذف', 'info');
 };
 
-// عرض المستودعات
-window.renderWarehouses = window.renderWarehouses || function() {
+window.renderWarehouses = function() {
     const c = document.getElementById('warehouseList');
     if (!c) return;
 
@@ -553,8 +549,7 @@ window.renderWarehouses = window.renderWarehouses || function() {
     c.innerHTML = html;
 };
 
-// عرض مخزون المستودع
-window.showWarehouseStock = window.showWarehouseStock || function(warehouseId) {
+window.showWarehouseStock = function(warehouseId) {
     const warehouse = (window.warehouses || []).find(function(w) { return w.id == warehouseId; });
     if (!warehouse) return;
 
@@ -622,7 +617,7 @@ window.showWarehouseStock = window.showWarehouseStock || function(warehouseId) {
 // الفروع
 // ═══════════════════════════════════════════════════════════
 
-window.saveBranch = window.saveBranch || function() {
+window.saveBranch = function() {
     const idEl = document.getElementById('branchId');
     const nameEl = document.getElementById('branchName');
     const codeEl = document.getElementById('branchCode');
@@ -665,7 +660,7 @@ window.saveBranch = window.saveBranch || function() {
     window.renderBranches();
 };
 
-window.renderBranches = window.renderBranches || function() {
+window.renderBranches = function() {
     const c = document.getElementById('branchList');
     if (!c) return;
 
@@ -698,7 +693,7 @@ window.renderBranches = window.renderBranches || function() {
     c.innerHTML = html;
 };
 
-window.deleteBranch = window.deleteBranch || function(id) {
+window.deleteBranch = function(id) {
     if (!confirm('⚠️ حذف هذا الفرع؟')) return;
     window.branches = (window.branches || []).filter(function(b) { return b.id != id; });
     window.setData('branches', window.branches);
@@ -710,7 +705,7 @@ window.deleteBranch = window.deleteBranch || function(id) {
 // العملات
 // ═══════════════════════════════════════════════════════════
 
-window.loadCurrencies = window.loadCurrencies || function() {
+window.loadCurrencies = function() {
     if (!window.currencies || window.currencies.length === 0) {
         window.currencies = [
             { code: 'EGP', name: 'جنيه مصري', symbol: 'ج.م', rate: 1, isDefault: true },
@@ -722,7 +717,7 @@ window.loadCurrencies = window.loadCurrencies || function() {
     }
 };
 
-window.renderCurrencies = window.renderCurrencies || function() {
+window.renderCurrencies = function() {
     const c = document.getElementById('currencyList');
     if (!c) return;
 
@@ -1145,32 +1140,6 @@ window.renderSettings = function() {
     setTxt('setSuppliersCount', (window.suppliers || []).length);
 };
 
-window.saveCompanySettings = function() {
-    if (!window.isAdmin()) { 
-        window.showToast('⚠️ لا تملك صلاحية', 'error'); 
-        return; 
-    }
-    
-    const nameEl = document.getElementById('setCompanyName');
-    const phoneEl = document.getElementById('setCompanyPhone');
-    const addressEl = document.getElementById('setCompanyAddress');
-    const taxEl = document.getElementById('setCompanyTax');
-    const footerEl = document.getElementById('setCompanyFooter');
-    
-    if (nameEl) window.companyData.name = nameEl.value.trim() || 'الميزان';
-    if (phoneEl) window.companyData.phone = phoneEl.value.trim();
-    if (addressEl) window.companyData.address = addressEl.value.trim();
-    if (taxEl) window.companyData.tax = taxEl.value.trim();
-    if (footerEl) window.companyData.footer = footerEl.value.trim() || 'شكراً لتعاملكم معنا 🌟';
-    
-    window.setData('companyData', window.companyData);
-    
-    const headerCompany = document.getElementById('headerCompanyName');
-    if (headerCompany) headerCompany.textContent = window.companyData.name;
-    
-    window.showToast('✅ تم الحفظ', 'success');
-};
-
 window.exportData = function() {
     const data = {
         version: '17.0',
@@ -1304,7 +1273,6 @@ window.init = function() {
         primaryColor: '#C9A94E', currency: 'ج.م'
     });
 
-    // بيانات تجريبية
     if (window.products.length === 0 && !localStorage.getItem('mizan_seeded_v3')) {
         window.products = [
             { id: 1, name: 'قلم جاف', barcode: '1001', buy: 2, sell: 5, qty: 50, min: 10, warehouseStock: {} },
