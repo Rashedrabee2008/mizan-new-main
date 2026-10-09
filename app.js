@@ -1005,6 +1005,303 @@ window.updateUserUI = function() {
 };
 
 // ═══════════════════════════════════════════════════════════
+// العملاء (Customers)
+// ═══════════════════════════════════════════════════════════
+window.saveCustomer = function() {
+    if (!window.canAdd()) { 
+        window.showToast('⚠️ لا تملك صلاحية', 'error'); 
+        return; 
+    }
+    
+    const idEl = document.getElementById('customerId');
+    const nameEl = document.getElementById('customerName');
+    const phoneEl = document.getElementById('customerPhone');
+    const whatsappEl = document.getElementById('customerWhatsapp');
+    const addressEl = document.getElementById('customerAddress');
+
+    const id = idEl ? idEl.value : '';
+    const name = nameEl ? nameEl.value.trim() : '';
+    const phone = phoneEl ? phoneEl.value.trim() : '';
+    const whatsapp = whatsappEl ? whatsappEl.value.trim() : '';
+    const address = addressEl ? addressEl.value.trim() : '';
+    
+    if (!name) { 
+        window.showToast('⚠️ أدخل اسم العميل', 'error'); 
+        return; 
+    }
+
+    if (id) {
+        const idx = (window.customers || []).findIndex(function(c) { return c.id == id; });
+        if (idx > -1) {
+            window.customers[idx] = Object.assign({}, window.customers[idx], { 
+                name: name, phone: phone, whatsapp: whatsapp, address: address 
+            });
+            window.showToast('✅ تم التعديل', 'success');
+        }
+    } else {
+        if ((window.customers || []).find(function(c) { return c.name === name; })) { 
+            window.showToast('⚠️ الاسم موجود', 'warning'); 
+            return; 
+        }
+        window.customers.push({ 
+            id: Date.now(), 
+            name: name, 
+            phone: phone, 
+            whatsapp: whatsapp, 
+            address: address 
+        });
+        window.showToast('✅ تم إضافة العميل', 'success');
+    }
+    
+    window.setData('customers', window.customers);
+    window.resetCustomerForm();
+    if (typeof window.renderCustomers === 'function') window.renderCustomers();
+    if (typeof window.populateSaleCustomers === 'function') window.populateSaleCustomers();
+    if (typeof window.populateCollectCustomers === 'function') window.populateCollectCustomers();
+    if (typeof window.updateDashboard === 'function') window.updateDashboard();
+};
+
+window.resetCustomerForm = function() {
+    ['customerId','customerName','customerPhone','customerWhatsapp','customerAddress'].forEach(function(id) {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const titleEl = document.getElementById('customerFormTitle');
+    if (titleEl) titleEl.textContent = '➕ إضافة عميل';
+    const btnEl = document.getElementById('customerSaveBtnText');
+    if (btnEl) btnEl.textContent = 'إضافة';
+};
+
+window.editCustomer = function(id) {
+    const c = (window.customers || []).find(function(cu) { return cu.id == id; });
+    if (!c) return;
+    
+    const setVal = function(elId, val) {
+        const el = document.getElementById(elId);
+        if (el) el.value = val;
+    };
+    
+    setVal('customerId', c.id);
+    setVal('customerName', c.name);
+    setVal('customerPhone', c.phone || '');
+    setVal('customerWhatsapp', c.whatsapp || '');
+    setVal('customerAddress', c.address || '');
+    
+    const titleEl = document.getElementById('customerFormTitle');
+    if (titleEl) titleEl.textContent = '✏️ تعديل';
+    const btnEl = document.getElementById('customerSaveBtnText');
+    if (btnEl) btnEl.textContent = 'حفظ';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.deleteCustomer = function(id) {
+    if (!window.canDelete()) { 
+        window.showToast('⚠️ لا تملك صلاحية', 'error'); 
+        return; 
+    }
+    const c = (window.customers || []).find(function(cu) { return cu.id == id; });
+    if (!c) return;
+    if (!confirm('⚠️ حذف "' + c.name + '"؟')) return;
+    
+    window.customers = window.customers.filter(function(cu) { return cu.id !== id; });
+    window.setData('customers', window.customers);
+    if (typeof window.renderCustomers === 'function') window.renderCustomers();
+    if (typeof window.updateDashboard === 'function') window.updateDashboard();
+    window.showToast('🗑️ تم الحذف', 'info');
+};
+
+window.renderCustomers = function() {
+    const c = document.getElementById('customerList');
+    if (!c) return;
+    
+    const searchInput = document.getElementById('customerSearch');
+    const search = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    let filtered = window.customers || [];
+    
+    if (search) {
+        filtered = filtered.filter(function(cu) { 
+            return (cu.name || '').toLowerCase().indexOf(search) > -1; 
+        });
+    }
+    
+    if (filtered.length === 0) {
+        c.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><span>لا يوجد عملاء</span></div>';
+        return;
+    }
+    
+    let html = '<div class="table-header" style="grid-template-columns: 1.5fr 1fr 1fr 1.2fr;"><span>الاسم</span><span>الهاتف</span><span>المديونية</span><span></span></div>';
+    
+    filtered.forEach(function(cu) {
+        const balance = typeof window.getCustomerBalance === 'function' 
+            ? window.getCustomerBalance(cu.name) 
+            : 0;
+        
+        html += '<div class="table-row" style="grid-template-columns: 1.5fr 1fr 1fr 1.2fr;">' +
+            '<span><strong>' + cu.name + '</strong>' +
+                (cu.address ? '<br><small style="color:#A89070;font-size:9px;">📍 ' + cu.address + '</small>' : '') +
+            '</span>' +
+            '<span style="font-size:11px;color:#A89070;">' + (cu.phone || '-') + '</span>' +
+            '<span style="color:' + (balance > 0 ? '#E06060' : '#2D8F5E') + ';font-weight:900;">' + window.formatMoney(balance) + '</span>' +
+            '<div style="display:flex;gap:4px;justify-content:flex-end;">' +
+                '<button class="btn btn-warning btn-sm" onclick="editCustomer(' + cu.id + ')"><i class="fas fa-edit"></i></button>' +
+                '<button class="btn btn-danger btn-sm" onclick="deleteCustomer(' + cu.id + ')"><i class="fas fa-trash"></i></button>' +
+            '</div>' +
+        '</div>';
+    });
+    
+    c.innerHTML = html;
+};
+
+// ═══════════════════════════════════════════════════════════
+// الموردين (Suppliers)
+// ═══════════════════════════════════════════════════════════
+window.saveSupplier = function() {
+    if (!window.canAdd()) { 
+        window.showToast('⚠️ لا تملك صلاحية', 'error'); 
+        return; 
+    }
+    
+    const idEl = document.getElementById('supplierId');
+    const nameEl = document.getElementById('supplierName');
+    const phoneEl = document.getElementById('supplierPhone');
+    const whatsappEl = document.getElementById('supplierWhatsapp');
+    const addressEl = document.getElementById('supplierAddress');
+
+    const id = idEl ? idEl.value : '';
+    const name = nameEl ? nameEl.value.trim() : '';
+    const phone = phoneEl ? phoneEl.value.trim() : '';
+    const whatsapp = whatsappEl ? whatsappEl.value.trim() : '';
+    const address = addressEl ? addressEl.value.trim() : '';
+    
+    if (!name) { 
+        window.showToast('⚠️ أدخل اسم المورد', 'error'); 
+        return; 
+    }
+
+    if (id) {
+        const idx = (window.suppliers || []).findIndex(function(s) { return s.id == id; });
+        if (idx > -1) {
+            window.suppliers[idx] = Object.assign({}, window.suppliers[idx], { 
+                name: name, phone: phone, whatsapp: whatsapp, address: address 
+            });
+            window.showToast('✅ تم التعديل', 'success');
+        }
+    } else {
+        if ((window.suppliers || []).find(function(s) { return s.name === name; })) { 
+            window.showToast('⚠️ الاسم موجود', 'warning'); 
+            return; 
+        }
+        window.suppliers.push({ 
+            id: Date.now(), 
+            name: name, 
+            phone: phone, 
+            whatsapp: whatsapp, 
+            address: address 
+        });
+        window.showToast('✅ تم إضافة المورد', 'success');
+    }
+    
+    window.setData('suppliers', window.suppliers);
+    window.resetSupplierForm();
+    if (typeof window.renderSuppliers === 'function') window.renderSuppliers();
+    if (typeof window.populatePurSuppliers === 'function') window.populatePurSuppliers();
+    if (typeof window.populatePaySuppliers === 'function') window.populatePaySuppliers();
+    if (typeof window.updateDashboard === 'function') window.updateDashboard();
+};
+
+window.resetSupplierForm = function() {
+    ['supplierId','supplierName','supplierPhone','supplierWhatsapp','supplierAddress'].forEach(function(id) {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const titleEl = document.getElementById('supplierFormTitle');
+    if (titleEl) titleEl.textContent = '➕ إضافة مورد';
+    const btnEl = document.getElementById('supplierSaveBtnText');
+    if (btnEl) btnEl.textContent = 'إضافة';
+};
+
+window.editSupplier = function(id) {
+    const s = (window.suppliers || []).find(function(su) { return su.id == id; });
+    if (!s) return;
+    
+    const setVal = function(elId, val) {
+        const el = document.getElementById(elId);
+        if (el) el.value = val;
+    };
+    
+    setVal('supplierId', s.id);
+    setVal('supplierName', s.name);
+    setVal('supplierPhone', s.phone || '');
+    setVal('supplierWhatsapp', s.whatsapp || '');
+    setVal('supplierAddress', s.address || '');
+    
+    const titleEl = document.getElementById('supplierFormTitle');
+    if (titleEl) titleEl.textContent = '✏️ تعديل';
+    const btnEl = document.getElementById('supplierSaveBtnText');
+    if (btnEl) btnEl.textContent = 'حفظ';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.deleteSupplier = function(id) {
+    if (!window.canDelete()) { 
+        window.showToast('⚠️ لا تملك صلاحية', 'error'); 
+        return; 
+    }
+    const s = (window.suppliers || []).find(function(su) { return su.id == id; });
+    if (!s) return;
+    if (!confirm('⚠️ حذف "' + s.name + '"؟')) return;
+    
+    window.suppliers = window.suppliers.filter(function(su) { return su.id !== id; });
+    window.setData('suppliers', window.suppliers);
+    if (typeof window.renderSuppliers === 'function') window.renderSuppliers();
+    if (typeof window.updateDashboard === 'function') window.updateDashboard();
+    window.showToast('🗑️ تم الحذف', 'info');
+};
+
+window.renderSuppliers = function() {
+    const c = document.getElementById('supplierList');
+    if (!c) return;
+    
+    const searchInput = document.getElementById('supplierSearch');
+    const search = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    let filtered = window.suppliers || [];
+    
+    if (search) {
+        filtered = filtered.filter(function(s) { 
+            return (s.name || '').toLowerCase().indexOf(search) > -1; 
+        });
+    }
+    
+    if (filtered.length === 0) {
+        c.innerHTML = '<div class="empty-state"><i class="fas fa-truck"></i><span>لا يوجد موردين</span></div>';
+        return;
+    }
+    
+    let html = '<div class="table-header" style="grid-template-columns: 1.5fr 1fr 1fr 1.2fr;"><span>الاسم</span><span>الهاتف</span><span>المديونية</span><span></span></div>';
+    
+    filtered.forEach(function(s) {
+        const balance = typeof window.getSupplierBalance === 'function' 
+            ? window.getSupplierBalance(s.name) 
+            : 0;
+        
+        html += '<div class="table-row" style="grid-template-columns: 1.5fr 1fr 1fr 1.2fr;">' +
+            '<span><strong>' + s.name + '</strong>' +
+                (s.address ? '<br><small style="color:#A89070;font-size:9px;">📍 ' + s.address + '</small>' : '') +
+            '</span>' +
+            '<span style="font-size:11px;color:#A89070;">' + (s.phone || '-') + '</span>' +
+            '<span style="color:' + (balance > 0 ? '#E6A830' : '#2D8F5E') + ';font-weight:900;">' + window.formatMoney(balance) + '</span>' +
+            '<div style="display:flex;gap:4px;justify-content:flex-end;">' +
+                '<button class="btn btn-warning btn-sm" onclick="editSupplier(' + s.id + ')"><i class="fas fa-edit"></i></button>' +
+                '<button class="btn btn-danger btn-sm" onclick="deleteSupplier(' + s.id + ')"><i class="fas fa-trash"></i></button>' +
+            '</div>' +
+        '</div>';
+    });
+    
+    c.innerHTML = html;
+};
+
+
+// ═══════════════════════════════════════════════════════════
 // إدارة المستخدمين
 // ═══════════════════════════════════════════════════════════
 window.renderUsers = function() {
@@ -1356,5 +1653,234 @@ window.addEventListener('load', function() {
         }
     }, 1000);
 });
+
+// ═══════════════════════════════════════════════════════════
+// العملاء والموردين (إصلاح عاجل)
+// ═══════════════════════════════════════════════════════════
+
+window.saveCustomer = function() {
+    if (!window.canAdd()) { window.showToast('⚠️ لا تملك صلاحية', 'error'); return; }
+    
+    const idEl = document.getElementById('customerId');
+    const nameEl = document.getElementById('customerName');
+    const phoneEl = document.getElementById('customerPhone');
+    const whatsappEl = document.getElementById('customerWhatsapp');
+    const addressEl = document.getElementById('customerAddress');
+
+    const id = idEl ? idEl.value : '';
+    const name = nameEl ? nameEl.value.trim() : '';
+    const phone = phoneEl ? phoneEl.value.trim() : '';
+    const whatsapp = whatsappEl ? whatsappEl.value.trim() : '';
+    const address = addressEl ? addressEl.value.trim() : '';
+    
+    if (!name) { window.showToast('⚠️ أدخل اسم العميل', 'error'); return; }
+
+    if (id) {
+        const idx = (window.customers || []).findIndex(function(c) { return c.id == id; });
+        if (idx > -1) {
+            window.customers[idx] = Object.assign({}, window.customers[idx], { 
+                name: name, phone: phone, whatsapp: whatsapp, address: address 
+            });
+            window.showToast('✅ تم التعديل', 'success');
+        }
+    } else {
+        if ((window.customers || []).find(function(c) { return c.name === name; })) { 
+            window.showToast('⚠️ الاسم موجود', 'warning'); return; 
+        }
+        window.customers.push({ id: Date.now(), name: name, phone: phone, whatsapp: whatsapp, address: address });
+        window.showToast('✅ تم إضافة العميل', 'success');
+    }
+    
+    window.setData('customers', window.customers);
+    window.resetCustomerForm();
+    if (typeof window.renderCustomers === 'function') window.renderCustomers();
+    if (typeof window.populateSaleCustomers === 'function') window.populateSaleCustomers();
+    if (typeof window.populateCollectCustomers === 'function') window.populateCollectCustomers();
+    if (typeof window.updateDashboard === 'function') window.updateDashboard();
+};
+
+window.resetCustomerForm = function() {
+    ['customerId','customerName','customerPhone','customerWhatsapp','customerAddress'].forEach(function(id) {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const titleEl = document.getElementById('customerFormTitle');
+    if (titleEl) titleEl.textContent = '➕ إضافة عميل';
+    const btnEl = document.getElementById('customerSaveBtnText');
+    if (btnEl) btnEl.textContent = 'إضافة';
+};
+
+window.editCustomer = function(id) {
+    const c = (window.customers || []).find(function(cu) { return cu.id == id; });
+    if (!c) return;
+    const setVal = function(elId, val) {
+        const el = document.getElementById(elId);
+        if (el) el.value = val;
+    };
+    setVal('customerId', c.id);
+    setVal('customerName', c.name);
+    setVal('customerPhone', c.phone || '');
+    setVal('customerWhatsapp', c.whatsapp || '');
+    setVal('customerAddress', c.address || '');
+    const titleEl = document.getElementById('customerFormTitle');
+    if (titleEl) titleEl.textContent = '✏️ تعديل';
+    const btnEl = document.getElementById('customerSaveBtnText');
+    if (btnEl) btnEl.textContent = 'حفظ';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.deleteCustomer = function(id) {
+    if (!window.canDelete()) { window.showToast('⚠️ لا تملك صلاحية', 'error'); return; }
+    const c = (window.customers || []).find(function(cu) { return cu.id == id; });
+    if (!c) return;
+    if (!confirm('⚠️ حذف "' + c.name + '"؟')) return;
+    window.customers = window.customers.filter(function(cu) { return cu.id !== id; });
+    window.setData('customers', window.customers);
+    if (typeof window.renderCustomers === 'function') window.renderCustomers();
+    if (typeof window.updateDashboard === 'function') window.updateDashboard();
+    window.showToast('🗑️ تم الحذف', 'info');
+};
+
+window.renderCustomers = function() {
+    const c = document.getElementById('customerList');
+    if (!c) return;
+    const searchInput = document.getElementById('customerSearch');
+    const search = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    let filtered = window.customers || [];
+    if (search) filtered = filtered.filter(function(cu) { return (cu.name || '').toLowerCase().indexOf(search) > -1; });
+    if (filtered.length === 0) {
+        c.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><span>لا يوجد عملاء</span></div>';
+        return;
+    }
+    let html = '<div class="table-header" style="grid-template-columns: 1.5fr 1fr 1fr 1.2fr;"><span>الاسم</span><span>الهاتف</span><span>المديونية</span><span></span></div>';
+    filtered.forEach(function(cu) {
+        const balance = typeof window.getCustomerBalance === 'function' ? window.getCustomerBalance(cu.name) : 0;
+        html += '<div class="table-row" style="grid-template-columns: 1.5fr 1fr 1fr 1.2fr;">' +
+            '<span><strong>' + cu.name + '</strong>' +
+                (cu.address ? '<br><small style="color:#A89070;font-size:9px;">📍 ' + cu.address + '</small>' : '') +
+            '</span>' +
+            '<span style="font-size:11px;color:#A89070;">' + (cu.phone || '-') + '</span>' +
+            '<span style="color:' + (balance > 0 ? '#E06060' : '#2D8F5E') + ';font-weight:900;">' + window.formatMoney(balance) + '</span>' +
+            '<div style="display:flex;gap:4px;justify-content:flex-end;">' +
+                '<button class="btn btn-warning btn-sm" onclick="editCustomer(' + cu.id + ')"><i class="fas fa-edit"></i></button>' +
+                '<button class="btn btn-danger btn-sm" onclick="deleteCustomer(' + cu.id + ')"><i class="fas fa-trash"></i></button>' +
+            '</div>' +
+        '</div>';
+    });
+    c.innerHTML = html;
+};
+
+window.saveSupplier = function() {
+    if (!window.canAdd()) { window.showToast('⚠️ لا تملك صلاحية', 'error'); return; }
+    
+    const idEl = document.getElementById('supplierId');
+    const nameEl = document.getElementById('supplierName');
+    const phoneEl = document.getElementById('supplierPhone');
+    const whatsappEl = document.getElementById('supplierWhatsapp');
+    const addressEl = document.getElementById('supplierAddress');
+
+    const id = idEl ? idEl.value : '';
+    const name = nameEl ? nameEl.value.trim() : '';
+    const phone = phoneEl ? phoneEl.value.trim() : '';
+    const whatsapp = whatsappEl ? whatsappEl.value.trim() : '';
+    const address = addressEl ? addressEl.value.trim() : '';
+    
+    if (!name) { window.showToast('⚠️ أدخل اسم المورد', 'error'); return; }
+
+    if (id) {
+        const idx = (window.suppliers || []).findIndex(function(s) { return s.id == id; });
+        if (idx > -1) {
+            window.suppliers[idx] = Object.assign({}, window.suppliers[idx], { 
+                name: name, phone: phone, whatsapp: whatsapp, address: address 
+            });
+            window.showToast('✅ تم التعديل', 'success');
+        }
+    } else {
+        if ((window.suppliers || []).find(function(s) { return s.name === name; })) { 
+            window.showToast('⚠️ الاسم موجود', 'warning'); return; 
+        }
+        window.suppliers.push({ id: Date.now(), name: name, phone: phone, whatsapp: whatsapp, address: address });
+        window.showToast('✅ تم إضافة المورد', 'success');
+    }
+    
+    window.setData('suppliers', window.suppliers);
+    window.resetSupplierForm();
+    if (typeof window.renderSuppliers === 'function') window.renderSuppliers();
+    if (typeof window.populatePurSuppliers === 'function') window.populatePurSuppliers();
+    if (typeof window.populatePaySuppliers === 'function') window.populatePaySuppliers();
+    if (typeof window.updateDashboard === 'function') window.updateDashboard();
+};
+
+window.resetSupplierForm = function() {
+    ['supplierId','supplierName','supplierPhone','supplierWhatsapp','supplierAddress'].forEach(function(id) {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const titleEl = document.getElementById('supplierFormTitle');
+    if (titleEl) titleEl.textContent = '➕ إضافة مورد';
+    const btnEl = document.getElementById('supplierSaveBtnText');
+    if (btnEl) btnEl.textContent = 'إضافة';
+};
+
+window.editSupplier = function(id) {
+    const s = (window.suppliers || []).find(function(su) { return su.id == id; });
+    if (!s) return;
+    const setVal = function(elId, val) {
+        const el = document.getElementById(elId);
+        if (el) el.value = val;
+    };
+    setVal('supplierId', s.id);
+    setVal('supplierName', s.name);
+    setVal('supplierPhone', s.phone || '');
+    setVal('supplierWhatsapp', s.whatsapp || '');
+    setVal('supplierAddress', s.address || '');
+    const titleEl = document.getElementById('supplierFormTitle');
+    if (titleEl) titleEl.textContent = '✏️ تعديل';
+    const btnEl = document.getElementById('supplierSaveBtnText');
+    if (btnEl) btnEl.textContent = 'حفظ';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.deleteSupplier = function(id) {
+    if (!window.canDelete()) { window.showToast('⚠️ لا تملك صلاحية', 'error'); return; }
+    const s = (window.suppliers || []).find(function(su) { return su.id == id; });
+    if (!s) return;
+    if (!confirm('⚠️ حذف "' + s.name + '"؟')) return;
+    window.suppliers = window.suppliers.filter(function(su) { return su.id !== id; });
+    window.setData('suppliers', window.suppliers);
+    if (typeof window.renderSuppliers === 'function') window.renderSuppliers();
+    if (typeof window.updateDashboard === 'function') window.updateDashboard();
+    window.showToast('🗑️ تم الحذف', 'info');
+};
+
+window.renderSuppliers = function() {
+    const c = document.getElementById('supplierList');
+    if (!c) return;
+    const searchInput = document.getElementById('supplierSearch');
+    const search = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    let filtered = window.suppliers || [];
+    if (search) filtered = filtered.filter(function(s) { return (s.name || '').toLowerCase().indexOf(search) > -1; });
+    if (filtered.length === 0) {
+        c.innerHTML = '<div class="empty-state"><i class="fas fa-truck"></i><span>لا يوجد موردين</span></div>';
+        return;
+    }
+    let html = '<div class="table-header" style="grid-template-columns: 1.5fr 1fr 1fr 1.2fr;"><span>الاسم</span><span>الهاتف</span><span>المديونية</span><span></span></div>';
+    filtered.forEach(function(s) {
+        const balance = typeof window.getSupplierBalance === 'function' ? window.getSupplierBalance(s.name) : 0;
+        html += '<div class="table-row" style="grid-template-columns: 1.5fr 1fr 1fr 1.2fr;">' +
+            '<span><strong>' + s.name + '</strong>' +
+                (s.address ? '<br><small style="color:#A89070;font-size:9px;">📍 ' + s.address + '</small>' : '') +
+            '</span>' +
+            '<span style="font-size:11px;color:#A89070;">' + (s.phone || '-') + '</span>' +
+            '<span style="color:' + (balance > 0 ? '#E6A830' : '#2D8F5E') + ';font-weight:900;">' + window.formatMoney(balance) + '</span>' +
+            '<div style="display:flex;gap:4px;justify-content:flex-end;">' +
+                '<button class="btn btn-warning btn-sm" onclick="editSupplier(' + s.id + ')"><i class="fas fa-edit"></i></button>' +
+                '<button class="btn btn-danger btn-sm" onclick="deleteSupplier(' + s.id + ')"><i class="fas fa-trash"></i></button>' +
+            '</div>' +
+        '</div>';
+    });
+    c.innerHTML = html;
+};
+
 
 window.__appLoaded = true;
