@@ -3936,5 +3936,149 @@ setTimeout(function() {
     }
 }, 3000);
 
+// ═══════════════════════════════════════════════════════════
+// الإشعارات
+// ═══════════════════════════════════════════════════════════
+window.updateNotifStatus = function() {
+    const el = document.getElementById('notifStatus');
+    if (!el) return;
+    
+    if (!('Notification' in window)) {
+        el.textContent = '❌ غير مدعوم';
+        el.style.color = '#E06060';
+        return;
+    }
+    
+    if (Notification.permission === 'granted') {
+        el.textContent = '✅ مفعّل';
+        el.style.color = '#2D8F5E';
+    } else if (Notification.permission === 'denied') {
+        el.textContent = '❌ مرفوض';
+        el.style.color = '#E06060';
+    } else {
+        el.textContent = '⏸️ غير مفعّل';
+        el.style.color = '#E6A830';
+    }
+};
+
+window.requestNotificationPermission = async function() {
+    if (!('Notification' in window)) {
+        window.showToast('⚠️ المتصفح لا يدعم الإشعارات', 'warning');
+        return false;
+    }
+    
+    if (Notification.permission === 'granted') {
+        window.showToast('✅ الإشعارات مفعّلة بالفعل', 'success');
+        window.updateNotifStatus();
+        return true;
+    }
+    
+    const permission = await Notification.requestPermission();
+    
+    if (permission === 'granted') {
+        window.showToast('✅ تم تفعيل الإشعارات', 'success');
+        window.updateNotifStatus();
+        
+        // إشعار ترحيبي
+        new Notification('🔔 مرحباً!', {
+            body: 'الإشعارات مفعّلة الآن. ستصلك تنبيهات المخزون والديون.',
+            tag: 'welcome'
+        });
+        return true;
+    } else {
+        window.showToast('❌ تم رفض الإشعارات', 'error');
+        window.updateNotifStatus();
+        return false;
+    }
+};
+
+window.testNotification = function() {
+    if (!('Notification' in window)) {
+        window.showToast('⚠️ المتصفح لا يدعم الإشعارات', 'warning');
+        return;
+    }
+    
+    if (Notification.permission !== 'granted') {
+        window.showToast('⚠️ فعّل الإشعارات أولاً', 'warning');
+        return;
+    }
+    
+    new Notification('🎉 اختبار الإشعارات', {
+        body: 'هذا إشعار تجريبي من تطبيق الميزان. الإشعارات شغالة!',
+        tag: 'test-' + Date.now()
+    });
+    
+    window.showToast('📬 تم إرسال إشعار تجريبي', 'info');
+};
+
+// ═══════════════════════════════════════════════════════════
+// إشعارات الأحداث
+// ═══════════════════════════════════════════════════════════
+window.notifyNewInvoice = function(invoice) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    
+    try {
+        new Notification('💰 فاتورة جديدة #' + invoice.number, {
+            body: 'العميل: ' + (invoice.customer || 'نقدي') + ' | المبلغ: ' + window.formatMoney(invoice.total) + ' ج.م',
+            tag: 'invoice-' + invoice.number
+        });
+    } catch(e) {}
+};
+
+window.notifyLowStock = function(product) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    
+    try {
+        new Notification('⚠️ انخفاض المخزون', {
+            body: product.name + ' - الكمية: ' + product.qty + ' (الحد: ' + (product.min || 5) + ')',
+            tag: 'stock-' + product.id
+        });
+    } catch(e) {}
+};
+
+window.notifyCollect = function(party, amount) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    
+    try {
+        new Notification('💵 تحصيل جديد', {
+            body: 'من ' + party + ' - ' + window.formatMoney(amount) + ' ج.م',
+            tag: 'collect-' + Date.now()
+        });
+    } catch(e) {}
+};
+
+window.notifyPay = function(party, amount) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    
+    try {
+        new Notification('💳 سداد جديد', {
+            body: 'لـ ' + party + ' - ' + window.formatMoney(amount) + ' ج.م',
+            tag: 'pay-' + Date.now()
+        });
+    } catch(e) {}
+};
+
+window.notifyExpense = function(note, amount) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    
+    try {
+        new Notification('💸 مصروف جديد', {
+            body: note + ' - ' + window.formatMoney(amount) + ' ج.م',
+            tag: 'expense-' + Date.now()
+        });
+    } catch(e) {}
+};
+
+// تحديث حالة الإشعارات في الإعدادات
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        if (typeof window.updateNotifStatus === 'function') {
+            window.updateNotifStatus();
+        }
+    }, 3000);
+});
+
+console.log('✅ نظام الإشعارات جاهز');
+
 window.__appLoaded = true;
 
