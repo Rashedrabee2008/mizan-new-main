@@ -3781,51 +3781,13 @@ window.init = function() {
 
 window.updateClock();
 window.refreshAllUI();
-
-// ⚡ المزامنة مع Firebase
-(function initCloudSync() {
-    let attempts = 0;
-    const maxAttempts = 20;
     
-    function trySync() {
-        attempts++;
-        
-        if (!window.firebaseReady) {
-            if (attempts < maxAttempts) {
-                setTimeout(trySync, 500);
-            } else {
-                console.warn('⚠️ Firebase مش جاهز بعد ' + maxAttempts + ' محاولة');
-            }
-            return;
-        }
-        
-        console.log('🔥 Firebase جاهز - بدء المزامنة');
-        
-        // تحميل البيانات من Firebase
-        if (typeof window.syncFromCloud === 'function') {
-            window.syncFromCloud(true).then(function() {
-                console.log('✅ تم تحميل البيانات من السحابة');
-                
-                // تحديث الواجهة
-                if (typeof window.refreshAllUI === 'function') {
-                    window.refreshAllUI();
-                }
-            });
-        }
-        
-        // بدء المزامنة الحية
-        if (typeof window.startRealtimeSync === 'function') {
-            window.startRealtimeSync();
-        }
-        
-        // بدء المزامنة التلقائية
-        if (typeof window.startAutoSync === 'function') {
-            window.startAutoSync();
-        }
+// ⚡ بدء المزامنة مع Firebase
+setTimeout(function() {
+    if (typeof window.initCloudSync === 'function') {
+        window.initCloudSync();
     }
-    
-    trySync();
-})();
+}, 2000);
     
     console.log('✅ التطبيق جاهز!');
 };
@@ -3841,5 +3803,63 @@ if (document.readyState === 'loading') {
     setInterval(window.updateClock, 1000);
 }
 
+
+// ═══════════════════════════════════════════════════════════
+// إصلاح المزامنة مع Firebase
+// ═══════════════════════════════════════════════════════════
+window.initCloudSync = function() {
+    let attempts = 0;
+    const maxAttempts = 40;
+    
+    function trySync() {
+        attempts++;
+        
+        if (!window.firebaseReady) {
+            if (attempts < maxAttempts) {
+                setTimeout(trySync, 500);
+            } else {
+                console.warn('⚠️ Firebase لم يتصل بعد ' + (maxAttempts * 0.5) + ' ثانية');
+            }
+            return;
+        }
+        
+        console.log('🔥 Firebase جاهز - بدء المزامنة (' + attempts + ' محاولة)');
+        
+        // 1. تحميل البيانات من Firebase
+        if (typeof window.syncFromCloud === 'function') {
+            window.syncFromCloud(true).then(function() {
+                console.log('✅ تم تحميل البيانات من السحابة');
+                
+                // تحديث الواجهة
+                if (typeof window.refreshAllUI === 'function') {
+                    window.refreshAllUI();
+                }
+            }).catch(function(e) {
+                console.error('❌ فشل التحميل:', e);
+            });
+        }
+        
+        // 2. بدء المزامنة الحية
+        if (typeof window.startRealtimeSync === 'function') {
+            window.startRealtimeSync();
+            console.log('✅ Real-time Sync بدأ');
+        }
+        
+        // 3. بدء المزامنة التلقائية
+        if (typeof window.startAutoSync === 'function') {
+            window.startAutoSync();
+            console.log('✅ Auto Sync بدأ');
+        }
+    }
+    
+    trySync();
+};
+
+// استدعاء الإصلاح بعد التهيئة
+setTimeout(function() {
+    if (typeof window.initCloudSync === 'function') {
+        window.initCloudSync();
+    }
+}, 1000);
 window.__appLoaded = true;
 
