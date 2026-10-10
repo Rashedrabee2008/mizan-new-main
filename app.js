@@ -3462,55 +3462,44 @@ window.updateDashboard = function() {
     set('dashSupplierDebt', window.formatMoney(supDebt));
 
     // آخر المبيعات
-   window.renderLastSales = function() {
-    const container = document.getElementById('dashLastSales');
-    if (!container) return;
+  const last5 = window.sales.slice().sort(function(a, b) { return b.id - a.id; }).slice(0, 5);
+const payIcons = { cash: '💵', credit: '📝', wallet: '📱', visa: '💳', bank: '🏦', installment: '📅' };
 
-    const sales = window.sales || [];
+let html = '';
+last5.forEach(function(inv) {
+    const total = parseFloat(inv.total) || 0;
+    const profit = parseFloat(inv.profit) || 0;
+    const customer = inv.customer || 'عميل نقدي';
+    const payIcon = payIcons[inv.paymentMethod] || '💵';
+    const profitColor = profit >= 0 ? '#2D8F5E' : '#E06060';
+    const itemCount = (inv.items || []).length;
 
-    if (sales.length === 0) {
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-receipt"></i><span>لا توجد مبيعات</span></div>';
-        return;
-    }
-
-    const sorted = sales.slice().sort(function(a, b) { return (b.id || 0) - (a.id || 0); }).slice(0, 5);
-    const payIcons = { cash: '💵', credit: '📝', wallet: '📱', visa: '💳', bank: '🏦', installment: '📅' };
-
-    let html = '';
-    sorted.forEach(function(sale) {
-        const total = parseFloat(sale.total) || 0;
-        const profit = parseFloat(sale.profit) || 0;
-        const customer = sale.customer || 'عميل نقدي';
-        const payIcon = payIcons[sale.paymentMethod] || '💵';
-        const profitColor = profit >= 0 ? '#2D8F5E' : '#E06060';
-
-        html += '<div style="background:linear-gradient(135deg,#0D0D0D,#1A1A1A);border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid #2D2D2D;border-right:4px solid #C9A94E;cursor:pointer;" onclick="showInvoiceDetails(' + sale.id + ')">' +
-            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed #2D2D2D;">' +
-                '<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">' +
-                    '<span style="font-size:20px;">' + payIcon + '</span>' +
-                    '<span style="font-size:15px;font-weight:900;color:#F5E6C8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + customer + '</span>' +
-                '</div>' +
-                '<span style="background:linear-gradient(135deg,#C9A94E,#B8953A);color:#0D0D0D;padding:4px 12px;border-radius:8px;font-size:12px;font-weight:900;font-family:monospace;">#' + sale.number + '</span>' +
+    html += '<div style="background:linear-gradient(135deg,#0D0D0D,#1A1A1A);border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid #2D2D2D;border-right:4px solid #C9A94E;cursor:pointer;" onclick="showInvoiceDetails(' + inv.id + ')">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed #2D2D2D;">' +
+            '<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">' +
+                '<span style="font-size:20px;">' + payIcon + '</span>' +
+                '<span style="font-size:15px;font-weight:900;color:#F5E6C8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + customer + '</span>' +
             '</div>' +
-            '<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px;font-size:11px;color:#A89070;font-weight:700;">' +
-                '<span>📅 ' + sale.date + '</span>' +
-                '<span>🕐 ' + sale.time + '</span>' +
-                '<span>🛍️ ' + (sale.items || []).length + ' صنف</span>' +
+            '<span style="background:linear-gradient(135deg,#C9A94E,#B8953A);color:#0D0D0D;padding:4px 12px;border-radius:8px;font-size:12px;font-weight:900;font-family:monospace;">#' + inv.number + '</span>' +
+        '</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px;font-size:11px;color:#A89070;font-weight:700;">' +
+            '<span>📅 ' + (inv.date || '') + '</span>' +
+            '<span>🕐 ' + (inv.time || '') + '</span>' +
+            '<span>🛍️ ' + itemCount + ' صنف</span>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+            '<div style="background:#0D0D0D;border-radius:8px;padding:10px;text-align:center;border:1px solid #2D2D2D;border-right:3px solid #2D8F5E;">' +
+                '<div style="font-size:10px;color:#A89070;font-weight:700;margin-bottom:4px;">الإجمالي</div>' +
+                '<div style="font-size:16px;font-weight:900;color:#2D8F5E;font-family:monospace;direction:ltr;">' + window.formatMoney(total) + ' <span style="font-size:10px;opacity:0.7;">ج.م</span></div>' +
             '</div>' +
-            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
-                '<div style="background:#0D0D0D;border-radius:8px;padding:10px;text-align:center;border:1px solid #2D2D2D;border-right:3px solid #2D8F5E;">' +
-                    '<div style="font-size:10px;color:#A89070;font-weight:700;margin-bottom:4px;">الإجمالي</div>' +
-                    '<div style="font-size:16px;font-weight:900;color:#2D8F5E;font-family:monospace;direction:ltr;">' + window.formatMoney(total) + ' <span style="font-size:10px;opacity:0.7;">ج.م</span></div>' +
-                '</div>' +
-                '<div style="background:#0D0D0D;border-radius:8px;padding:10px;text-align:center;border:1px solid #2D2D2D;border-right:3px solid #C9A94E;">' +
-                    '<div style="font-size:10px;color:#A89070;font-weight:700;margin-bottom:4px;">📈 الربح</div>' +
-                    '<div style="font-size:16px;font-weight:900;color:' + profitColor + ';font-family:monospace;direction:ltr;">' + window.formatMoney(profit) + ' <span style="font-size:10px;opacity:0.7;">ج.م</span></div>' +
-                '</div>' +
+            '<div style="background:#0D0D0D;border-radius:8px;padding:10px;text-align:center;border:1px solid #2D2D2D;border-right:3px solid #C9A94E;">' +
+                '<div style="font-size:10px;color:#A89070;font-weight:700;margin-bottom:4px;">📈 الربح</div>' +
+                '<div style="font-size:16px;font-weight:900;color:' + profitColor + ';font-family:monospace;direction:ltr;">' + window.formatMoney(profit) + ' <span style="font-size:10px;opacity:0.7;">ج.م</span></div>' +
             '</div>' +
-        '</div>';
-    });
-
-    container.innerHTML = html;
+        '</div>' +
+    '</div>';
+});
+container.innerHTML = html;
 };
 
 // ═══════════════════════════════════════════════════════════
