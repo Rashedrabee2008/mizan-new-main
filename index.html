@@ -893,6 +893,24 @@
                     <div class="settings-info-row"><span>العملاء</span><span id="setCustomersCount">0</span></div>
                     <div class="settings-info-row"><span>الموردين</span><span id="setSuppliersCount">0</span></div>
                 </div>
+                
+                <div class="settings-section">
+    <h3>🔔 الإشعارات</h3>
+    <p class="settings-desc">تنبيهات فورية للمخزون والديون والفواتير</p>
+    
+    <div class="settings-info-row">
+        <span>حالة الإشعارات</span>
+        <span id="notifStatus" style="color:#E6A830;">⏸️ غير مفعّل</span>
+    </div>
+    
+    <button class="btn btn-primary btn-block" onclick="requestNotificationPermission()" style="margin-top:10px;">
+        <i class="fas fa-bell"></i> تفعيل الإشعارات
+    </button>
+    
+    <button class="btn btn-info btn-block" onclick="testNotification()" style="margin-top:6px;">
+        <i class="fas fa-vial"></i> اختبار الإشعارات
+    </button>
+</div>        
                 <div class="settings-section">
                     <h3>🚪 تسجيل الخروج</h3>
                     <button class="btn btn-warning btn-block" onclick="lockApp()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
