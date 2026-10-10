@@ -3779,9 +3779,54 @@ window.init = function() {
     if (loginCont) loginCont.classList.remove('hidden');
     if (appCont) appCont.style.display = 'none';
 
-    window.updateClock();
-    window.refreshAllUI();
+window.updateClock();
+window.refreshAllUI();
 
+// ⚡ المزامنة مع Firebase
+(function initCloudSync() {
+    let attempts = 0;
+    const maxAttempts = 20;
+    
+    function trySync() {
+        attempts++;
+        
+        if (!window.firebaseReady) {
+            if (attempts < maxAttempts) {
+                setTimeout(trySync, 500);
+            } else {
+                console.warn('⚠️ Firebase مش جاهز بعد ' + maxAttempts + ' محاولة');
+            }
+            return;
+        }
+        
+        console.log('🔥 Firebase جاهز - بدء المزامنة');
+        
+        // تحميل البيانات من Firebase
+        if (typeof window.syncFromCloud === 'function') {
+            window.syncFromCloud(true).then(function() {
+                console.log('✅ تم تحميل البيانات من السحابة');
+                
+                // تحديث الواجهة
+                if (typeof window.refreshAllUI === 'function') {
+                    window.refreshAllUI();
+                }
+            });
+        }
+        
+        // بدء المزامنة الحية
+        if (typeof window.startRealtimeSync === 'function') {
+            window.startRealtimeSync();
+        }
+        
+        // بدء المزامنة التلقائية
+        if (typeof window.startAutoSync === 'function') {
+            window.startAutoSync();
+        }
+    }
+    
+    trySync();
+})();
+    
     console.log('✅ التطبيق جاهز!');
 };
 
