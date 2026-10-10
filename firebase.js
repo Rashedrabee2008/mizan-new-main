@@ -21,6 +21,8 @@ function isFirebaseReady() {
         && window.firebaseReady;
 }
 
+
+
 // ═══════════════════════════════════════════════════════════
 // رفع البيانات للسحابة
 // ═══════════════════════════════════════════════════════════
@@ -282,6 +284,115 @@ window.initFirebaseSync = function() {
             });
         }
     }, 3000);
+
+    // ═══════════════════════════════════════════════════════════
+// ضمان وجود المتغيرات بعد أي مزامنة
+// ═══════════════════════════════════════════════════════════
+window.ensureDataIntegrity = function() {
+    console.log('🔒 التحقق من سلامة البيانات...');
+    
+    const KEYS = [
+        'products', 'sales', 'purchases', 'expenses',
+        'cashBoxes', 'customers', 'suppliers', 'users',
+        'treasury', 'journalEntries', 'returns',
+        'payments', 'warehouses', 'branches', 'companyData',
+        'accounts'
+    ];
+    
+    let recovered = 0;
+    
+    KEYS.forEach(function(key) {
+        // 1. لو المتغير مش موجود أو فاضي
+        if (!window[key] || (Array.isArray(window[key]) && window[key].length === 0)) {
+            // حاول من localStorage
+            try {
+                const local = localStorage.getItem('mizan_' + key);
+                if (local) {
+                    const parsed = JSON.parse(local);
+                    const arr = Array.isArray(parsed) ? parsed : Object.values(parsed);
+                    if (arr.length > 0) {
+                        window[key] = arr;
+                        recovered++;
+                        console.log('✅ ' + key + ': ' + arr.length + ' عنصر (من localStorage)');
+                        return;
+                    }
+                }
+            } catch(e) {
+                console.warn('⚠️ فشل استعادة ' + key + ' من localStorage');
+            }
+            
+            // 2. لو localStorage فاضي، جرب Firebase
+            if (typeof firebase !== 'undefined' && firebase.database) {
+                firebase.database().ref('mizan/' + key).once('value').then(function(snap) {
+                    const data = snap.val();
+                    if (data) {
+                        const arr = Array.isArray(data) ? data : Object.values(data);
+                        if (arr.length > 0) {
+                            window[key] = arr;
+                            localStorage.setItem('mizan_' + key, JSON.stringify(arr));
+                            console.log('☁️ ' + key + ': ' + arr.length + ' عنصر (من Firebase)');
+                        }
+                    }
+                }).catch(function() {});
+            }
+        }
+    });
+    
+    if (recovered > 0) {
+        console.log('✅ تم استعادة ' + recovered + ' مجموعة بيانات');
+        
+        // إعادة عرض الواجهة
+        setTimeout(function() {
+            if (typeof window.refreshAllUI === 'function') {
+                window.refreshAllUI();
+            }
+            if (typeof window.updateDashboard === 'function') {
+                window.updateDashboard();
+            }
+        }, 500);
+    }
+};
+
+// استدعاء تلقائي بعد أي مزامنة
+const originalSyncFromCloud = window.syncFromCloud;
+window.syncFromCloud = async function(silent) {
+    const result = await originalSyncFromCloud(silent);
+    
+    // بعد المزامنة، تأكد من البيانات
+    if (typeof window.ensureDataIntegrity === 'function') {
+        setTimeout(window.ensureDataIntegrity, 1000);
+    }
+    
+    return result;
+};
+
+const originalSyncToCloud = window.syncToCloud;
+window.syncToCloud = async function(silent) {
+    const result = await originalSyncToCloud(silent);
+    
+    // بعد الرفع، تأكد من البيانات
+    if (typeof window.ensureDataIntegrity === 'function') {
+        setTimeout(window.ensureDataIntegrity, 500);
+    }
+    
+    return result;
+};
+
+// استدعاء عند بدء التطبيق
+setTimeout(function() {
+    if (typeof window.ensureDataIntegrity === 'function') {
+        window.ensureDataIntegrity();
+    }
+}, 3000);
+
+// استدعاء كل 30 ثانية (أمان إضافي)
+setInterval(function() {
+    if (typeof window.ensureDataIntegrity === 'function') {
+        window.ensureDataIntegrity();
+    }
+}, 30000);
+
+console.log('✅ نظام سلامة البيانات جاهز');
     
     console.log('✅ Firebase Sync جاهز');
 };
