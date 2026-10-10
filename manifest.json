@@ -1,7 +1,7 @@
 {
   "name": "الميزان - نظام محاسبة ونقاط بيع",
   "short_name": "الميزان",
-  "description": "نظام محاسبة متكامل",
+  "description": "نظام محاسبة احترافي مع كاشير ومخزون وتقارير",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
@@ -9,5 +9,14 @@
   "background_color": "#0D0D0D",
   "lang": "ar",
   "dir": "rtl",
-  "scope": "./"
+  "scope": "./",
+  "categories": ["business", "finance", "productivity"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEwMCIgZmlsbD0iIzBEMEQwRCIvPjx0ZXh0IHg9IjI1NiIgeT0iMzgwIiBmb250LXNpemU9IjMyMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI0M5QTk0RSI+4pqXPC90ZXh0Pjwvc3ZnPg==",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
