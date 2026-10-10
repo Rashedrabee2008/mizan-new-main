@@ -3861,5 +3861,59 @@ setTimeout(function() {
         window.initCloudSync();
     }
 }, 1000);
+
+// ═══════════════════════════════════════════════════════════
+// إنشاء دليل الحسابات الافتراضي
+// ═══════════════════════════════════════════════════════════
+window.initDefaultAccounts = function() {
+    if ((window.accounts || []).length > 0) {
+        console.log('✅ دليل الحسابات موجود: ' + window.accounts.length);
+        return;
+    }
+    
+    window.accounts = [
+        { id: 1, code: '1000', name: 'الأصول', type: 'asset', level: 0 },
+        { id: 2, code: '1100', name: 'الأصول المتداولة', type: 'asset', level: 1 },
+        { id: 3, code: '1110', name: 'النقدية بالخزينة', type: 'asset', level: 2 },
+        { id: 4, code: '1120', name: 'النقدية بالبنك', type: 'asset', level: 2 },
+        { id: 5, code: '1130', name: 'محافظ إلكترونية', type: 'asset', level: 2 },
+        { id: 6, code: '1200', name: 'العملاء (المدينون)', type: 'asset', level: 1 },
+        { id: 7, code: '1300', name: 'المخزون', type: 'asset', level: 1 },
+        { id: 20, code: '2000', name: 'الالتزامات', type: 'liability', level: 0 },
+        { id: 21, code: '2100', name: 'الالتزامات المتداولة', type: 'liability', level: 1 },
+        { id: 22, code: '2110', name: 'الموردون (الدائنون)', type: 'liability', level: 2 },
+        { id: 30, code: '3000', name: 'حقوق الملكية', type: 'equity', level: 0 },
+        { id: 31, code: '3100', name: 'رأس المال', type: 'equity', level: 1 },
+        { id: 32, code: '3200', name: 'الأرباح المحتجزة', type: 'equity', level: 1 },
+        { id: 40, code: '4000', name: 'الإيرادات', type: 'revenue', level: 0 },
+        { id: 41, code: '4100', name: 'المبيعات', type: 'revenue', level: 1 },
+        { id: 42, code: '4200', name: 'المرتجعات', type: 'revenue', level: 1 },
+        { id: 50, code: '5000', name: 'المصروفات', type: 'expense', level: 0 },
+        { id: 51, code: '5100', name: 'تكلفة المبيعات', type: 'expense', level: 1 },
+        { id: 52, code: '5200', name: 'الرواتب والأجور', type: 'expense', level: 1 },
+        { id: 53, code: '5300', name: 'الإيجارات', type: 'expense', level: 1 },
+        { id: 54, code: '5400', name: 'الكهرباء والمياه', type: 'expense', level: 1 },
+        { id: 55, code: '5500', name: 'الاتصالات', type: 'expense', level: 1 },
+        { id: 56, code: '5600', name: 'المواصلات', type: 'expense', level: 1 },
+        { id: 57, code: '5700', name: 'الصيانة', type: 'expense', level: 1 },
+        { id: 58, code: '5800', name: 'مصروفات أخرى', type: 'expense', level: 1 }
+    ];
+    
+    if (typeof window.setData === 'function') {
+        window.setData('accounts', window.accounts);
+    }
+    console.log('✅ تم إنشاء دليل الحسابات: ' + window.accounts.length + ' حساب');
+};
+
+// استدعاء إنشاء الحسابات
+setTimeout(function() {
+    if (typeof window.initDefaultAccounts === 'function') {
+        window.initDefaultAccounts();
+        if (typeof window.renderAccounts === 'function') {
+            window.renderAccounts();
+        }
+    }
+}, 3000);
+
 window.__appLoaded = true;
 
