@@ -258,22 +258,30 @@ window.initFirebaseSync = function() {
     window.startRealtimeSync();
     window.startAutoSync();
     
-    // مزامنة أولية
+    // ⚡ الأهم: تحميل البيانات من Firebase عند بدء التطبيق
     setTimeout(function() {
+        console.log('📥 جاري تحميل البيانات من السحابة...');
         window.syncFromCloud(true);
     }, 2000);
     
+    // ⚡ إعادة تحميل كل 3 ثواني (في حالة تغييرات)
+    setInterval(function() {
+        if (isFirebaseReady() && window.currentUser) {
+            // مزامنة خفيفة - بس للـ treasury
+            firebase.database().ref('mizan/treasury').once('value').then(function(snap) {
+                const data = snap.val();
+                if (!data) return;
+                const arr = Array.isArray(data) ? data : Object.values(data);
+                if (arr.length !== (window.treasury || []).length) {
+                    window.treasury = arr;
+                    localStorage.setItem('mizan_treasury', JSON.stringify(arr));
+                    if (typeof window.renderTreasury === 'function') {
+                        window.renderTreasury();
+                    }
+                }
+            });
+        }
+    }, 3000);
+    
     console.log('✅ Firebase Sync جاهز');
 };
-
-// التشغيل التلقائي
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(window.initFirebaseSync, 2000);
-    });
-} else {
-    setTimeout(window.initFirebaseSync, 2000);
-}
-
-window.__firebaseLoaded = true;
-console.log('✅ firebase.js جاهز');
