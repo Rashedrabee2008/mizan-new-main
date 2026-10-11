@@ -1,191 +1,218 @@
 // ============================================================
-// الميزان 17.0 - core.js
-// الأساسيات: أدوات + أمان + جلسات
-// يدمج: fixes.js + crypto.js + session.js + security.js + 2fa.js + console-cleaner.js
+// الميزان Pro - core.js
+// الأساسيات: أدوات + أمان + تشفير + جلسات + EventBus
 // ============================================================
 
 (function() {
     'use strict';
-    
-    console.log('🚀 تحميل core.js v17.0');
+
+    console.log('🚀 core.js v18.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 1: الأدوات الأساسية (من fixes.js)
+    // الجزء 1: EventBus — نظام الأحداث المركزي
     // ═══════════════════════════════════════════════════════════
     
-    // اختصار getElementById
-    if (typeof window.$ !== 'function') {
-        window.$ = function(id) { return document.getElementById(id); };
-    }
+    const _listeners = {};
 
-    // التاريخ الحالي
-    if (typeof window.getTodayDate !== 'function') {
-        window.getTodayDate = function() { 
-            return new Date().toISOString().split('T')[0]; 
-        };
-    }
+    window.EventBus = {
+        on: function(event, callback) {
+            if (typeof callback !== 'function') return;
+            if (!_listeners[event]) _listeners[event] = [];
+            _listeners[event].push(callback);
+            return function unsubscribe() {
+                window.EventBus.off(event, callback);
+            };
+        },
 
-    // الوقت الحالي بصيغة عربية
-    if (typeof window.getNowTime !== 'function') {
-        window.getNowTime = function() { 
-            const now = new Date();
-            let hours = now.getHours();
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const ampm = hours >= 12 ? 'م' : 'ص';
-            hours = hours % 12 || 12;
-            return hours + ':' + minutes + ' ' + ampm;
-        };
-    }
-
-    // تنسيق المبالغ
-    if (typeof window.formatMoney !== 'function') {
-        window.formatMoney = function(n) { 
-            const num = parseFloat(n);
-            if (!isFinite(num) || isNaN(num)) return '0.00';
-            return num.toFixed(2); 
-        };
-    }
-
-    // تحويل الكائنات لمصفوفات
-    if (typeof window.toArray !== 'function') {
-        window.toArray = function(data) {
-            if (!data) return [];
-            if (Array.isArray(data)) return data;
-            return Object.values(data).filter(function(item) { 
-                return item !== null && item !== undefined; 
+        off: function(event, callback) {
+            if (!_listeners[event]) return;
+            _listeners[event] = _listeners[event].filter(function(cb) {
+                return cb !== callback;
             });
-        };
-    }
+        },
 
-    // قراءة من localStorage
-    if (typeof window.getData !== 'function') {
-        window.getData = function(key, def) {
-            if (def === undefined) def = [];
-            try {
-                const d = localStorage.getItem('mizan_' + key);
-                return d ? JSON.parse(d) : def;
-            } catch (e) { return def; }
-        };
-    }
+        emit: function(event, data) {
+            if (!_listeners[event]) return;
+            _listeners[event].forEach(function(cb) {
+                try {
+                    cb(data);
+                } catch (e) {
+                    console.error('❌ خطأ في listener لـ ' + event + ':', e.message);
+                }
+            });
+        },
 
-    // كتابة في localStorage
-    if (typeof window.setData !== 'function') {
-        window.setData = function(key, data) {
-            try { 
-                localStorage.setItem('mizan_' + key, JSON.stringify(data)); 
-                return true;
-            } catch (e) {
-                console.error('❌ خطأ في حفظ ' + key + ':', e.message);
-                return false;
-            }
-        };
-    }
-
-    // قراءة radio button
-    if (typeof window.getRadioValue !== 'function') {
-        window.getRadioValue = function(name, defaultValue) {
-            defaultValue = defaultValue || '';
-            const el = document.querySelector('input[name="' + name + '"]:checked');
-            return el ? el.value : defaultValue;
-        };
-    }
-
-    // تعيين radio button
-    if (typeof window.setRadioValue !== 'function') {
-        window.setRadioValue = function(name, value) {
-            const el = document.querySelector('input[name="' + name + '"][value="' + value + '"]');
-            if (el) el.checked = true;
-        };
-    }
-
-    // أسماء طرق الدفع
-    if (typeof window.getPaymentMethodLabel !== 'function') {
-        window.getPaymentMethodLabel = function(method) {
-            const labels = {
-                'cash': '💵 نقدي', 
-                'credit': '📝 آجل', 
-                'wallet': '📱 موبايل',
-                'visa': '💳 فيزا', 
-                'bank': '🏦 تحويل', 
-                'installment': '📅 تقسيط'
+        once: function(event, callback) {
+            const wrapper = function(data) {
+                window.EventBus.off(event, wrapper);
+                callback(data);
             };
-            return labels[method] || method;
-        };
-    }
-
-    // الرسائل المنبثقة
-    if (typeof window.showToast !== 'function') {
-        window.showToast = function(msg, type) {
-            type = type || 'info';
-            const t = document.getElementById('toast');
-            if (!t) { 
-                console.log('[' + type + '] ' + msg); 
-                return; 
-            }
-            t.textContent = msg;
-            t.className = 'toast show ' + type;
-            clearTimeout(t._t);
-            t._t = setTimeout(function() { t.className = 'toast'; }, 3000);
-        };
-    }
-
-    // النوافذ المنبثقة
-    if (typeof window.openModal !== 'function') {
-        window.openModal = function(html) {
-            const overlay = document.getElementById('modalOverlay');
-            if (!overlay) return;
-            let box = overlay.querySelector('.modal-box');
-            if (!box) {
-                box = document.createElement('div');
-                box.className = 'modal-box';
-                overlay.appendChild(box);
-            }
-            box.innerHTML = html;
-            overlay.classList.add('show');
-            overlay.onclick = function(e) { 
-                if (e.target === overlay) window.closeModal(); 
-            };
-        };
-    }
-
-    if (typeof window.closeModal !== 'function') {
-        window.closeModal = function() {
-            const overlay = document.getElementById('modalOverlay');
-            if (overlay) overlay.classList.remove('show');
-        };
-    }
-
-    // تنفيذ دالة لو موجودة
-    window.callIfExists = function(fnName, arg1, arg2) {
-        if (typeof window[fnName] === 'function') {
-            try {
-                if (arg2 !== undefined) return window[fnName](arg1, arg2);
-                if (arg1 !== undefined) return window[fnName](arg1);
-                return window[fnName]();
-            } catch (e) {
-                console.error('❌ خطأ في ' + fnName + ':', e.message);
-            }
+            window.EventBus.on(event, wrapper);
         }
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 2: التشفير (من crypto.js - مبسّط)
+    // الجزء 2: الأدوات الأساسية
     // ═══════════════════════════════════════════════════════════
-    
-    const CRYPTO_CONFIG = {
-        SALT_LENGTH: 16,
-        ITERATIONS: 50000,  // مبسّط من 100000
-        KEY_LENGTH: 32
+
+    window.$ = function(id) { return document.getElementById(id); };
+
+    window.$$ = function(selector) {
+        return Array.from(document.querySelectorAll(selector));
     };
 
-    // توليد Salt عشوائي
+    window.getTodayDate = function() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + d;
+    };
+
+    window.getNowTime = function() {
+        const now = new Date();
+        let hours = now.getHours();
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const ampm = hours >= 12 ? 'م' : 'ص';
+        hours = hours % 12 || 12;
+        return hours + ':' + minutes + ' ' + ampm;
+    };
+
+    window.formatMoney = function(n) {
+        const num = parseFloat(n);
+        if (!isFinite(num) || isNaN(num)) return '0.00';
+        return num.toFixed(2);
+    };
+
+    window.formatNumber = function(n) {
+        const num = parseFloat(n);
+        if (!isFinite(num) || isNaN(num)) return '0';
+        return num.toLocaleString('ar-EG');
+    };
+
+    window.toArray = function(data) {
+        if (!data) return [];
+        if (Array.isArray(data)) return data;
+        if (typeof data === 'object') {
+            return Object.keys(data).map(function(k) {
+                const item = data[k];
+                if (item && typeof item === 'object') {
+                    if (!item.id) item.id = k;
+                    return item;
+                }
+                return null;
+            }).filter(function(item) { return item !== null; });
+        }
+        return [];
+    };
+
+    window.getRadioValue = function(name, defaultValue) {
+        const el = document.querySelector('input[name="' + name + '"]:checked');
+        return el ? el.value : (defaultValue || '');
+    };
+
+    window.setRadioValue = function(name, value) {
+        const el = document.querySelector('input[name="' + name + '"][value="' + value + '"]');
+        if (el) el.checked = true;
+    };
+
+    window.escapeHtml = function(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
+
+    window.getPaymentMethodLabel = function(method) {
+        const labels = {
+            'cash': '💵 نقدي',
+            'credit': '📝 آجل',
+            'wallet': '📱 موبايل',
+            'visa': '💳 فيزا',
+            'bank': '🏦 تحويل',
+            'installment': '📅 تقسيط'
+        };
+        return labels[method] || method;
+    };
+
+    window.getPaymentIcon = function(method) {
+        const icons = {
+            'cash': '💵', 'credit': '📝', 'wallet': '📱',
+            'visa': '💳', 'bank': '🏦', 'installment': '📅'
+        };
+        return icons[method] || '💵';
+    };
+
+    // توليد ID فريد
+    window.generateId = function(prefix) {
+        const timestamp = Date.now();
+        const random = Math.floor(Math.random() * 10000);
+        return (prefix || '') + timestamp + '_' + random;
+    };
+
+    // كود قصير للعرض
+    window.shortId = function(id) {
+        if (!id) return '—';
+        return '#' + String(id).slice(-6);
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 3: الأدوار والصلاحيات
+    // ═══════════════════════════════════════════════════════════
+
+    window.ROLES = {
+        admin:   { name: 'مدير',   icon: '👑', color: '#E06060',
+                   permissions: ['add', 'edit', 'delete', 'view', 'manage_users',
+                                 'settings', 'view_reports', 'clear_data', 'view_accounts',
+                                 'manage_warehouses', 'manage_hr', 'approve_discount'] },
+        manager: { name: 'مشرف',   icon: '📊', color: '#C9A94E',
+                   permissions: ['add', 'edit', 'view', 'view_reports', 'settings',
+                                 'view_accounts', 'manage_warehouses', 'manage_hr',
+                                 'approve_discount'] },
+        cashier: { name: 'كاشير',  icon: '💰', color: '#4A8AB5',
+                   permissions: ['add', 'add_sale', 'view'] },
+        seller:  { name: 'بائع',   icon: '🛒', color: '#E6A830',
+                   permissions: ['add_sale', 'view'] },
+        viewer:  { name: 'مشاهد',  icon: '👁️', color: '#5D5D5D',
+                   permissions: ['view'] }
+    };
+
+    window.hasPermission = function(permission) {
+        if (!window.currentUser) return false;
+        const role = window.currentUser.role || 'viewer';
+        const permissions = (window.ROLES[role] || {}).permissions || [];
+        return permissions.indexOf(permission) > -1;
+    };
+
+    window.isAdmin = function() {
+        return window.currentUser && window.currentUser.role === 'admin';
+    };
+
+    window.canAdd = function() {
+        return window.hasPermission('add') || window.hasPermission('add_sale');
+    };
+
+    window.canEdit = function() { return window.hasPermission('edit'); };
+    window.canDelete = function() { return window.hasPermission('delete'); };
+    window.canManageUsers = function() { return window.hasPermission('manage_users'); };
+    window.canViewAccounts = function() { return window.hasPermission('view_accounts'); };
+    window.canViewReports = function() { return window.hasPermission('view_reports'); };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 4: التشفير (Web Crypto API - SHA-256 + Salt)
+    // ═══════════════════════════════════════════════════════════
+
     window.generateSalt = function() {
         try {
-            const array = new Uint8Array(CRYPTO_CONFIG.SALT_LENGTH);
+            const array = new Uint8Array(16);
             crypto.getRandomValues(array);
-            return Array.from(array, b => b.toString(16).padStart(2, '0')).join('');
+            return Array.from(array, function(b) {
+                return b.toString(16).padStart(2, '0');
+            }).join('');
         } catch (e) {
-            // بديل لو crypto غير متاح
             let salt = '';
             for (let i = 0; i < 32; i++) {
                 salt += Math.floor(Math.random() * 16).toString(16);
@@ -194,88 +221,55 @@
         }
     };
 
-    // تشفير كلمة المرور
-    window.hashPasswordPBKDF2 = async function(password, salt) {
+    window.hashPassword = async function(password, salt) {
         if (!password) return '';
         if (!salt) salt = window.generateSalt();
 
         try {
             const encoder = new TextEncoder();
-            const passwordBuffer = encoder.encode(password);
-            const saltBuffer = encoder.encode(salt);
-
-            const baseKey = await crypto.subtle.importKey(
-                'raw',
-                passwordBuffer,
-                { name: 'PBKDF2' },
-                false,
-                ['deriveBits']
-            );
-
-            const derivedBits = await crypto.subtle.deriveBits(
-                {
-                    name: 'PBKDF2',
-                    salt: saltBuffer,
-                    iterations: CRYPTO_CONFIG.ITERATIONS,
-                    hash: 'SHA-256'
-                },
-                baseKey,
-                CRYPTO_CONFIG.KEY_LENGTH * 8
-            );
-
-            const hashArray = Array.from(new Uint8Array(derivedBits));
-            const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-            return 'pbkdf2_' + CRYPTO_CONFIG.ITERATIONS + '_' + salt + '_' + hash;
-
+            const data = encoder.encode(salt + ':' + password + ':mizan');
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hash = hashArray.map(function(b) {
+                return b.toString(16).padStart(2, '0');
+            }).join('');
+            return 'sha256_' + salt + '_' + hash;
         } catch (e) {
             console.error('❌ خطأ تشفير:', e);
-            return '';
+            // fallback ضعيف
+            let simple = '';
+            const combined = salt + password;
+            for (let i = 0; i < combined.length; i++) {
+                simple += combined.charCodeAt(i).toString(16);
+            }
+            return 'simple_' + salt + '_' + simple;
         }
     };
 
-    // التحقق من كلمة المرور
-    window.verifyPasswordPBKDF2 = async function(password, storedHash) {
+    window.verifyPassword = async function(password, storedHash) {
         if (!password || !storedHash) return false;
 
         try {
-            const parts = storedHash.split('_');
-            if (parts.length !== 4 || parts[0] !== 'pbkdf2') {
-                return false;
+            // SHA-256
+            if (storedHash.indexOf('sha256_') === 0) {
+                const parts = storedHash.split('_');
+                if (parts.length !== 3) return false;
+                const salt = parts[1];
+                const newHash = await window.hashPassword(password, salt);
+                return newHash === storedHash;
             }
 
-            const iterations = parseInt(parts[1]);
-            const salt = parts[2];
-            const originalHash = parts[3];
+            // Simple fallback
+            if (storedHash.indexOf('simple_') === 0) {
+                const parts = storedHash.split('_');
+                if (parts.length !== 3) return false;
+                const salt = parts[1];
+                const newHash = await window.hashPassword(password, salt);
+                return newHash === storedHash;
+            }
 
-            const encoder = new TextEncoder();
-            const passwordBuffer = encoder.encode(password);
-            const saltBuffer = encoder.encode(salt);
-
-            const baseKey = await crypto.subtle.importKey(
-                'raw',
-                passwordBuffer,
-                { name: 'PBKDF2' },
-                false,
-                ['deriveBits']
-            );
-
-            const derivedBits = await crypto.subtle.deriveBits(
-                {
-                    name: 'PBKDF2',
-                    salt: saltBuffer,
-                    iterations: iterations,
-                    hash: 'SHA-256'
-                },
-                baseKey,
-                CRYPTO_CONFIG.KEY_LENGTH * 8
-            );
-
-            const hashArray = Array.from(new Uint8Array(derivedBits));
-            const newHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-            return newHash === originalHash;
-
+            // Plain text (توافق مع البيانات القديمة)
+            return storedHash === password;
         } catch (e) {
             console.error('❌ خطأ تحقق:', e);
             return false;
@@ -283,17 +277,18 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 3: إدارة الجلسات (من session.js - مبسّط)
+    // الجزء 5: إدارة الجلسات
     // ═══════════════════════════════════════════════════════════
-    
-    const SESSION_KEY = 'mizan_session';
-    const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 دقيقة
+
+    const SESSION_KEY = 'mizan_session_v18';
+    const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 ساعة
 
     window.saveSession = function(user) {
         const session = {
             userId: user.id,
             userName: user.name,
             role: user.role,
+            storeId: user.storeId,
             createdAt: Date.now(),
             expiresAt: Date.now() + SESSION_TIMEOUT
         };
@@ -311,7 +306,6 @@
             if (!data) return null;
 
             const session = JSON.parse(data);
-
             if (session.expiresAt < Date.now()) {
                 window.clearSession();
                 return null;
@@ -332,7 +326,6 @@
     window.refreshSession = function() {
         const session = window.getSession();
         if (!session) return false;
-
         session.expiresAt = Date.now() + SESSION_TIMEOUT;
         try {
             localStorage.setItem(SESSION_KEY, JSON.stringify(session));
@@ -343,17 +336,15 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: Rate Limiting (من security.js)
+    // الجزء 6: Rate Limiting للحماية من التجربة المتكررة
     // ═══════════════════════════════════════════════════════════
-    
-    const SECURITY_CONFIG = {
-        MAX_LOGIN_ATTEMPTS: 5,
-        LOCKOUT_TIME: 15 * 60 * 1000
-    };
+
+    const MAX_LOGIN_ATTEMPTS = 5;
+    const LOCKOUT_TIME = 15 * 60 * 1000; // 15 دقيقة
 
     window.getLoginAttempts = function() {
         try {
-            const data = localStorage.getItem('mizan_login_attempts');
+            const data = localStorage.getItem('mizan_login_attempts_v18');
             if (!data) return { count: 0, lastAttempt: 0, lockedUntil: 0 };
             return JSON.parse(data);
         } catch (e) {
@@ -365,20 +356,19 @@
         const attempts = window.getLoginAttempts();
         attempts.count = (attempts.count || 0) + 1;
         attempts.lastAttempt = Date.now();
-        
-        if (attempts.count >= SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS) {
-            attempts.lockedUntil = Date.now() + SECURITY_CONFIG.LOCKOUT_TIME;
-            console.warn('🚫 تم قفل الحساب مؤقتاً');
+
+        if (attempts.count >= MAX_LOGIN_ATTEMPTS) {
+            attempts.lockedUntil = Date.now() + LOCKOUT_TIME;
         }
-        
+
         try {
-            localStorage.setItem('mizan_login_attempts', JSON.stringify(attempts));
+            localStorage.setItem('mizan_login_attempts_v18', JSON.stringify(attempts));
         } catch (e) {}
     };
 
     window.recordSuccessfulLogin = function() {
         try {
-            localStorage.setItem('mizan_login_attempts', JSON.stringify({
+            localStorage.setItem('mizan_login_attempts_v18', JSON.stringify({
                 count: 0, lastAttempt: Date.now(), lockedUntil: 0
             }));
         } catch (e) {}
@@ -394,169 +384,138 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 5: التحقق الثنائي (من 2fa.js - مبسّط)
+    // الجزء 7: تنسيقات خاصة
     // ═══════════════════════════════════════════════════════════
-    
-    const TWOFA_KEY = 'mizan_2fa';
-    const OTP_VALIDITY = 5 * 60 * 1000; // 5 دقائق
 
-    window.generateOTP = function() {
-        try {
-            const array = new Uint32Array(1);
-            crypto.getRandomValues(array);
-            return String(array[0] % 1000000).padStart(6, '0');
-        } catch (e) {
-            return String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
-        }
+    window.getArabicDayName = function(dateStr) {
+        const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        const d = new Date(dateStr);
+        return days[d.getDay()] || '';
     };
 
-    window.sendOTP = function(user) {
-        const otp = window.generateOTP();
-        const expiresAt = Date.now() + OTP_VALIDITY;
-
-        try {
-            sessionStorage.setItem(TWOFA_KEY, JSON.stringify({
-                code: otp,
-                userId: user.id,
-                userName: user.name,
-                expiresAt: expiresAt,
-                attempts: 0,
-                maxAttempts: 3
-            }));
-        } catch (e) {}
-
-        if (typeof window.showToast === 'function') {
-            window.showToast('📱 الرمز: ' + otp, 'info');
-        }
-
-        return otp;
+    window.getArabicMonthName = function(monthIndex) {
+        const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+                       'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+        return months[monthIndex] || '';
     };
 
-    window.verifyOTP = function(inputCode) {
-        try {
-            const data = sessionStorage.getItem(TWOFA_KEY);
-            if (!data) return { valid: false, reason: 'NO_OTP' };
-
-            const otpData = JSON.parse(data);
-
-            if (otpData.expiresAt < Date.now()) {
-                sessionStorage.removeItem(TWOFA_KEY);
-                return { valid: false, reason: 'EXPIRED' };
-            }
-
-            if (otpData.attempts >= otpData.maxAttempts) {
-                sessionStorage.removeItem(TWOFA_KEY);
-                return { valid: false, reason: 'MAX_ATTEMPTS' };
-            }
-
-            otpData.attempts++;
-            sessionStorage.setItem(TWOFA_KEY, JSON.stringify(otpData));
-
-            if (inputCode === otpData.code) {
-                sessionStorage.removeItem(TWOFA_KEY);
-                return { valid: true };
-            }
-
-            return { valid: false, reason: 'WRONG_CODE' };
-
-        } catch (e) {
-            return { valid: false, reason: 'ERROR' };
-        }
+    window.formatDate = function(dateStr) {
+        if (!dateStr) return '—';
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return day + '/' + month + '/' + year;
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 6: سجل الأحداث الأمنية (من security.js)
+    // الجزء 8: التحقق من صحة البيانات
     // ═══════════════════════════════════════════════════════════
-    
-    window.logSecurityEvent = function(event, data) {
-        try {
-            let logs = JSON.parse(localStorage.getItem('mizan_security_logs') || '[]');
-            logs.push({
-                event: event,
-                data: data,
-                timestamp: new Date().toISOString()
-            });
-            if (logs.length > 100) logs = logs.slice(-100);
-            localStorage.setItem('mizan_security_logs', JSON.stringify(logs));
-        } catch (e) {}
+
+    window.isValidEmail = function(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    };
+
+    window.isValidPhone = function(phone) {
+        const clean = String(phone).replace(/[^0-9]/g, '');
+        return clean.length >= 10 && clean.length <= 15;
+    };
+
+    window.sanitizeNumber = function(n, defaultValue, min, max) {
+        let num = parseFloat(n);
+        if (!isFinite(num) || isNaN(num)) num = defaultValue || 0;
+        if (min !== undefined && num < min) num = min;
+        if (max !== undefined && num > max) num = max;
+        return num;
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 7: Default Currencies (للـ ERP)
+    // الجزء 9: ثوابت النظام
     // ═══════════════════════════════════════════════════════════
-    
-    if (typeof window.DEFAULT_CURRENCIES === 'undefined') {
-        window.DEFAULT_CURRENCIES = [
-            { code: 'EGP', name: 'جنيه مصري', symbol: 'ج.م', rate: 1, isDefault: true },
-            { code: 'USD', name: 'دولار أمريكي', symbol: '$', rate: 50.00, isDefault: false },
-            { code: 'EUR', name: 'يورو', symbol: '€', rate: 54.00, isDefault: false },
-            { code: 'SAR', name: 'ريال سعودي', symbol: 'ر.س', rate: 13.33, isDefault: false },
-            { code: 'AED', name: 'درهم إماراتي', symbol: 'د.إ', rate: 13.60, isDefault: false }
-        ];
-    }
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 8: Console Cleaner (مبسّط - اختياري)
-    // ═══════════════════════════════════════════════════════════
-    
-    const BLOCKED_KEYWORDS = [
-        'manifest',
-        'favicon',
-        'apple-touch-icon',
-        'failed to load resource',
-        'net::err',
-        'devtools',
-        'sockjs',
-        'websocket'
+    window.VAT_SETTINGS = { defaultVAT: 14 };
+
+    window.LOYALTY_CONFIG = {
+        POINTS_PER_100: 1,
+        POINT_VALUE: 0.1,
+        MIN_REDEEM_POINTS: 50,
+        LEVELS: [
+            { name: 'عادي',    min: 0,    icon: '🥉', color: '#A89070', discount: 0 },
+            { name: 'فضي',     min: 500,  icon: '🥈', color: '#A8A8A8', discount: 2 },
+            { name: 'ذهبي',    min: 2000, icon: '🥇', color: '#C9A94E', discount: 5 },
+            { name: 'بلاتيني', min: 5000, icon: '💎', color: '#4A8AB5', discount: 10 }
+        ]
+    };
+
+    window.WAREHOUSE_TYPES = {
+        'main':    { name: 'رئيسي',   icon: '🏭' },
+        'branch':  { name: 'فرع',     icon: '🏪' },
+        'storage': { name: 'مخزن',    icon: '📦' },
+        'returns': { name: 'مرتجعات', icon: '🔄' }
+    };
+
+    window.ACCOUNT_TYPES = {
+        asset:     { name: 'أصول',        icon: '💎', color: '#2D8F5E' },
+        liability: { name: 'التزامات',    icon: '📋', color: '#E06060' },
+        equity:    { name: 'حقوق ملكية',  icon: '👑', color: '#C9A94E' },
+        revenue:   { name: 'إيرادات',     icon: '💰', color: '#4A8AB5' },
+        expense:   { name: 'مصروفات',     icon: '💸', color: '#E6A830' }
+    };
+
+    window.DEFAULT_CURRENCIES = [
+        { code: 'EGP', name: 'جنيه مصري', symbol: 'ج.م', rate: 1, isDefault: true },
+        { code: 'USD', name: 'دولار أمريكي', symbol: '$', rate: 50.00, isDefault: false },
+        { code: 'EUR', name: 'يورو', symbol: '€', rate: 54.00, isDefault: false },
+        { code: 'SAR', name: 'ريال سعودي', symbol: 'ر.س', rate: 13.33, isDefault: false },
+        { code: 'AED', name: 'درهم إماراتي', symbol: 'د.إ', rate: 13.60, isDefault: false }
     ];
 
-    let filterEnabled = localStorage.getItem('mizan_console_filter') !== 'off';
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 10: Console Filter (تنظيف الرسائل المزعجة)
+    // ═══════════════════════════════════════════════════════════
 
+    const BLOCKED_KEYWORDS = [
+        'manifest', 'favicon', 'apple-touch-icon',
+        'failed to load resource', 'net::err', 'devtools',
+        'sockjs', 'websocket', 'firebase-database'
+    ];
+
+    const filterEnabled = localStorage.getItem('mizan_console_filter_v18') !== 'off';
     const originalLog = console.log.bind(console);
     const originalWarn = console.warn.bind(console);
     const originalError = console.error.bind(console);
 
-    function shouldFilter(msg) {
-        const str = String(msg).toLowerCase();
+    function shouldFilter(args) {
+        const msg = Array.from(args).join(' ').toLowerCase();
         return BLOCKED_KEYWORDS.some(function(k) {
-            return str.indexOf(k.toLowerCase()) > -1;
+            return msg.indexOf(k.toLowerCase()) > -1;
         });
     }
 
-    console.log = function() {
-        if (!filterEnabled) return originalLog.apply(console, arguments);
-        const msg = Array.from(arguments).join(' ');
-        if (!shouldFilter(msg)) originalLog.apply(console, arguments);
-    };
-
-    console.warn = function() {
-        if (!filterEnabled) return originalWarn.apply(console, arguments);
-        const msg = Array.from(arguments).join(' ');
-        if (!shouldFilter(msg)) originalWarn.apply(console, arguments);
-    };
-
-    console.error = function() {
-        if (!filterEnabled) return originalError.apply(console, arguments);
-        const msg = Array.from(arguments).join(' ');
-        if (shouldFilter(msg)) return;
-        originalError.apply(console, arguments);
-    };
+    if (filterEnabled) {
+        console.log = function() {
+            if (!shouldFilter(arguments)) originalLog.apply(console, arguments);
+        };
+        console.warn = function() {
+            if (!shouldFilter(arguments)) originalWarn.apply(console, arguments);
+        };
+        console.error = function() {
+            if (!shouldFilter(arguments)) originalError.apply(console, arguments);
+        };
+    }
 
     window.toggleConsoleFilter = function() {
-        filterEnabled = !filterEnabled;
-        localStorage.setItem('mizan_console_filter', filterEnabled ? 'on' : 'off');
-        if (typeof window.showToast === 'function') {
-            window.showToast(filterEnabled ? '🧹 تم تفعيل الفلتر' : '🔊 تم إيقاف الفلتر', 'success');
-        }
+        const current = localStorage.getItem('mizan_console_filter_v18') !== 'off';
+        localStorage.setItem('mizan_console_filter_v18', current ? 'off' : 'on');
+        location.reload();
     };
 
     // ═══════════════════════════════════════════════════════════
-    // تسجيل الجاهزية
+    // جاهز
     // ═══════════════════════════════════════════════════════════
-    
-    originalLog.call(console, '✅ core.js v17.0 جاهز — كل الأساسيات محمّلة');
-    
-    // علم إن الملف محمّل
+
     window.__coreLoaded = true;
+    originalLog.call(console, '✅ core.js v18.0 جاهز');
 
 })();
