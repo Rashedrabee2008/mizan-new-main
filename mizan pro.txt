@@ -1,0 +1,12 @@
+
+---
+
+## 🚀 التشغيل
+
+### 1. تشغيل محلي
+```bash
+# باستخدام Python
+python -m http.server 8080
+
+# أو باستخدام Node.js
+npx serve
