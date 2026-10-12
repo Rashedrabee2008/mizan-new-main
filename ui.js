@@ -6,7 +6,7 @@
 (function() {
     'use strict';
 
-    console.log('🎨 ui.js v18.0 - بدء التحميل');
+    console.log('🎨 ui.js v18.1 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: Toast
@@ -56,44 +56,96 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 3: التنقل
+    // الجزء 3: التنقل — خريطة دوال كل صفحة
     // ═══════════════════════════════════════════════════════════
 
-    // خريطة الدوال المطلوبة لكل صفحة
     const PAGE_REFRESHERS = {
         'dashboard':    ['updateDashboard'],
+
         'company':      ['renderCompany'],
-        'inventory':    ['renderProducts', 'populateSaleProducts', 'populatePurProducts'],
-        'cashier':      ['populateSaleProducts', 'populateSaleCustomers',
-                         'populateCashBoxDropdowns', 'populateWarehouseField',
-                         'renderCashier', 'updateSaleTotals', 'updateSalePrice',
+
+        'inventory':    ['renderProducts',
+                         'populateSaleProducts',
+                         'populatePurProducts'],
+
+        'cashier':      ['populateSaleProducts',
+                         'populateSaleCustomers',
+                         'populateCashBoxDropdowns',
+                         'populateWarehouseField',
+                         'renderCashier',
+                         'updateSaleTotals',
+                         'updateSalePrice',
                          'updateInvoiceHeader'],
-        'purchases':    ['populatePurProducts', 'populatePurSuppliers',
-                         'populateCashBoxDropdowns', 'populateWarehouseField',
-                         'renderPurItems', 'updatePurTotals',
-                         'renderPurchases', 'updatePurStats'],
+
+        'purchases':    ['populatePurProducts',
+                         'populatePurSuppliers',
+                         'populateCashBoxDropdowns',
+                         'populateWarehouseField',
+                         'renderPurItems',
+                         'updatePurTotals',
+                         'renderPurchases',
+                         'updatePurStats'],
+
         'customers':    ['renderCustomers'],
+
         'suppliers':    ['renderSuppliers'],
-        'cash-boxes':   ['populateCashBoxDropdowns', 'renderCashBoxes'],
-        'expenses':     ['populateCashBoxDropdowns', 'renderExpenses', 'updateExpensesStats'],
-        'treasury':     ['populateCashBoxDropdowns', 'renderTreasury'],
-        'invoices':     ['updateInvoiceStats', 'renderInvoices'],
-        'payments':     ['populateCollectCustomers', 'populatePaySuppliers',
-                         'populateCashBoxDropdowns', 'updatePaymentsStats', 'renderPayments'],
-        'returns':      ['toggleReturnParty', 'populateRetProducts',
-                         'populateCashBoxDropdowns', 'populateWarehouseField',
-                         'updateReturnsStats', 'renderReturns'],
-        'accounts':     ['renderAccounts', 'renderJournalEntries', 'updateAccountsStats'],
-        'erp':          ['renderWarehouses', 'renderBranches', 'renderCurrencies'],
+
+        'cash-boxes':   ['populateCashBoxDropdowns',
+                         'renderCashBoxes'],
+
+        'expenses':     ['populateCashBoxDropdowns',
+                         'renderExpenses',
+                         'updateExpensesStats'],
+
+        'treasury':     ['populateCashBoxDropdowns',
+                         'renderTreasury'],
+
+        'invoices':     ['updateInvoiceStats',
+                         'renderInvoices'],
+
+        'payments':     ['populateCollectCustomers',
+                         'populatePaySuppliers',
+                         'populateCashBoxDropdowns',
+                         'updatePaymentsStats',
+                         'renderPayments'],
+
+        'returns':      ['toggleReturnParty',
+                         'populateRetProducts',
+                         'populateCashBoxDropdowns',
+                         'populateWarehouseField',
+                         'updateReturnsStats',
+                         'renderReturns'],
+
+        'accounts':     ['renderAccounts',
+                         'renderJournalEntries',
+                         'updateAccountsStats'],
+
+        'erp':          ['renderWarehouses',
+                         'renderBranches',
+                         'renderCurrencies'],
+
+        // ⚡ صفحة المخازن الجديدة (warehouses.js)
         'warehouses':   ['populateWarehouseDropdowns',
-                         'renderWarehouseReceipts', 'renderWarehouseIssues',
-                         'renderWarehouseTransfers', 'renderWarehouseAdjustments',
-                         'renderOpeningBalances'],
+                         'renderWarehouseReceipts',
+                         'renderWarehouseIssues',
+                         'renderWarehouseTransfers',
+                         'renderWarehouseAdjustments',
+                         'renderOpeningBalances',
+                         'renderWarehouseReportsList',
+                         'renderVoucherItems'],
+
         'employees':    ['renderEmployees'],
+
         'reports':      ['renderReport'],
+
         'users':        ['renderUsers'],
+
         'settings':     ['renderSettings']
     };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 4: التنقل
+    // ═══════════════════════════════════════════════════════════
 
     window.navigateTo = function(page) {
         // إخفاء كل الصفحات
@@ -133,7 +185,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: قائمة المزيد
+    // الجزء 5: قائمة المزيد
     // ═══════════════════════════════════════════════════════════
 
     window.toggleMoreMenu = function() {
@@ -158,7 +210,7 @@
     });
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 5: الساعة والتاريخ
+    // الجزء 6: الساعة والتاريخ
     // ═══════════════════════════════════════════════════════════
 
     window.updateClock = function() {
@@ -177,7 +229,6 @@
 
         el.textContent = day + '/' + month + '/' + year + ' ' + hoursStr + ':' + minutes + ' ' + ampm;
 
-        // تحديث حقول الفاتورة لو موجودة
         const invDateEl = document.getElementById('invDateDisplay');
         const invTimeEl = document.getElementById('invTimeDisplay');
         if (invDateEl) invDateEl.value = day + '/' + month + '/' + year;
@@ -185,14 +236,13 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 6: تحديث كل الواجهات (بعد مزامنة مثلاً)
+    // الجزء 7: تحديث كل الواجهات
     // ═══════════════════════════════════════════════════════════
 
     window.refreshAllUI = function() {
         const currentPage = document.querySelector('.page-container.active');
         const pageId = currentPage ? currentPage.id.replace('page-', '') : 'dashboard';
 
-        // تحديث الصفحة الحالية
         const refreshers = PAGE_REFRESHERS[pageId] || [];
         refreshers.forEach(function(fn) {
             if (typeof window[fn] === 'function') {
@@ -216,7 +266,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 7: عرض المستخدم الحالي
+    // الجزء 8: عرض المستخدم الحالي
     // ═══════════════════════════════════════════════════════════
 
     window.updateUserUI = function() {
@@ -235,14 +285,12 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 8: ربط الأحداث (EventBus → UI)
+    // الجزء 9: ربط الأحداث (EventBus → UI)
     // ═══════════════════════════════════════════════════════════
 
-    // كل ما تتغير مجموعة بيانات، نحدث الواجهة
     window.EventBus.on('data:changed', function(evt) {
         const key = evt.key;
 
-        // خريطة تحديثات حسب المفتاح
         const UI_MAP = {
             'sales':          ['renderInvoices', 'updateInvoiceStats', 'updateDashboard'],
             'purchases':      ['renderPurchases', 'updatePurStats', 'updateDashboard'],
@@ -257,14 +305,22 @@
             'journalEntries': ['renderJournalEntries', 'renderAccounts', 'updateAccountsStats'],
             'accounts':       ['renderAccounts', 'updateAccountsStats'],
             'users':          ['renderUsers', 'populateLoginUsers'],
-            'warehouses':     ['renderWarehouses', 'populateWarehouseField'],
+            'warehouses':     ['renderWarehouses', 'populateWarehouseField', 'populateWarehouseDropdowns'],
             'branches':       ['renderBranches'],
-            'employees':      ['renderEmployees']
+            'employees':      ['renderEmployees'],
+            'attendance':     ['renderAttendanceList'],
+            'salaries':       ['renderSalariesList'],
+
+            // ⚡ المخازن
+            'warehouseReceipts':   ['renderWarehouseReceipts'],
+            'warehouseIssues':     ['renderWarehouseIssues'],
+            'warehouseTransfers':  ['renderWarehouseTransfers'],
+            'warehouseAdjustments': ['renderWarehouseAdjustments'],
+            'openingBalances':     ['renderOpeningBalances']
         };
 
         const toRefresh = UI_MAP[key] || [];
 
-        // لا نحدث إلا الصفحات الظاهرة (لتجنب البطء)
         toRefresh.forEach(function(fn) {
             if (typeof window[fn] === 'function') {
                 try { window[fn](); } catch (e) {}
@@ -273,10 +329,9 @@
     });
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 9: أدوات واجهة إضافية
+    // الجزء 10: أدوات واجهة إضافية
     // ═══════════════════════════════════════════════════════════
 
-    // تعطيل/تفعيل زر
     window.setButtonLoading = function(btn, isLoading, loadingText) {
         if (!btn) return;
 
@@ -293,7 +348,6 @@
         }
     };
 
-    // تأكيد
     window.confirmDialog = function(message) {
         return new Promise(function(resolve) {
             const overlay = document.getElementById('modalOverlay');
@@ -331,7 +385,6 @@
         });
     };
 
-    // إدخال سريع
     window.promptDialog = function(message, defaultValue) {
         return new Promise(function(resolve) {
             const overlay = document.getElementById('modalOverlay');
@@ -380,6 +433,6 @@
     // ═══════════════════════════════════════════════════════════
 
     window.__uiLoaded = true;
-    console.log('✅ ui.js v18.0 جاهز');
+    console.log('✅ ui.js v18.1 جاهز');
 
 })();
