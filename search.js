@@ -67,10 +67,15 @@
         selectEl.dataset.searchTransformed = 'true';
 
         // إخفاء الـ select الأصلي (مش مسحه)
-        selectEl.style.display = 'none';
-        selectEl.style.position = 'absolute';
-        selectEl.style.opacity = '0';
-        selectEl.style.pointerEvents = 'none';
+selectEl.style.setProperty('display', 'none', 'important');
+selectEl.style.setProperty('position', 'absolute', 'important');
+selectEl.style.setProperty('opacity', '0', 'important');
+selectEl.style.setProperty('pointer-events', 'none', 'important');
+selectEl.style.setProperty('visibility', 'hidden', 'important');
+selectEl.style.setProperty('width', '0', 'important');
+selectEl.style.setProperty('height', '0', 'important');
+selectEl.setAttribute('aria-hidden', 'true');
+selectEl.setAttribute('tabindex', '-1');
 
         // إنشاء الغلاف
         const wrapper = document.createElement('div');
