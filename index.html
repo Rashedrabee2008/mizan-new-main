@@ -1184,6 +1184,268 @@
             </div>
         </div>
 
+        <!-- ═══════════ المخازن 🆕 ═══════════ -->
+        <div id="page-warehouses" class="page-container">
+            <div class="page-content">
+                <h2><i class="fas fa-boxes"></i> إدارة المخازن</h2>
+
+                <div class="tabs-row">
+                    <button class="tab-btn active" onclick="showWarehouseTab('receipts', this)">📥 إضافة</button>
+                    <button class="tab-btn" onclick="showWarehouseTab('issues', this)">📤 صرف</button>
+                    <button class="tab-btn" onclick="showWarehouseTab('transfers', this)">🔄 تحويل</button>
+                    <button class="tab-btn" onclick="showWarehouseTab('adjustments', this)">⚖️ تسوية</button>
+                    <button class="tab-btn" onclick="showWarehouseTab('opening', this)">📊 أول المدة</button>
+                    <button class="tab-btn" onclick="showWarehouseTab('reports', this)">📈 تقارير</button>
+                </div>
+
+                <!-- ═══ الأصناف المشتركة (تظهر في كل التبويبات) ═══ -->
+                <div class="form-card" id="whVoucherItemsCard" style="border-right:3px solid #C9A94E;">
+                    <h3>📦 إضافة أصناف للإذن</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>المنتج *</label>
+                            <select id="whVoucherProduct" class="inv-select">
+                                <option value="">اختر منتج...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>الكمية *</label>
+                            <input type="number" id="whVoucherQty" value="1" min="1" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>السعر</label>
+                            <input type="number" id="whVoucherPrice" min="0" step="0.01" />
+                        </div>
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <button class="btn btn-success btn-block" onclick="addVoucherItemFromGlobal()">
+                                <i class="fas fa-plus"></i> إضافة صنف
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="whVoucherItemsContainer">
+                    <div class="empty-items">
+                        <i class="fas fa-boxes"></i>
+                        <span>لا توجد أصناف</span>
+                        <small>أضف صنف من الأعلى</small>
+                    </div>
+                </div>
+
+                <div class="totals-box" id="whVoucherTotalsBox" style="display:none;margin-bottom:14px;">
+                    <div class="totals-grid">
+                        <div class="total-stat"><span class="total-label">الأصناف</span><span class="total-value" id="whVoucherItemsCount">0</span></div>
+                        <div class="total-stat"><span class="total-label">الكمية</span><span class="total-value" id="whVoucherTotalQty">0</span></div>
+                        <div class="total-stat"><span class="total-label">القيمة</span><span class="total-value" id="whVoucherTotalValue">0.00</span></div>
+                    </div>
+                </div>
+
+                <!-- ═══ تبويب 1: أذون الإضافة ═══ -->
+                <div id="whTabReceipts" class="warehouse-tab">
+                    <div class="form-card">
+                        <h3>📥 إنشاء إذن إضافة للمخزن</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>المستودع *</label>
+                                <select id="whReceiptWarehouse" class="inv-select"><option value="">اختر...</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label>التاريخ</label>
+                                <input type="date" id="whReceiptDate" />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>المصدر</label>
+                                <input type="text" id="whReceiptSource" placeholder="اسم المصدر (اختياري)" />
+                            </div>
+                            <div class="form-group">
+                                <label>المورد</label>
+                                <select id="whReceiptSupplier" class="inv-select"><option value="">اختر مورد</option></select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>ملاحظات</label>
+                            <input type="text" id="whReceiptNotes" />
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
+                            <button class="btn btn-success" onclick="createWarehouseReceipt()">
+                                <i class="fas fa-check"></i> حفظ الإذن
+                            </button>
+                            <button class="btn btn-secondary" onclick="resetVoucherForm('receipt')">
+                                <i class="fas fa-times"></i> إلغاء
+                            </button>
+                        </div>
+                    </div>
+                    <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;">
+                        <i class="fas fa-list"></i> السجل
+                    </h3>
+                    <div id="whReceiptsList"></div>
+                </div>
+
+                <!-- ═══ تبويب 2: أذون الصرف ═══ -->
+                <div id="whTabIssues" class="warehouse-tab" style="display:none;">
+                    <div class="form-card">
+                        <h3>📤 إنشاء إذن صرف من المخزن</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>المستودع *</label>
+                                <select id="whIssueWarehouse" class="inv-select"><option value="">اختر...</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label>التاريخ</label>
+                                <input type="date" id="whIssueDate" />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>الوجهة</label>
+                                <input type="text" id="whIssueDestination" placeholder="مكان الصرف (اختياري)" />
+                            </div>
+                            <div class="form-group">
+                                <label>العميل</label>
+                                <select id="whIssueCustomer" class="inv-select"><option value="">اختر عميل</option></select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>ملاحظات</label>
+                            <input type="text" id="whIssueNotes" />
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
+                            <button class="btn btn-danger" onclick="createWarehouseIssue()">
+                                <i class="fas fa-check"></i> حفظ الإذن
+                            </button>
+                            <button class="btn btn-secondary" onclick="resetVoucherForm('issue')">
+                                <i class="fas fa-times"></i> إلغاء
+                            </button>
+                        </div>
+                    </div>
+                    <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;">
+                        <i class="fas fa-list"></i> السجل
+                    </h3>
+                    <div id="whIssuesList"></div>
+                </div>
+
+                <!-- ═══ تبويب 3: التحويلات ═══ -->
+                <div id="whTabTransfers" class="warehouse-tab" style="display:none;">
+                    <div class="form-card">
+                        <h3>🔄 تحويل بين المستودعات</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>من مستودع *</label>
+                                <select id="whTransferFrom" class="inv-select"><option value="">اختر...</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label>إلى مستودع *</label>
+                                <select id="whTransferTo" class="inv-select"><option value="">اختر...</option></select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>التاريخ</label>
+                            <input type="date" id="whTransferDate" />
+                        </div>
+                        <div class="form-group">
+                            <label>ملاحظات</label>
+                            <input type="text" id="whTransferNotes" />
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
+                            <button class="btn btn-info" onclick="createWarehouseTransfer()">
+                                <i class="fas fa-check"></i> حفظ التحويل
+                            </button>
+                            <button class="btn btn-secondary" onclick="resetVoucherForm('transfer')">
+                                <i class="fas fa-times"></i> إلغاء
+                            </button>
+                        </div>
+                    </div>
+                    <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;">
+                        <i class="fas fa-list"></i> السجل
+                    </h3>
+                    <div id="whTransfersList"></div>
+                </div>
+
+                <!-- ═══ تبويب 4: التسويات ═══ -->
+                <div id="whTabAdjustments" class="warehouse-tab" style="display:none;">
+                    <div class="form-card">
+                        <h3>⚖️ تسوية الجرد</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>المستودع *</label>
+                                <select id="whAdjustWarehouse" class="inv-select"><option value="">اختر...</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label>التاريخ</label>
+                                <input type="date" id="whAdjustDate" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>ملاحظات</label>
+                            <input type="text" id="whAdjustNotes" />
+                        </div>
+                        <div style="background:#0D0D0D;border-radius:8px;padding:10px;margin-top:10px;font-size:11px;color:#A89070;">
+                            💡 اكتب الكمية الفعلية في خانة "الكمية" عند إضافة الأصناف.
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
+                            <button class="btn btn-warning" onclick="createWarehouseAdjustment()">
+                                <i class="fas fa-check"></i> حفظ التسوية
+                            </button>
+                            <button class="btn btn-secondary" onclick="resetVoucherForm('adjustment')">
+                                <i class="fas fa-times"></i> إلغاء
+                            </button>
+                        </div>
+                    </div>
+                    <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;">
+                        <i class="fas fa-list"></i> السجل
+                    </h3>
+                    <div id="whAdjustmentsList"></div>
+                </div>
+
+                <!-- ═══ تبويب 5: أول المدة ═══ -->
+                <div id="whTabOpening" class="warehouse-tab" style="display:none;">
+                    <div class="form-card">
+                        <h3>📊 رصيد أول المدة</h3>
+                        <div style="background:#0D0D0D;border-radius:8px;padding:10px;margin-bottom:10px;font-size:11px;color:#A89070;">
+                            💡 استخدمه <strong>مرة واحدة</strong> عند بدء استخدام التطبيق، لتسجيل البضاعة الموجودة عندك حالياً.
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>المستودع *</label>
+                                <select id="obWarehouse" class="inv-select"><option value="">اختر...</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label>التاريخ</label>
+                                <input type="date" id="obDate" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>ملاحظات</label>
+                            <input type="text" id="obNotes" />
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
+                            <button class="btn btn-primary" onclick="saveOpeningBalance()">
+                                <i class="fas fa-check"></i> حفظ الرصيد
+                            </button>
+                            <button class="btn btn-secondary" onclick="resetVoucherForm('opening')">
+                                <i class="fas fa-times"></i> إلغاء
+                            </button>
+                        </div>
+                    </div>
+                    <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;">
+                        <i class="fas fa-list"></i> السجل
+                    </h3>
+                    <div id="obList"></div>
+                </div>
+
+                <!-- ═══ تبويب 6: التقارير ═══ -->
+                <div id="whTabReports" class="warehouse-tab" style="display:none;">
+                    <div id="whReportsList"></div>
+                </div>
+
+            </div>
+        </div>
+
         <!-- ═══════════ التقارير ═══════════ -->
         <div id="page-reports" class="page-container">
             <div class="page-content">
@@ -1437,6 +1699,10 @@
                 <button class="more-item" onclick="navigateTo('erp')">
                     <i class="fas fa-warehouse" style="color:#4A8AB5;"></i>
                     <span>الموارد</span>
+                </button>
+                <button class="more-item" onclick="navigateTo('warehouses')">
+                    <i class="fas fa-boxes" style="color:#E6A830;"></i>
+                    <span>المخازن</span>
                 </button>
                 <button class="more-item" onclick="navigateTo('employees')">
                     <i class="fas fa-user-tie" style="color:#4A8AB5;"></i>
