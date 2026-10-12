@@ -341,6 +341,45 @@
         }
     }, 2000);
 
+    // ═══════════════════════════════════════════════════════════
+// تحديث بحث المرتجعات حسب النوع (عميل/مورد)
+// ═══════════════════════════════════════════════════════════
+
+function updateRetPartySearch() {
+    const retTypeEl = document.getElementById('retType');
+    if (!retTypeEl) return;
+
+    const container = document.getElementById('retPartySearch');
+    if (!container) return;
+
+    const type = retTypeEl.value === 'purchase' ? 'suppliers' : 'customers';
+    const config = SEARCH_CONFIG[type];
+
+    // تحديث الـ type
+    container.dataset.searchType = type;
+
+    // تحديث placeholder
+    const input = container.querySelector('.smart-search-input');
+    if (input && config) {
+        input.placeholder = config.placeholder;
+        input.value = '';
+    }
+
+    // إعادة تهيئة المكون
+    container.dataset.searchInit = 'false';
+    initSearchComponent(container);
+}
+
+// ربط التحديث مع تغيير نوع المرتجع
+document.addEventListener('change', function(e) {
+    if (e.target && e.target.id === 'retType') {
+        setTimeout(updateRetPartySearch, 100);
+    }
+});
+
+// تحديث أولي
+setTimeout(updateRetPartySearch, 2000);
+
     window.__searchLoaded = true;
     console.log('✅ search.js v2.0 جاهز');
 
