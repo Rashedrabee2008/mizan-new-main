@@ -2100,8 +2100,322 @@ window.showReceipt = function(id) {
 
     window.openModal(html);
 };
-    
-    window.__posLoaded = true;
-    console.log('✅ pos.js v18.0 جاهز');
+
+        // ═══════════════════════════════════════════════════════════
+    // تبديل تبويب التحصيل/السداد
+    // ═══════════════════════════════════════════════════════════
+
+    window.switchPayTab = function(tab, btn) {
+        window.currentPayTab = tab;
+
+        // تحديث أزرار التبويب
+        document.querySelectorAll('#page-payments .tab-btn').forEach(function(b) {
+            b.classList.remove('active');
+        });
+        if (btn) btn.classList.add('active');
+
+        // إخفاء/إظهار المحتوى
+        const collect = document.getElementById('payTabCollect');
+        const pay = document.getElementById('payTabPay');
+
+        if (collect) collect.style.display = tab === 'collect' ? 'block' : 'none';
+        if (pay) pay.style.display = tab === 'pay' ? 'block' : 'none';
+
+        // تحديث القوائم
+        if (tab === 'collect') {
+            window.populateCollectCustomers();
+            window.populateCashBoxDropdowns();
+        } else if (tab === 'pay') {
+            window.populatePaySuppliers();
+            window.populateCashBoxDropdowns();
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // إصلاح عرض رصيد الخزائن في حركات الخزنة
+    // ═══════════════════════════════════════════════════════════
+
+    window.renderTreasury = function() {
+        const filter = window.currentTreasuryFilter || 'all';
+
+        // ⚡ استخدام Balance.totalCash بدل ما نحسب يدوياً
+        const totalBalance = window.Balance.totalCash();
+
+        const set = function(id, val) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val;
+        };
+
+        set('treasuryBalance', window.formatMoney(totalBalance) + ' 🇪🇬');
+
+        const deposits = (window.treasury || [])
+            .filter(function(t) { return t.type === 'deposit'; })
+            .reduce(function(s, t) { return s + (parseFloat(t.amount) || 0); }, 0);
+
+        const withdrawals = (window.treasury || [])
+            .filter(function(t) { return t.type === 'withdraw'; })
+            .reduce(function(s, t) { return s + (parseFloat(t.amount) || 0); }, 0);
+
+        set('treasuryDeposits', window.formatMoney(deposits));
+        set('treasuryWithdrawals', window.formatMoney(withdrawals));
+
+        const c = document.getElementById('treasuryList');
+        if (!c) return;
+
+        let filtered = window.treasury || [];
+
+        if (filter === 'sale') filtered = filtered.filter(function(t) { return t.refType === 'sale'; });
+        else if (filter === 'purchase') filtered = filtered.filter(function(t) { return t.refType === 'purchase'; });
+        else if (filter === 'expense') filtered = filtered.filter(function(t) { return t.refType === 'expense'; });
+        else if (filter === 'collect') filtered = filtered.filter(function(t) { return t.refType === 'collect'; });
+        else if (filter === 'pay') filtered = filtered.filter(function(t) { return t.refType === 'pay'; });
+        else if (filter === 'manual') filtered = filtered.filter(function(t) { return t.refType === 'manual'; });
+        else if (filter === 'salary') filtered = filtered.filter(function(t) { return t.refType === 'salary'; });
+        else if (filter === 'return') filtered = filtered.filter(function(t) { return t.refType === 'return'; });
+
+        if (filtered.length === 0) {
+            c.innerHTML = '<div class="empty-state"><i class="fas fa-vault"></i><span>لا توجد حركات</span></div>';
+            return;
+        }
+
+        const sorted = filtered.slice().sort(function(a, b) {
+            return (b.createdAt || '').localeCompare(a.createdAt || '');
+        }).slice(0, 100);
+
+        let html = '<div class="table-header" style="grid-template-columns: 1.5fr 0.8fr 0.7fr 0.8fr;">' +
+            '<span>البيان</span><span>المبلغ</span><span>النوع</span><span>التاريخ</span>' +
+        '</div>';
+
+        sorted.forEach(function(t) {
+            const isDep = t.type === 'deposit';
+            const color = isDep ? '#2D8F5E' : '#E06060';
+            const refIcons = {
+                'sale': '💰', 'purchase': '🛒', 'expense': '💸',
+                'collect': '💵', 'pay': '💳', 'manual': '✋',
+                'return': '🔄', 'salary': '👤'
+            };
+
+            html += '<div class="table-row" style="grid-template-columns: 1.5fr 0.8fr 0.7fr 0.8fr;">' +
+                '<span style="font-size:11px;">' + (refIcons[t.refType] || '📋') + ' ' + window.escapeHtml(t.note) + '</span>' +
+                '<span style="color:' + color + ';font-weight:700;font-size:12px;">' +
+                    (isDep ? '+' : '-') + window.formatMoney(t.amount) + '</span>' +
+                '<span style="color:' + color + ';font-size:10px;">' +
+                    (isDep ? '💚 إيداع' : '❤️ سحب') + '</span>' +
+                '<span style="font-size:10px;color:#A89070;">' + (t.date || '') + '</span>' +
+            '</div>';
+        });
+
+        c.innerHTML = html;
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // فلترة حركات الخزنة
+    // ═══════════════════════════════════════════════════════════
+
+    window.filterTreasury = function(filter, btn) {
+        window.currentTreasuryFilter = filter;
+
+        document.querySelectorAll('#page-treasury .filter-chip').forEach(function(c) {
+            c.classList.remove('active');
+        });
+        if (btn) btn.classList.add('active');
+
+        window.renderTreasury();
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // إضافة حركة خزنة يدوية
+    // ═══════════════════════════════════════════════════════════
+
+    window.addTreasuryTransaction = function() {
+        if (!window.canAdd()) {
+            window.showToast('⚠️ لا تملك صلاحية', 'error');
+            return;
+        }
+
+        const type = document.getElementById('treasuryType') ? document.getElementById('treasuryType').value : 'deposit';
+        const amount = parseFloat(document.getElementById('treasuryAmount') ? document.getElementById('treasuryAmount').value : 0) || 0;
+        const note = (document.getElementById('treasuryNote') ? document.getElementById('treasuryNote').value.trim() : '') ||
+                     (type === 'deposit' ? 'إيداع يدوي' : 'سحب يدوي');
+        const cashBoxId = document.getElementById('manualCashBox') ? document.getElementById('manualCashBox').value : '';
+
+        if (amount <= 0) {
+            window.showToast('⚠️ أدخل مبلغ صحيح', 'error');
+            return;
+        }
+        if (!cashBoxId) {
+            window.showToast('⚠️ اختر الخزنة', 'error');
+            return;
+        }
+
+        const box = (window.cashBoxes || []).find(function(b) { return b.id == cashBoxId; });
+
+        window.DataStore.add('treasury', {
+            id: window.generateId('tr_'),
+            type: type,
+            amount: amount,
+            note: note,
+            cashBoxId: cashBoxId,
+            cashBoxName: box ? box.name : '',
+            refType: 'manual',
+            refId: null,
+            date: window.getTodayDate(),
+            time: window.getNowTime()
+        });
+
+        if (document.getElementById('treasuryAmount')) document.getElementById('treasuryAmount').value = '';
+        if (document.getElementById('treasuryNote')) document.getElementById('treasuryNote').value = '';
+
+        window.showToast((type === 'deposit' ? '✅ إيداع ' : '✅ سحب ') + window.formatMoney(amount), 'success');
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // سداد للموردين (populate + update + save)
+    // ═══════════════════════════════════════════════════════════
+
+    window.populatePaySuppliers = function() {
+        const sel = document.getElementById('paySupplier');
+        if (!sel) return;
+        const cv = sel.value;
+        sel.innerHTML = '<option value="">اختر مورد...</option>';
+        (window.suppliers || []).forEach(function(s) {
+            const bal = window.Balance.supplier(s.name);
+            const text = window.escapeHtml(s.name) +
+                (bal > 0 ? ' (مديونية: ' + window.formatMoney(bal) + ')' : '');
+            sel.innerHTML += '<option value="' + window.escapeHtml(s.name) + '">' + text + '</option>';
+        });
+        sel.value = cv;
+    };
+
+    window.updatePayInfo = function() {
+        const name = document.getElementById('paySupplier') ? document.getElementById('paySupplier').value : '';
+        const box = document.getElementById('payInfoBox');
+        if (!box) return;
+
+        if (!name) {
+            box.style.display = 'none';
+            return;
+        }
+
+        const balance = window.Balance.supplier(name);
+        box.style.display = 'block';
+
+        const debtEl = document.getElementById('payCurrentDebt');
+        if (debtEl) debtEl.textContent = window.formatMoney(balance);
+
+        const amountInput = document.getElementById('payAmount');
+        if (amountInput) {
+            amountInput.max = balance;
+            if (balance > 0) amountInput.value = balance.toFixed(2);
+        }
+    };
+
+    window.savePay = function() {
+        if (!window.canAdd()) {
+            window.showToast('⚠️ لا تملك صلاحية', 'error');
+            return;
+        }
+
+        const party = document.getElementById('paySupplier') ? document.getElementById('paySupplier').value : '';
+        const amount = parseFloat(document.getElementById('payAmount') ? document.getElementById('payAmount').value : 0) || 0;
+        const date = (document.getElementById('payDate') ? document.getElementById('payDate').value : '') || window.getTodayDate();
+        const cashBoxId = document.getElementById('payCashBox') ? document.getElementById('payCashBox').value : '';
+        const note = document.getElementById('payNote') ? document.getElementById('payNote').value.trim() : '';
+
+        if (!party) {
+            window.showToast('⚠️ اختر مورد', 'error');
+            return;
+        }
+        if (amount <= 0) {
+            window.showToast('⚠️ أدخل مبلغ صحيح', 'error');
+            return;
+        }
+        if (!cashBoxId) {
+            window.showToast('⚠️ اختر الخزنة', 'error');
+            return;
+        }
+
+        const box = (window.cashBoxes || []).find(function(b) { return b.id == cashBoxId; });
+
+        const pay = {
+            id: window.generateId('pay_'),
+            type: 'pay',
+            party: party,
+            amount: amount,
+            date: date,
+            time: window.getNowTime(),
+            note: note,
+            cashBoxId: cashBoxId,
+            cashBoxName: box ? box.name : '',
+            relatedInvoices: [],
+            createdBy: window.currentUser ? window.currentUser.name : ''
+        };
+
+        // توزيع المبلغ على فواتير الشراء الآجلة
+        let remaining = amount;
+        const supplierInvoices = (window.purchases || []).filter(function(p) {
+            return p.supplierName === party &&
+                   p.payment === 'credit' &&
+                   (p.status === 'unpaid' || p.status === 'partial');
+        }).sort(function(a, b) {
+            return (a.createdAt || '').localeCompare(b.createdAt || '');
+        });
+
+        supplierInvoices.forEach(function(inv) {
+            if (remaining <= 0.01) return;
+            const invRemaining = inv.remainingAmount !== undefined ? inv.remainingAmount : inv.total;
+            if (invRemaining <= 0.01) return;
+
+            const payAmt = Math.min(remaining, invRemaining);
+            inv.paidAmount = (inv.paidAmount || 0) + payAmt;
+            inv.remainingAmount = invRemaining - payAmt;
+            inv.status = inv.remainingAmount <= 0.01 ? 'paid' : 'partial';
+            if (inv.remainingAmount <= 0.01) inv.remainingAmount = 0;
+
+            pay.relatedInvoices.push({
+                invoiceId: inv.id,
+                invoiceNumber: inv.number,
+                amount: payAmt
+            });
+            remaining -= payAmt;
+        });
+
+        window.DataStore.add('payments', pay);
+        window.DataStore.set('purchases', window.purchases);
+
+        // خصم من الخزنة
+        window.DataStore.add('treasury', {
+            id: window.generateId('tr_'),
+            type: 'withdraw',
+            amount: amount,
+            note: 'سداد لـ ' + party,
+            cashBoxId: cashBoxId,
+            cashBoxName: box ? box.name : '',
+            refType: 'pay',
+            refId: pay.id,
+            date: date,
+            time: window.getNowTime()
+        });
+
+        // قيد محاسبي
+        window.Accounting.entryPay(pay);
+
+        // إعادة تعيين
+        const amountEl = document.getElementById('payAmount');
+        const noteEl = document.getElementById('payNote');
+        const supEl = document.getElementById('paySupplier');
+        const infoBox = document.getElementById('payInfoBox');
+
+        if (amountEl) amountEl.value = '';
+        if (noteEl) noteEl.value = '';
+        if (supEl) supEl.value = '';
+        if (infoBox) infoBox.style.display = 'none';
+
+        window.updatePaymentsStats();
+        window.showToast('✅ تم سداد ' + window.formatMoney(amount) + ' ج.م', 'success');
+    };
+
+window.__posLoaded = true;
+console.log('✅ pos.js v18.0 جاهز');
 
 })();
