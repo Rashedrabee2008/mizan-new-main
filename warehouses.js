@@ -108,30 +108,71 @@
             cusSel.value = cv;
         }
 
-        // المنتجات في كل الأذون
-        const productSelects = [
-            'whReceiptProduct', 'whIssueProduct',
-            'whTransferProduct', 'whAdjustProduct', 'obProduct'
-        ];
-
-        productSelects.forEach(function(id) {
-            const sel = document.getElementById(id);
-            if (!sel) return;
-            const cv = sel.value;
+        // المنتج العام للأصناف
+        const voucherProduct = document.getElementById('whVoucherProduct');
+        if (voucherProduct) {
+            const cv = voucherProduct.value;
             let html = '<option value="">اختر منتج...</option>';
             (window.products || []).forEach(function(p) {
                 html += '<option value="' + p.id + '">' +
                     window.escapeHtml(p.name) + ' (متاح: ' + (p.qty || 0) + ')</option>';
             });
-            sel.innerHTML = html;
-            if (cv) sel.value = cv;
-        });
+            voucherProduct.innerHTML = html;
+            if (cv) voucherProduct.value = cv;
+        }
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: إدارة أصناف الإذن
+    // الجزء 4: إدارة أصناف الإذن (من القسم العام)
     // ═══════════════════════════════════════════════════════════
 
+    window.addVoucherItemFromGlobal = function() {
+        const productId = document.getElementById('whVoucherProduct') ? document.getElementById('whVoucherProduct').value : '';
+        const qtyInput = document.getElementById('whVoucherQty');
+        const priceInput = document.getElementById('whVoucherPrice');
+
+        let qty = parseInt(qtyInput ? qtyInput.value : 0) || 0;
+        let price = parseFloat(priceInput ? priceInput.value : 0) || 0;
+
+        if (!productId) {
+            window.showToast('⚠️ اختر منتج', 'error');
+            return;
+        }
+
+        const product = (window.products || []).find(function(p) { return p.id == productId; });
+        if (!product) return;
+
+        if (qty <= 0) qty = 1;
+        if (price <= 0) price = product.buy || 0;
+
+        const existing = window.currentVoucherItems.find(function(i) { return i.productId == productId; });
+        if (existing) {
+            existing.qty += qty;
+            existing.total = existing.qty * existing.price;
+        } else {
+            window.currentVoucherItems.push({
+                productId: product.id,
+                name: product.name,
+                barcode: product.barcode || '',
+                qty: qty,
+                price: price,
+                total: qty * price,
+                actualQty: qty,
+                systemQty: product.qty || 0
+            });
+        }
+
+        if (qtyInput) qtyInput.value = 1;
+        if (priceInput) priceInput.value = '';
+        if (document.getElementById('whVoucherProduct')) {
+            document.getElementById('whVoucherProduct').value = '';
+        }
+
+        window.renderVoucherItems();
+        window.showToast('✅ تم إضافة ' + product.name, 'success');
+    };
+
+    // نسخة قديمة للتوافق (لا تُستخدم)
     window.addVoucherItem = function(type) {
         const prefix = type;
         const productId = document.getElementById(prefix + 'Product') ? document.getElementById(prefix + 'Product').value : '';
@@ -154,12 +195,10 @@
         if (qty <= 0) qty = 1;
         if (price <= 0) price = product.buy || 0;
 
-        // لو المنتج موجود بالصنف، نجمع الكمية
         const existing = window.currentVoucherItems.find(function(i) { return i.productId == productId; });
         if (existing) {
             existing.qty += qty;
             existing.total = existing.qty * existing.price;
-            if (actualQtyInput) existing.actualQty = actualQty;
         } else {
             window.currentVoucherItems.push({
                 productId: product.id,
@@ -173,7 +212,6 @@
             });
         }
 
-        // إعادة تعيين الحقول
         if (qtyInput) qtyInput.value = 1;
         if (priceInput) priceInput.value = '';
         if (actualQtyInput) actualQtyInput.value = '';
@@ -979,26 +1017,30 @@
         let summaryHtml = '<div style="background:#0D0D0D;border-radius:10px;padding:14px;margin-bottom:12px;">' +
             '<h3 style="color:#C9A94E;font-size:14px;margin-bottom:12px;">📊 رصيد المستودعات</h3>';
 
-        warehouses.forEach(function(wh) {
-            let totalQty = 0;
-            let totalValue = 0;
+        if (warehouses.length === 0) {
+            summaryHtml += '<div style="text-align:center;padding:20px;color:#A89070;">لا توجد مستودعات</div>';
+        } else {
+            warehouses.forEach(function(wh) {
+                let totalQty = 0;
+                let totalValue = 0;
 
-            products.forEach(function(p) {
-                const qty = (p.warehouseStock && p.warehouseStock[wh.id]) || 0;
-                if (qty > 0) {
-                    totalQty += qty;
-                    totalValue += qty * (p.buy || 0);
-                }
+                products.forEach(function(p) {
+                    const qty = (p.warehouseStock && p.warehouseStock[wh.id]) || 0;
+                    if (qty > 0) {
+                        totalQty += qty;
+                        totalValue += qty * (p.buy || 0);
+                    }
+                });
+
+                summaryHtml += '<div style="background:#1A1A1A;border-radius:8px;padding:10px;margin-bottom:6px;border-right:3px solid #4A8AB5;">' +
+                    '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">' +
+                        '<strong style="color:#C9A94E;font-size:12px;">🏭 ' + window.escapeHtml(wh.name) + '</strong>' +
+                        '<span style="color:#4A8AB5;font-weight:900;font-size:12px;">' + totalQty + ' قطعة</span>' +
+                    '</div>' +
+                    '<div style="color:#2D8F5E;font-size:11px;text-align:left;">💰 ' + window.formatMoney(totalValue) + ' ج.م</div>' +
+                '</div>';
             });
-
-            summaryHtml += '<div style="background:#1A1A1A;border-radius:8px;padding:10px;margin-bottom:6px;border-right:3px solid #4A8AB5;">' +
-                '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">' +
-                    '<strong style="color:#C9A94E;font-size:12px;">🏭 ' + window.escapeHtml(wh.name) + '</strong>' +
-                    '<span style="color:#4A8AB5;font-weight:900;font-size:12px;">' + totalQty + ' قطعة</span>' +
-                '</div>' +
-                '<div style="color:#2D8F5E;font-size:11px;text-align:left;">💰 ' + window.formatMoney(totalValue) + ' ج.م</div>' +
-            '</div>';
-        });
+        }
 
         summaryHtml += '</div>';
 
@@ -1057,7 +1099,6 @@
     // الجزء 12: ربط الأحداث
     // ═══════════════════════════════════════════════════════════
 
-    // عند تغيير المنتجات أو المستودعات، حدّث القوائم
     window.EventBus.on('data:products:changed', function() {
         window.populateWarehouseDropdowns();
     });
