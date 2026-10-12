@@ -1,257 +1,115 @@
 // ============================================================
-// الميزان Pro - search.js
-// مكون بحث ذكي للحقول المنسدلة (بديل <select>)
+// الميزان Pro - search.js v2.0
+// مكون بحث ذكي للحقول المنسدلة (يستبدل select من HTML)
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🔍 search.js v1.0 - بدء التحميل');
+    console.log('🔍 search.js v2.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: الإعدادات
     // ═══════════════════════════════════════════════════════════
 
-    // الحقول اللي هتتحول لبحث ذكي
-    const SEARCH_TARGETS = {
-        'saleProduct':    { type: 'products',  placeholder: '🔍 ابحث باسم المنتج أو الباركود...' },
-        'saleCustomer':   { type: 'customers', placeholder: '🔍 ابحث باسم العميل أو الموبايل...' },
-        'purProduct':     { type: 'products',  placeholder: '🔍 ابحث باسم المنتج أو الباركود...' },
-        'purSupplier':    { type: 'suppliers', placeholder: '🔍 ابحث باسم المورد أو الموبايل...' },
-        'retProduct':     { type: 'products',  placeholder: '🔍 ابحث باسم المنتج أو الباركود...' },
-        'retParty':       { type: 'mixed',     placeholder: '🔍 ابحث باسم العميل أو المورد...' }
+    // خريطة: نوع البحث لكل حقل
+    const SEARCH_CONFIG = {
+        'customers': {
+            getData: function() { return window.customers || []; },
+            searchFields: ['name', 'phone', 'whatsapp'],
+            icon: '👤',
+            placeholder: '🔍 ابحث باسم العميل أو الموبايل...',
+            emptyLabel: 'لا يوجد عملاء'
+        },
+        'suppliers': {
+            getData: function() { return window.suppliers || []; },
+            searchFields: ['name', 'phone', 'whatsapp'],
+            icon: '🚚',
+            placeholder: '🔍 ابحث باسم المورد أو الموبايل...',
+            emptyLabel: 'لا يوجد موردين'
+        },
+        'products': {
+            getData: function() { return window.products || []; },
+            searchFields: ['name', 'barcode'],
+            icon: '📦',
+            placeholder: '🔍 ابحث باسم المنتج أو الباركود...',
+            emptyLabel: 'لا توجد منتجات'
+        }
     };
 
-    // خريطة البحث لكل نوع
-    function getSearchFields(type) {
-        if (type === 'products') return ['name', 'barcode'];
-        if (type === 'customers') return ['name', 'phone', 'whatsapp'];
-        if (type === 'suppliers') return ['name', 'phone', 'whatsapp'];
-        if (type === 'mixed') return ['name', 'phone', 'whatsapp'];
-        return ['name'];
-    }
-
-    // الحصول على البيانات حسب النوع
-    function getDataByType(type) {
-        if (type === 'products') return window.products || [];
-        if (type === 'customers') return window.customers || [];
-        if (type === 'suppliers') return window.suppliers || [];
-
-        // mixed = عملاء + موردين (للمرتجعات)
-        if (type === 'mixed') {
-            const customers = (window.customers || []).map(function(c) {
-                return Object.assign({}, c, { _isCustomer: true });
-            });
-            const suppliers = (window.suppliers || []).map(function(s) {
-                return Object.assign({}, s, { _isSupplier: true });
-            });
-            return customers.concat(suppliers);
-        }
-
-        return [];
-    }
-
     // ═══════════════════════════════════════════════════════════
-    // الجزء 2: تحويل <select> إلى بحث ذكي
+    // الجزء 2: توليد قائمة النتائج
     // ═══════════════════════════════════════════════════════════
 
-    function transformSelect(selectId) {
-        const selectEl = document.getElementById(selectId);
-        if (!selectEl) return;
+    function getResultsHTML(type, query) {
+        const config = SEARCH_CONFIG[type];
+        if (!config) return '<div class="smart-search-empty">نوع غير معروف</div>';
 
-        const config = SEARCH_TARGETS[selectId];
-        if (!config) return;
-
-        // منع التحويل المزدوج
-        if (selectEl.dataset.searchTransformed === 'true') return;
-        selectEl.dataset.searchTransformed = 'true';
-
-        // إخفاء الـ select الأصلي (مش مسحه)
-selectEl.style.setProperty('display', 'none', 'important');
-selectEl.style.setProperty('position', 'absolute', 'important');
-selectEl.style.setProperty('opacity', '0', 'important');
-selectEl.style.setProperty('pointer-events', 'none', 'important');
-selectEl.style.setProperty('visibility', 'hidden', 'important');
-selectEl.style.setProperty('width', '0', 'important');
-selectEl.style.setProperty('height', '0', 'important');
-selectEl.setAttribute('aria-hidden', 'true');
-selectEl.setAttribute('tabindex', '-1');
-
-        // إنشاء الغلاف
-        const wrapper = document.createElement('div');
-        wrapper.className = 'smart-search-wrapper';
-        wrapper.dataset.targetId = selectId;
-
-        // إنشاء حقل البحث
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'smart-search-input';
-        input.placeholder = config.placeholder;
-        input.autocomplete = 'off';
-
-        // إنشاء قائمة النتائج
-        const results = document.createElement('div');
-        results.className = 'smart-search-results';
-
-        wrapper.appendChild(input);
-        wrapper.appendChild(results);
-
-        // إدخال الغلاف بعد الـ select
-        selectEl.parentNode.insertBefore(wrapper, selectEl.nextSibling);
-
-        // ═══ الأحداث ═══
-
-        // عند الكتابة
-        input.addEventListener('input', function() {
-            const query = input.value.trim();
-            showResults(selectId, query, results);
-        });
-
-        // عند التركيز
-        input.addEventListener('focus', function() {
-            const query = input.value.trim();
-            showResults(selectId, query, results);
-        });
-
-        // عند النقر على نتيجة
-        results.addEventListener('click', function(e) {
-            const item = e.target.closest('.smart-search-item');
-            if (!item) return;
-
-            const value = item.dataset.value;
-            const label = item.dataset.label;
-
-            // تعيين القيمة في الـ select الأصلي
-            selectEl.value = value;
-
-            // إظهار النص في حقل البحث
-            input.value = label;
-
-            // إخفاء النتائج
-            results.classList.remove('show');
-            results.innerHTML = '';
-
-            // إطلاق حدث change للأكواد الموجودة
-            selectEl.dispatchEvent(new Event('change', { bubbles: true }));
-            selectEl.dispatchEvent(new Event('input', { bubbles: true }));
-
-            // إخفاء الـ input (اختياري - لو عايزه يفضل يظهر)
-            // input.blur();
-        });
-
-        // إغلاق النتائج عند النقر خارج المكون
-        document.addEventListener('click', function(e) {
-            if (!wrapper.contains(e.target)) {
-                results.classList.remove('show');
-            }
-        });
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 3: عرض النتائج
-    // ═══════════════════════════════════════════════════════════
-
-    function showResults(selectId, query, resultsContainer) {
-        const config = SEARCH_TARGETS[selectId];
-        if (!config) return;
-
-        const data = getDataByType(config.type);
-        const fields = getSearchFields(config.type);
+        const data = config.getData();
 
         if (data.length === 0) {
-            resultsContainer.innerHTML = '<div class="smart-search-empty">لا توجد بيانات</div>';
-            resultsContainer.classList.add('show');
-            return;
+            return '<div class="smart-search-empty">' + config.emptyLabel + '</div>';
         }
 
-        // فلترة البيانات
-        const q = query.toLowerCase();
-        let filtered = data;
+        const q = String(query || '').trim().toLowerCase();
 
+        let filtered = data;
         if (q) {
             filtered = data.filter(function(item) {
-                return fields.some(function(field) {
+                return config.searchFields.some(function(field) {
                     const val = String(item[field] || '').toLowerCase();
                     return val.indexOf(q) > -1;
                 });
             });
         }
 
-        // تحديد الحد الأقصى
-        const MAX_RESULTS = 50;
-        const total = filtered.length;
-        const limited = filtered.slice(0, MAX_RESULTS);
-
-        if (limited.length === 0) {
-            resultsContainer.innerHTML = '<div class="smart-search-empty">لا توجد نتائج للبحث "' + query + '"</div>';
-            resultsContainer.classList.add('show');
-            return;
+        if (filtered.length === 0) {
+            return '<div class="smart-search-empty">لا توجد نتائج لـ "' + escapeHtml(query) + '"</div>';
         }
 
-        // بناء HTML
+        // حد أقصى 50 نتيجة
+        const MAX = 50;
+        const total = filtered.length;
+        const limited = filtered.slice(0, MAX);
+
         let html = '';
 
         limited.forEach(function(item) {
-            const label = buildLabel(item, config.type);
-            const icon = getIcon(config.type, item);
-            const sub = buildSubtitle(item, config.type);
+            const subtitle = buildSubtitle(item, type);
 
             html += '<div class="smart-search-item" ' +
                 'data-value="' + escapeAttr(item.name) + '" ' +
-                'data-id="' + escapeAttr(String(item.id || '')) + '" ' +
-                'data-label="' + escapeAttr(item.name) + '">' +
-                '<div class="smart-search-icon">' + icon + '</div>' +
+                'data-id="' + escapeAttr(String(item.id || '')) + '">' +
+                '<div class="smart-search-icon">' + config.icon + '</div>' +
                 '<div class="smart-search-info">' +
                     '<div class="smart-search-name">' + escapeHtml(item.name) + '</div>' +
-                    (sub ? '<div class="smart-search-sub">' + escapeHtml(sub) + '</div>' : '') +
+                    (subtitle ? '<div class="smart-search-sub">' + subtitle + '</div>' : '') +
                 '</div>' +
             '</div>';
         });
 
-        // لو في نتائج أكتر
-        if (total > MAX_RESULTS) {
-            html += '<div class="smart-search-more">و ' + (total - MAX_RESULTS) + ' نتيجة أخرى... اكتب أكثر للتصفية</div>';
+        if (total > MAX) {
+            html += '<div class="smart-search-more">و ' + (total - MAX) + ' نتيجة أخرى... اكتب أكثر للتصفية</div>';
         }
 
-        resultsContainer.innerHTML = html;
-        resultsContainer.classList.add('show');
+        return html;
     }
 
-    // بناء النص الفرعي
     function buildSubtitle(item, type) {
         const parts = [];
 
-        if (item.phone) parts.push('📱 ' + item.phone);
-        if (item.whatsapp && item.whatsapp !== item.phone) parts.push('💬 ' + item.whatsapp);
-        if (item.barcode && type === 'products') parts.push('🏷️ ' + item.barcode);
+        if (item.phone) parts.push('📱 ' + escapeHtml(item.phone));
+        if (item.whatsapp && item.whatsapp !== item.phone) parts.push('💬 ' + escapeHtml(item.whatsapp));
 
         if (type === 'products') {
-            parts.push('💰 ' + window.formatMoney(item.sell || 0));
+            if (item.barcode) parts.push('🏷️ ' + escapeHtml(item.barcode));
+            parts.push('💰 ' + (window.formatMoney ? window.formatMoney(item.sell || 0) : item.sell || 0));
             parts.push('📦 ' + (item.qty || 0));
         }
-
-        if (item._isCustomer) parts.push('👤 عميل');
-        if (item._isSupplier) parts.push('🚚 مورد');
 
         return parts.join(' • ');
     }
 
-    // أيقونة النوع
-    function getIcon(type, item) {
-        if (type === 'products') return '📦';
-        if (type === 'customers') return '👤';
-        if (type === 'suppliers') return '🚚';
-        if (item._isCustomer) return '👤';
-        if (item._isSupplier) return '🚚';
-        return '📋';
-    }
-
-    // بناء النص المعروض
-    function buildLabel(item, type) {
-        return item.name || '';
-    }
-
-    // دوال مساعدة
     function escapeHtml(s) {
         if (s == null) return '';
         return String(s)
@@ -272,25 +130,149 @@ selectEl.setAttribute('tabindex', '-1');
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: تحديث القوائم الأصلية (لمزامنة البيانات)
+    // الجزء 3: تهيئة مكون بحث واحد
     // ═══════════════════════════════════════════════════════════
 
-    // بعد أي تحديث للبيانات، نعيد تحميل النتائج
-    function refreshAllSearchFields() {
-        // مسح النص في الحقول لو قيمتها اتغيرت
-        Object.keys(SEARCH_TARGETS).forEach(function(selectId) {
-            const selectEl = document.getElementById(selectId);
-            if (!selectEl || selectEl.dataset.searchTransformed !== 'true') return;
+    function initSearchComponent(container) {
+        if (container.dataset.searchInit === 'true') return;
+        container.dataset.searchInit = 'true';
 
-            const wrapper = document.querySelector('.smart-search-wrapper[data-target-id="' + selectId + '"]');
-            if (!wrapper) return;
+        const type = container.dataset.searchType;
+        const targetId = container.dataset.searchTarget;
+        const hiddenValue = container.dataset.searchValue || '';
 
-            const input = wrapper.querySelector('.smart-search-input');
-            if (!input) return;
+        if (!type || !targetId) {
+            console.warn('⚠️ مكون بحث بدون type أو target:', container);
+            return;
+        }
 
-            // لو القيمة في الـ select فاضية، نفرغ الـ input
-            if (!selectEl.value) {
-                input.value = '';
+        const config = SEARCH_CONFIG[type];
+        if (!config) {
+            console.warn('⚠️ نوع بحث غير معروف:', type);
+            return;
+        }
+
+        // البحث عن الحقل المخفي (الـ select الأصلي)
+        const hiddenSelect = document.getElementById(targetId);
+
+        // البحث عن الـ input
+        let input = container.querySelector('.smart-search-input');
+        if (!input) {
+            input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'smart-search-input';
+            input.placeholder = config.placeholder;
+            input.autocomplete = 'off';
+            input.setAttribute('inputmode', 'search');
+            container.insertBefore(input, container.firstChild);
+        }
+
+        // البحث عن قائمة النتائج
+        let results = container.querySelector('.smart-search-results');
+        if (!results) {
+            results = document.createElement('div');
+            results.className = 'smart-search-results';
+            container.appendChild(results);
+        }
+
+        // ═══ الأحداث ═══
+
+        // عند الكتابة
+        input.addEventListener('input', function() {
+            const html = getResultsHTML(type, input.value);
+            results.innerHTML = html;
+            results.classList.add('show');
+        });
+
+        // عند التركيز
+        input.addEventListener('focus', function() {
+            const html = getResultsHTML(type, input.value);
+            results.innerHTML = html;
+            results.classList.add('show');
+        });
+
+        // عند الضغط على ESC
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                results.classList.remove('show');
+                input.blur();
+            }
+        });
+
+        // عند اختيار نتيجة
+        results.addEventListener('click', function(e) {
+            const item = e.target.closest('.smart-search-item');
+            if (!item) return;
+
+            const value = item.dataset.value;
+            const id = item.dataset.id;
+
+            // ضبط الـ select المخفي
+            if (hiddenSelect) {
+                // البحث عن option بالقيمة
+                let found = false;
+                Array.from(hiddenSelect.options).forEach(function(opt) {
+                    if (opt.value == value) {
+                        opt.selected = true;
+                        found = true;
+                    }
+                });
+
+                // لو مفيش option، نضيف واحد جديد
+                if (!found) {
+                    const newOption = document.createElement('option');
+                    newOption.value = value;
+                    newOption.text = value;
+                    newOption.selected = true;
+                    hiddenSelect.appendChild(newOption);
+                }
+
+                // ضبط القيمة
+                hiddenSelect.value = value;
+
+                // إطلاق الأحداث
+                hiddenSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                hiddenSelect.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+
+            // ضبط الـ input
+            input.value = value;
+
+            // إخفاء النتائج
+            results.classList.remove('show');
+            results.innerHTML = '';
+            input.blur();
+        });
+
+        // إغلاق النتائج عند النقر خارج المكون
+        document.addEventListener('click', function(e) {
+            if (!container.contains(e.target)) {
+                results.classList.remove('show');
+            }
+        });
+
+        // تحديث placeholder
+        if (config.placeholder) {
+            input.placeholder = config.placeholder;
+        }
+
+        // لو في قيمة موجودة
+        if (hiddenValue && !input.value) {
+            input.value = hiddenValue;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 4: تحديث الحقول بعد تغيير البيانات
+    // ═══════════════════════════════════════════════════════════
+
+    function refreshAllSearches() {
+        // تحديث placeholder والقيم لو اتغيرت
+        document.querySelectorAll('.smart-search-container').forEach(function(container) {
+            const input = container.querySelector('.smart-search-input');
+            const results = container.querySelector('.smart-search-results');
+            if (input && results) {
+                results.classList.remove('show');
             }
         });
     }
@@ -300,55 +282,31 @@ selectEl.setAttribute('tabindex', '-1');
     // ═══════════════════════════════════════════════════════════
 
     window.initSmartSearch = function() {
-        console.log('🔍 تفعيل البحث الذكي...');
+        const containers = document.querySelectorAll('.smart-search-container');
+        let count = 0;
 
-        Object.keys(SEARCH_TARGETS).forEach(function(selectId) {
+        containers.forEach(function(container) {
             try {
-                transformSelect(selectId);
+                initSearchComponent(container);
+                count++;
             } catch (e) {
-                console.warn('⚠️ فشل تحويل ' + selectId + ':', e.message);
+                console.warn('⚠️ فشل تهيئة مكون:', e.message);
             }
         });
 
-        console.log('✅ تم تفعيل البحث الذكي على ' + Object.keys(SEARCH_TARGETS).length + ' حقول');
+        console.log('✅ تم تفعيل البحث الذكي على ' + count + ' حقل');
     };
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 6: ربط الأحداث
     // ═══════════════════════════════════════════════════════════
 
-    // عند تغيير البيانات، نحدّث الحقول
     if (window.EventBus) {
-        window.EventBus.on('data:products:changed', function() {
-            setTimeout(refreshAllSearchFields, 100);
+        ['products', 'customers', 'suppliers'].forEach(function(key) {
+            window.EventBus.on('data:' + key + ':changed', function() {
+                refreshAllSearches();
+            });
         });
-        window.EventBus.on('data:customers:changed', function() {
-            setTimeout(refreshAllSearchFields, 100);
-        });
-        window.EventBus.on('data:suppliers:changed', function() {
-            setTimeout(refreshAllSearchFields, 100);
-        });
-    }
-
-    // إضافة قائمة المرتجعات عند تغيير نوع المرتجع
-    const originalToggleReturnParty = window.toggleReturnParty;
-    if (typeof originalToggleReturnParty === 'function') {
-        window.toggleReturnParty = function() {
-            originalToggleReturnParty();
-
-            // إعادة إنشاء البحث للمرتجعات
-            setTimeout(function() {
-                const retPartySelect = document.getElementById('retParty');
-                if (retPartySelect) {
-                    // مسح الحقل الحالي
-                    const wrapper = document.querySelector('.smart-search-wrapper[data-target-id="retParty"]');
-                    if (wrapper) {
-                        const input = wrapper.querySelector('.smart-search-input');
-                        if (input) input.value = '';
-                    }
-                }
-            }, 100);
-        };
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -356,39 +314,34 @@ selectEl.setAttribute('tabindex', '-1');
     // ═══════════════════════════════════════════════════════════
 
     function tryInit() {
-        // ننتظر لحد ما الصفحة تحمل
-        const saleProductEl = document.getElementById('saleProduct');
-        if (!saleProductEl) {
+        const containers = document.querySelectorAll('.smart-search-container');
+        if (containers.length === 0) {
             setTimeout(tryInit, 500);
             return;
         }
 
-        // نتأكد إن البيانات اتحملت
         window.initSmartSearch();
     }
 
-    // نبدأ التهيئة بعد 2 ثانية من تحميل الصفحة
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(tryInit, 1500);
+            setTimeout(tryInit, 800);
         });
     } else {
-        setTimeout(tryInit, 1500);
+        setTimeout(tryInit, 800);
     }
 
-    // نعيد التهيئة لو في حقول جديدة ظهرت (مثلاً في modal)
+    // إعادة الفحص كل ثانيتين (لو حقل جديد ظهر)
     setInterval(function() {
-        Object.keys(SEARCH_TARGETS).forEach(function(selectId) {
-            const selectEl = document.getElementById(selectId);
-            if (selectEl && selectEl.dataset.searchTransformed !== 'true') {
-                try {
-                    transformSelect(selectId);
-                } catch (e) {}
-            }
-        });
-    }, 3000);
+        const containers = document.querySelectorAll('.smart-search-container:not([data-search-init="true"])');
+        if (containers.length > 0) {
+            containers.forEach(function(c) {
+                try { initSearchComponent(c); } catch (e) {}
+            });
+        }
+    }, 2000);
 
     window.__searchLoaded = true;
-    console.log('✅ search.js v1.0 جاهز');
+    console.log('✅ search.js v2.0 جاهز');
 
 })();
