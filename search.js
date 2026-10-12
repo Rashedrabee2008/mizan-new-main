@@ -1,12 +1,12 @@
 // ============================================================
-// الميزان Pro - search.js v3.0
-// مكون بحث ذكي مع إصلاح كامل للمزامنة مع الحقول الأصلية
+// الميزان Pro - search.js v4.0
+// بحث ذكي كامل مع ربط كامل مع pos.js و inventory.js
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🔍 search.js v3.0 - بدء التحميل');
+    console.log('🔍 search.js v4.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: الإعدادات
@@ -60,7 +60,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 3: بناء النتائج
+    // الجزء 3: بناء نتائج البحث
     // ═══════════════════════════════════════════════════════════
 
     function getResultsHTML(type, query) {
@@ -132,49 +132,49 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: ضبط الحقل المخفي (القلب)
+    // الجزء 4: ضبط الحقل المخفي (القلب الحقيقي)
     // ═══════════════════════════════════════════════════════════
-function setSelectValue(selectEl, value, id) {
-    if (!selectEl) return;
-    
-    // مسح كل الاختيارات
-    Array.from(selectEl.options).forEach(function(opt) {
-        opt.selected = false;
-    });
-    
-    // ⚡ المفتاح: نستخدم ID بدل الاسم
-    const actualValue = id ? String(id) : String(value);
-    
-    // البحث عن option موجود
-    let foundIndex = -1;
-    for (let i = 0; i < selectEl.options.length; i++) {
-        if (String(selectEl.options[i].value) === actualValue) {
-            foundIndex = i;
-            break;
+
+    function setSelectValue(selectEl, value, id) {
+        if (!selectEl) return;
+
+        const actualValue = id ? String(id) : String(value);
+
+        // مسح كل الاختيارات
+        Array.from(selectEl.options).forEach(function(opt) {
+            opt.selected = false;
+        });
+
+        // البحث عن option موجود
+        let foundIndex = -1;
+        for (let i = 0; i < selectEl.options.length; i++) {
+            if (String(selectEl.options[i].value) === actualValue) {
+                foundIndex = i;
+                break;
+            }
         }
-    }
-    
-    // لو مش موجود، نضيف واحد جديد
-    if (foundIndex === -1) {
-        const newOption = document.createElement('option');
-        newOption.value = actualValue;
-        newOption.text = value;
-        selectEl.appendChild(newOption);
-        foundIndex = selectEl.options.length - 1;
-    }
-    
-    // ضبط القيمة
-    selectEl.selectedIndex = foundIndex;
-    selectEl.value = actualValue;
-    
-    // تخزين الـ ID في dataset
-    selectEl.dataset.selectedId = actualValue;
-    
-        // إطلاق الأحداث بطريقة مضمونة
+
+        // لو مش موجود، نضيف واحد جديد
+        if (foundIndex === -1) {
+            const newOption = document.createElement('option');
+            newOption.value = actualValue;
+            newOption.text = value;
+            selectEl.appendChild(newOption);
+            foundIndex = selectEl.options.length - 1;
+        }
+
+        // ضبط القيمة
+        selectEl.selectedIndex = foundIndex;
+        selectEl.value = actualValue;
+
+        // تخزين الـ id في dataset
+        selectEl.dataset.selectedId = actualValue;
+        selectEl.dataset.selectedName = value;
+
+        // ⚡ إطلاق الأحداث بطريقة مضمونة
         try {
             selectEl.dispatchEvent(new Event('change', { bubbles: true }));
         } catch (e) {
-            // بديل للمتصفحات القديمة
             const evt = document.createEvent('HTMLEvents');
             evt.initEvent('change', true, false);
             selectEl.dispatchEvent(evt);
@@ -255,7 +255,7 @@ function setSelectValue(selectEl, value, id) {
             }
         });
 
-        // الاختيار من النتائج
+        // ⚡ الاختيار من النتائج (القلب)
         results.addEventListener('click', function(e) {
             const item = e.target.closest('.smart-search-item');
             if (!item) return;
@@ -263,25 +263,20 @@ function setSelectValue(selectEl, value, id) {
             const value = item.dataset.value;
             const id = item.dataset.id;
 
-            // 1️⃣ ضبط الـ select المخفي (القلب)
+            // ضبط الـ select المخفي
             if (hiddenSelect) {
-                setSelectValue(hiddenSelect, value);
-
-                // 2️⃣ لو فيه data-id، نحفظه كسمة إضافية
-                if (id) {
-                    hiddenSelect.dataset.selectedId = id;
-                }
+                setSelectValue(hiddenSelect, value, id);
             }
 
-            // 3️⃣ ضبط الـ input
+            // ضبط الـ input
             input.value = value;
 
-            // 4️⃣ إخفاء النتائج
+            // إخفاء النتائج
             results.classList.remove('show');
             results.innerHTML = '';
             input.blur();
 
-            // 5️⃣ إطلاق أحداث إضافية بعد 50ms (لضمان الالتقاط)
+            // إطلاق الأحداث مرة تانية بعد 50ms (ضمان)
             setTimeout(function() {
                 if (hiddenSelect) {
                     try {
@@ -300,18 +295,19 @@ function setSelectValue(selectEl, value, id) {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 6: مساعدات — قراءة القيمة الحالية من أي حقل بحث
+    // الجزء 6: دوال مساعدة عامة (تستخدمها pos.js)
     // ═══════════════════════════════════════════════════════════
 
-    // هذه الدالة تُستخدم في pos.js لو احتجنا قراءة القيمة
+    // قراءة القيمة الحالية من أي حقل بحث
     window.getSmartSearchValue = function(targetId) {
         const selectEl = document.getElementById(targetId);
         if (!selectEl) return '';
 
         // الأولوية للـ select.value
         if (selectEl.value) return selectEl.value;
+        if (selectEl.dataset.selectedId) return selectEl.dataset.selectedId;
 
-        // بديل: نقرأ من حقل البحث نفسه
+        // بديل: نقرأ من حقل البحث
         const container = document.querySelector('.smart-search-container[data-search-target="' + targetId + '"]');
         if (container) {
             const input = container.querySelector('.smart-search-input');
@@ -319,6 +315,58 @@ function setSelectValue(selectEl, value, id) {
         }
 
         return '';
+    };
+
+    // الحصول على الـ ID الكامل
+    window.getSmartSearchId = function(targetId) {
+        const selectEl = document.getElementById(targetId);
+        if (!selectEl) return '';
+
+        if (selectEl.dataset.selectedId) return selectEl.dataset.selectedId;
+        if (selectEl.value) return selectEl.value;
+
+        // ابحث في البيانات
+        const container = document.querySelector('.smart-search-container[data-search-target="' + targetId + '"]');
+        if (!container) return '';
+
+        const input = container.querySelector('.smart-search-input');
+        if (!input || !input.value) return '';
+
+        const searchValue = input.value.trim();
+        const type = container.dataset.searchType;
+
+        let data = [];
+        if (type === 'products') data = window.products || [];
+        if (type === 'customers') data = window.customers || [];
+        if (type === 'suppliers') data = window.suppliers || [];
+
+        // ابحث بالاسم أو الـ id
+        const found = data.find(function(item) {
+            return String(item.id) === searchValue || item.name === searchValue;
+        });
+
+        return found ? String(found.id) : searchValue;
+    };
+
+    // إعادة تعيين حقل بحث
+    window.resetSmartSearch = function(targetId) {
+        const selectEl = document.getElementById(targetId);
+        if (selectEl) {
+            selectEl.value = '';
+            delete selectEl.dataset.selectedId;
+            delete selectEl.dataset.selectedName;
+        }
+
+        const container = document.querySelector('.smart-search-container[data-search-target="' + targetId + '"]');
+        if (container) {
+            const input = container.querySelector('.smart-search-input');
+            if (input) input.value = '';
+            const results = container.querySelector('.smart-search-results');
+            if (results) {
+                results.classList.remove('show');
+                results.innerHTML = '';
+            }
+        }
     };
 
     // ═══════════════════════════════════════════════════════════
@@ -370,10 +418,7 @@ function setSelectValue(selectEl, value, id) {
         }
 
         // نفرغ الـ select
-        const retPartySelect = document.getElementById('retParty');
-        if (retPartySelect) {
-            retPartySelect.value = '';
-        }
+        window.resetSmartSearch('retParty');
     }
 
     document.addEventListener('change', function(e) {
@@ -430,6 +475,6 @@ function setSelectValue(selectEl, value, id) {
     }, 2000);
 
     window.__searchLoaded = true;
-    console.log('✅ search.js v3.0 جاهز');
+    console.log('✅ search.js v4.0 جاهز');
 
 })();
