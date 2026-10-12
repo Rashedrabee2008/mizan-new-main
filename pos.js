@@ -1651,6 +1651,456 @@
         window.populateRetProducts();
     });
 
+    // ═══════════════════════════════════════════════════════════
+// الجزء 11: التبديل بين التحصيل والسداد
+// ═══════════════════════════════════════════════════════════
+
+window.switchPayTab = function(tab, btn) {
+    window.currentPayTab = tab;
+
+    // تحديث أزرار التبويب
+    document.querySelectorAll('#page-payments .tab-btn').forEach(function(b) {
+        b.classList.remove('active');
+    });
+    if (btn) btn.classList.add('active');
+
+    // إخفاء/إظهار المحتوى
+    const collect = document.getElementById('payTabCollect');
+    const pay = document.getElementById('payTabPay');
+
+    if (collect) collect.style.display = tab === 'collect' ? 'block' : 'none';
+    if (pay) pay.style.display = tab === 'pay' ? 'block' : 'none';
+
+    // تحديث القوائم المنسدلة عند التبديل
+    if (tab === 'collect') {
+        window.populateCollectCustomers();
+        window.populateCashBoxDropdowns();
+    } else if (tab === 'pay') {
+        window.populatePaySuppliers();
+        window.populateCashBoxDropdowns();
+    }
+};
+
+// ═══════════════════════════════════════════════════════════
+// الجزء 12: التحصيل من العملاء
+// ═══════════════════════════════════════════════════════════
+
+window.populateCollectCustomers = function() {
+    const sel = document.getElementById('collectCustomer');
+    if (!sel) return;
+    const cv = sel.value;
+    sel.innerHTML = '<option value="">اختر عميل...</option>';
+    (window.customers || []).forEach(function(c) {
+        const bal = window.Balance.customer(c.name);
+        const text = window.escapeHtml(c.name) +
+            (bal > 0 ? ' (مديونية: ' + window.formatMoney(bal) + ')' : '');
+        sel.innerHTML += '<option value="' + window.escapeHtml(c.name) + '">' + text + '</option>';
+    });
+    sel.value = cv;
+};
+
+window.populatePaySuppliers = function() {
+    const sel = document.getElementById('paySupplier');
+    if (!sel) return;
+    const cv = sel.value;
+    sel.innerHTML = '<option value="">اختر مورد...</option>';
+    (window.suppliers || []).forEach(function(s) {
+        const bal = window.Balance.supplier(s.name);
+        const text = window.escapeHtml(s.name) +
+            (bal > 0 ? ' (مديونية: ' + window.formatMoney(bal) + ')' : '');
+        sel.innerHTML += '<option value="' + window.escapeHtml(s.name) + '">' + text + '</option>';
+    });
+    sel.value = cv;
+};
+
+window.updateCollectInfo = function() {
+    const name = document.getElementById('collectCustomer') ? document.getElementById('collectCustomer').value : '';
+    const box = document.getElementById('collectInfoBox');
+    if (!box) return;
+
+    if (!name) {
+        box.style.display = 'none';
+        return;
+    }
+
+    const balance = window.Balance.customer(name);
+    box.style.display = 'block';
+
+    const debtEl = document.getElementById('collectCurrentDebt');
+    if (debtEl) debtEl.textContent = window.formatMoney(balance);
+
+    const amountInput = document.getElementById('collectAmount');
+    if (amountInput) {
+        amountInput.max = balance;
+        if (balance > 0) amountInput.value = balance.toFixed(2);
+    }
+};
+
+window.updatePayInfo = function() {
+    const name = document.getElementById('paySupplier') ? document.getElementById('paySupplier').value : '';
+    const box = document.getElementById('payInfoBox');
+    if (!box) return;
+
+    if (!name) {
+        box.style.display = 'none';
+        return;
+    }
+
+    const balance = window.Balance.supplier(name);
+    box.style.display = 'block';
+
+    const debtEl = document.getElementById('payCurrentDebt');
+    if (debtEl) debtEl.textContent = window.formatMoney(balance);
+
+    const amountInput = document.getElementById('payAmount');
+    if (amountInput) {
+        amountInput.max = balance;
+        if (balance > 0) amountInput.value = balance.toFixed(2);
+    }
+};
+
+// توزيع دفعة العميل على فواتيره الآجلة
+function distributePayment(customerName, amount) {
+    const relatedInvoices = [];
+    let remaining = amount;
+
+    const customerInvoices = (window.sales || []).filter(function(s) {
+        return s.customer === customerName &&
+               s.paymentMethod === 'credit' &&
+               (s.status === 'unpaid' || s.status === 'partial');
+    }).sort(function(a, b) {
+        return (a.createdAt || '').localeCompare(b.createdAt || '');
+    });
+
+    customerInvoices.forEach(function(inv) {
+        if (remaining <= 0.01) return;
+        const invRemaining = inv.remainingAmount !== undefined ? inv.remainingAmount : inv.total;
+        if (invRemaining <= 0.01) return;
+
+        const pay = Math.min(remaining, invRemaining);
+        inv.paidAmount = (inv.paidAmount || 0) + pay;
+        inv.remainingAmount = invRemaining - pay;
+        inv.status = inv.remainingAmount <= 0.01 ? 'paid' : 'partial';
+        if (inv.remainingAmount <= 0.01) inv.remainingAmount = 0;
+
+        relatedInvoices.push({
+            invoiceId: inv.id,
+            invoiceNumber: inv.number,
+            amount: pay
+        });
+        remaining -= pay;
+    });
+
+    return relatedInvoices;
+}
+
+// توزيع دفعة المورد على فواتيره الآجلة
+function distributePay(supplierName, amount) {
+    const relatedInvoices = [];
+    let remaining = amount;
+
+    const supplierInvoices = (window.purchases || []).filter(function(p) {
+        return p.supplierName === supplierName &&
+               p.payment === 'credit' &&
+               (p.status === 'unpaid' || p.status === 'partial');
+    }).sort(function(a, b) {
+        return (a.createdAt || '').localeCompare(b.createdAt || '');
+    });
+
+    supplierInvoices.forEach(function(inv) {
+        if (remaining <= 0.01) return;
+        const invRemaining = inv.remainingAmount !== undefined ? inv.remainingAmount : inv.total;
+        if (invRemaining <= 0.01) return;
+
+        const pay = Math.min(remaining, invRemaining);
+        inv.paidAmount = (inv.paidAmount || 0) + pay;
+        inv.remainingAmount = invRemaining - pay;
+        inv.status = inv.remainingAmount <= 0.01 ? 'paid' : 'partial';
+        if (inv.remainingAmount <= 0.01) inv.remainingAmount = 0;
+
+        relatedInvoices.push({
+            invoiceId: inv.id,
+            invoiceNumber: inv.number,
+            amount: pay
+        });
+        remaining -= pay;
+    });
+
+    return relatedInvoices;
+}
+
+// ═══════════════════════════════════════════════════════════
+// الجزء 13: حفظ التحصيل
+// ═══════════════════════════════════════════════════════════
+
+window.saveCollect = function() {
+    if (!window.canAdd()) {
+        window.showToast('⚠️ لا تملك صلاحية', 'error');
+        return;
+    }
+
+    const party = document.getElementById('collectCustomer') ? document.getElementById('collectCustomer').value : '';
+    const amount = parseFloat(document.getElementById('collectAmount') ? document.getElementById('collectAmount').value : 0) || 0;
+    const date = (document.getElementById('collectDate') ? document.getElementById('collectDate').value : '') || window.getTodayDate();
+    const cashBoxId = document.getElementById('collectCashBox') ? document.getElementById('collectCashBox').value : '';
+    const note = document.getElementById('collectNote') ? document.getElementById('collectNote').value.trim() : '';
+
+    if (!party) {
+        window.showToast('⚠️ اختر عميل', 'error');
+        return;
+    }
+    if (amount <= 0) {
+        window.showToast('⚠️ أدخل مبلغ صحيح', 'error');
+        return;
+    }
+    if (!cashBoxId) {
+        window.showToast('⚠️ اختر الخزنة', 'error');
+        return;
+    }
+
+    const box = (window.cashBoxes || []).find(function(b) { return b.id == cashBoxId; });
+
+    const pay = {
+        id: window.generateId('col_'),
+        type: 'collect',
+        party: party,
+        amount: amount,
+        date: date,
+        time: window.getNowTime(),
+        note: note,
+        cashBoxId: cashBoxId,
+        cashBoxName: box ? box.name : '',
+        relatedInvoices: [],
+        createdBy: window.currentUser ? window.currentUser.name : ''
+    };
+
+    // توزيع المبلغ على الفواتير
+    pay.relatedInvoices = distributePayment(party, amount);
+
+    window.DataStore.add('payments', pay);
+    window.DataStore.set('sales', window.sales);
+
+    // إضافة للخزنة
+    window.DataStore.add('treasury', {
+        id: window.generateId('tr_'),
+        type: 'deposit',
+        amount: amount,
+        note: 'تحصيل من ' + party,
+        cashBoxId: cashBoxId,
+        cashBoxName: box ? box.name : '',
+        refType: 'collect',
+        refId: pay.id,
+        date: date,
+        time: window.getNowTime()
+    });
+
+    // قيد محاسبي
+    window.Accounting.entryCollect(pay);
+
+    // إعادة تعيين
+    const amountEl = document.getElementById('collectAmount');
+    const noteEl = document.getElementById('collectNote');
+    const custEl = document.getElementById('collectCustomer');
+    const infoBox = document.getElementById('collectInfoBox');
+
+    if (amountEl) amountEl.value = '';
+    if (noteEl) noteEl.value = '';
+    if (custEl) custEl.value = '';
+    if (infoBox) infoBox.style.display = 'none';
+
+    window.updatePaymentsStats();
+    window.showToast('✅ تم تحصيل ' + window.formatMoney(amount) + ' ج.م', 'success');
+
+    // إشعار
+    if (typeof window.sendNotification === 'function') {
+        window.sendNotification('💵 تحصيل جديد', 'من ' + party + ' - ' + window.formatMoney(amount) + ' ج.م',
+            { type: 'success', tag: 'collect-' + Date.now() });
+    }
+};
+
+// ═══════════════════════════════════════════════════════════
+// الجزء 14: حفظ السداد
+// ═══════════════════════════════════════════════════════════
+
+window.savePay = function() {
+    if (!window.canAdd()) {
+        window.showToast('⚠️ لا تملك صلاحية', 'error');
+        return;
+    }
+
+    const party = document.getElementById('paySupplier') ? document.getElementById('paySupplier').value : '';
+    const amount = parseFloat(document.getElementById('payAmount') ? document.getElementById('payAmount').value : 0) || 0;
+    const date = (document.getElementById('payDate') ? document.getElementById('payDate').value : '') || window.getTodayDate();
+    const cashBoxId = document.getElementById('payCashBox') ? document.getElementById('payCashBox').value : '';
+    const note = document.getElementById('payNote') ? document.getElementById('payNote').value.trim() : '';
+
+    if (!party) {
+        window.showToast('⚠️ اختر مورد', 'error');
+        return;
+    }
+    if (amount <= 0) {
+        window.showToast('⚠️ أدخل مبلغ صحيح', 'error');
+        return;
+    }
+    if (!cashBoxId) {
+        window.showToast('⚠️ اختر الخزنة', 'error');
+        return;
+    }
+
+    const box = (window.cashBoxes || []).find(function(b) { return b.id == cashBoxId; });
+
+    const pay = {
+        id: window.generateId('pay_'),
+        type: 'pay',
+        party: party,
+        amount: amount,
+        date: date,
+        time: window.getNowTime(),
+        note: note,
+        cashBoxId: cashBoxId,
+        cashBoxName: box ? box.name : '',
+        relatedInvoices: [],
+        createdBy: window.currentUser ? window.currentUser.name : ''
+    };
+
+    pay.relatedInvoices = distributePay(party, amount);
+
+    window.DataStore.add('payments', pay);
+    window.DataStore.set('purchases', window.purchases);
+
+    // خصم من الخزنة
+    window.DataStore.add('treasury', {
+        id: window.generateId('tr_'),
+        type: 'withdraw',
+        amount: amount,
+        note: 'سداد لـ ' + party,
+        cashBoxId: cashBoxId,
+        cashBoxName: box ? box.name : '',
+        refType: 'pay',
+        refId: pay.id,
+        date: date,
+        time: window.getNowTime()
+    });
+
+    // قيد محاسبي
+    window.Accounting.entryPay(pay);
+
+    // إعادة تعيين
+    const amountEl = document.getElementById('payAmount');
+    const noteEl = document.getElementById('payNote');
+    const supEl = document.getElementById('paySupplier');
+    const infoBox = document.getElementById('payInfoBox');
+
+    if (amountEl) amountEl.value = '';
+    if (noteEl) noteEl.value = '';
+    if (supEl) supEl.value = '';
+    if (infoBox) infoBox.style.display = 'none';
+
+    window.updatePaymentsStats();
+    window.showToast('✅ تم سداد ' + window.formatMoney(amount) + ' ج.م', 'success');
+
+    if (typeof window.sendNotification === 'function') {
+        window.sendNotification('💳 سداد جديد', 'لـ ' + party + ' - ' + window.formatMoney(amount) + ' ج.م',
+            { type: 'success', tag: 'pay-' + Date.now() });
+    }
+};
+
+// ═══════════════════════════════════════════════════════════
+// الجزء 15: إحصائيات المدفوعات
+// ═══════════════════════════════════════════════════════════
+
+window.updatePaymentsStats = function() {
+    const collected = (window.payments || []).filter(function(p) { return p.type === 'collect'; })
+        .reduce(function(s, p) { return s + (parseFloat(p.amount) || 0); }, 0);
+    const paid = (window.payments || []).filter(function(p) { return p.type === 'pay'; })
+        .reduce(function(s, p) { return s + (parseFloat(p.amount) || 0); }, 0);
+
+    const set = function(id, val) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+
+    set('payTotalCollected', window.formatMoney(collected));
+    set('payTotalPaid', window.formatMoney(paid));
+};
+
+window.renderPayments = function() {
+    const c = document.getElementById('paymentsList');
+    if (!c) return;
+
+    if ((window.payments || []).length === 0) {
+        c.innerHTML = '<div class="empty-state"><i class="fas fa-hand-holding-usd"></i><span>لا توجد عمليات</span></div>';
+        return;
+    }
+
+    const sorted = window.payments.slice().sort(function(a, b) {
+        return (b.createdAt || '').localeCompare(a.createdAt || '');
+    }).slice(0, 50);
+
+    let html = '<div class="table-header" style="grid-template-columns: 0.7fr 1.5fr 1fr 1fr 0.7fr;">' +
+        '<span>النوع</span><span>الجهة</span><span>المبلغ</span><span>التاريخ</span><span></span>' +
+    '</div>';
+
+    sorted.forEach(function(p) {
+        const isCollect = p.type === 'collect';
+        const color = isCollect ? '#2D8F5E' : '#E06060';
+
+        html += '<div class="table-row" style="grid-template-columns: 0.7fr 1.5fr 1fr 1fr 0.7fr;">' +
+            '<span style="color:' + color + ';font-size:11px;font-weight:700;">' +
+                (isCollect ? '💰 تحصيل' : '💸 سداد') + '</span>' +
+            '<span>' + window.escapeHtml(p.party) + '</span>' +
+            '<span style="color:' + color + ';font-weight:700;">' + window.formatMoney(p.amount) + '</span>' +
+            '<span style="font-size:10px;color:#A89070;">' + (p.date || '') + '</span>' +
+            '<button class="btn btn-info btn-sm" onclick="showReceipt(\'' + p.id + '\')"><i class="fas fa-receipt"></i></button>' +
+        '</div>';
+    });
+
+    c.innerHTML = html;
+};
+
+window.showReceipt = function(id) {
+    const pay = (window.payments || []).find(function(p) { return p.id === id; });
+    if (!pay) return;
+
+    const isCollect = pay.type === 'collect';
+    const label = isCollect ? 'إيصال استلام نقدية' : 'إيصال دفع نقدية';
+    const color = isCollect ? '#2D8F5E' : '#E06060';
+
+    const html = '<button class="modal-close" onclick="closeModal()">&times;</button>' +
+        '<h3 style="color:' + color + ';">🧾 ' + label + '</h3>' +
+        '<div style="background:#fff;color:#000;padding:20px;border-radius:8px;border:2px solid ' + color + ';">' +
+            '<div style="text-align:center;padding-bottom:12px;border-bottom:2px dashed #333;margin-bottom:12px;">' +
+                '<h2 style="color:' + color + ';font-size:20px;">' +
+                    window.escapeHtml((window.companyData || {}).name || 'الميزان') + '</h2>' +
+                '<p style="font-size:12px;">' + label + '</p>' +
+            '</div>' +
+            '<div style="padding:10px 0;border-bottom:1px dashed #333;margin-bottom:12px;">' +
+                '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;">' +
+                    '<span>رقم الإيصال:</span><span>#' + String(pay.id).slice(-6) + '</span>' +
+                '</div>' +
+                '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;">' +
+                    '<span>التاريخ:</span><span>' + pay.date + '</span>' +
+                '</div>' +
+                '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;">' +
+                    '<span>' + (isCollect ? 'العميل' : 'المورد') + ':</span>' +
+                    '<span>' + window.escapeHtml(pay.party) + '</span>' +
+                '</div>' +
+            '</div>' +
+            '<div style="text-align:center;padding:15px;border:2px solid ' + color + ';border-radius:8px;margin:12px 0;background:#f9f9f9;">' +
+                '<div style="font-size:12px;color:#555;margin-bottom:6px;">' +
+                    (isCollect ? 'المبلغ المستلم' : 'المبلغ المدفوع') + '</div>' +
+                '<div style="font-size:26px;font-weight:900;color:' + color + ';">' +
+                    window.formatMoney(pay.amount) + ' ج.م</div>' +
+            '</div>' +
+            '<div style="text-align:center;margin-top:12px;padding-top:10px;border-top:2px dashed #333;font-size:11px;color:#666;">' +
+                window.escapeHtml((window.companyData || {}).footer || 'شكراً لتعاملكم معنا 🌟') +
+            '</div>' +
+        '</div>' +
+        '<button class="btn btn-secondary btn-block" onclick="closeModal()" style="margin-top:12px;">إغلاق</button>';
+
+    window.openModal(html);
+};
+    
     window.__posLoaded = true;
     console.log('✅ pos.js v18.0 جاهز');
 
