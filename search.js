@@ -134,37 +134,42 @@
     // ═══════════════════════════════════════════════════════════
     // الجزء 4: ضبط الحقل المخفي (القلب)
     // ═══════════════════════════════════════════════════════════
-
-    function setSelectValue(selectEl, value) {
-        if (!selectEl) return;
-
-        // مسح كل الاختيارات
-        Array.from(selectEl.options).forEach(function(opt) {
-            opt.selected = false;
-        });
-
-        // البحث عن option موجود
-        let foundIndex = -1;
-        for (let i = 0; i < selectEl.options.length; i++) {
-            if (String(selectEl.options[i].value) === String(value)) {
-                foundIndex = i;
-                break;
-            }
+function setSelectValue(selectEl, value, id) {
+    if (!selectEl) return;
+    
+    // مسح كل الاختيارات
+    Array.from(selectEl.options).forEach(function(opt) {
+        opt.selected = false;
+    });
+    
+    // ⚡ المفتاح: نستخدم ID بدل الاسم
+    const actualValue = id ? String(id) : String(value);
+    
+    // البحث عن option موجود
+    let foundIndex = -1;
+    for (let i = 0; i < selectEl.options.length; i++) {
+        if (String(selectEl.options[i].value) === actualValue) {
+            foundIndex = i;
+            break;
         }
-
-        // لو مش موجود، نضيف واحد جديد
-        if (foundIndex === -1) {
-            const newOption = document.createElement('option');
-            newOption.value = value;
-            newOption.text = value;
-            selectEl.appendChild(newOption);
-            foundIndex = selectEl.options.length - 1;
-        }
-
-        // ضبط القيمة
-        selectEl.selectedIndex = foundIndex;
-        selectEl.value = value;
-
+    }
+    
+    // لو مش موجود، نضيف واحد جديد
+    if (foundIndex === -1) {
+        const newOption = document.createElement('option');
+        newOption.value = actualValue;
+        newOption.text = value;
+        selectEl.appendChild(newOption);
+        foundIndex = selectEl.options.length - 1;
+    }
+    
+    // ضبط القيمة
+    selectEl.selectedIndex = foundIndex;
+    selectEl.value = actualValue;
+    
+    // تخزين الـ ID في dataset
+    selectEl.dataset.selectedId = actualValue;
+    
         // إطلاق الأحداث بطريقة مضمونة
         try {
             selectEl.dispatchEvent(new Event('change', { bubbles: true }));
