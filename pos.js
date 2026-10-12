@@ -2415,6 +2415,402 @@ window.showReceipt = function(id) {
         window.showToast('✅ تم سداد ' + window.formatMoney(amount) + ' ج.م', 'success');
     };
 
+    // ═══════════════════════════════════════════════════════════
+// قسم التقارير الكامل
+// ═══════════════════════════════════════════════════════════
+
+window.currentReport = 'daily';
+
+window.switchReport = function(type, btn) {
+    window.currentReport = type;
+
+    document.querySelectorAll('#page-reports .report-tab').forEach(function(b) {
+        b.classList.remove('active');
+    });
+    if (btn) btn.classList.add('active');
+
+    window.renderReport(type);
+};
+
+window.getDateRange = function(period) {
+    const now = new Date();
+
+    if (period === 'daily') {
+        const days = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            days.push({
+                date: d.toISOString().split('T')[0],
+                label: window.getArabicDayName(d) + ' ' + d.getDate() + '/' + (d.getMonth() + 1)
+            });
+        }
+        return days;
+    }
+
+    if (period === 'monthly') {
+        const months = [];
+        for (let i = 11; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            months.push({
+                date: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'),
+                label: window.getArabicMonthName(d.getMonth()) + ' ' + d.getFullYear()
+            });
+        }
+        return months;
+    }
+
+    if (period === 'yearly') {
+        const years = [];
+        for (let i = 2; i >= 0; i--) {
+            const year = now.getFullYear() - i;
+            years.push({ date: String(year), label: 'سنة ' + year });
+        }
+        return years;
+    }
+
+    return [];
+};
+
+window.getReportData = function(period, dateStr) {
+    const filterFn = function(date) {
+        if (!date) return false;
+        if (period === 'daily') return date === dateStr;
+        if (period === 'monthly') return (date || '').indexOf(dateStr) === 0;
+        if (period === 'yearly') return (date || '').indexOf(dateStr) === 0;
+        return false;
+    };
+
+    const daySales = (window.sales || []).filter(function(s) { return filterFn(s.date); });
+    const dayPurchases = (window.purchases || []).filter(function(p) { return filterFn(p.date); });
+    const dayExpenses = (window.expenses || []).filter(function(e) { return filterFn(e.date); });
+
+    const salesAmount = daySales.reduce(function(s, x) { return s + (parseFloat(x.total) || 0); }, 0);
+    const purchasesAmount = dayPurchases.reduce(function(s, x) { return s + (parseFloat(x.total) || 0); }, 0);
+    const expensesAmount = dayExpenses.reduce(function(s, x) { return s + (parseFloat(x.amount) || 0); }, 0);
+    const cogsAmount = daySales.reduce(function(s, x) { return s + (parseFloat(x.cogs) || 0); }, 0);
+
+    const grossProfit = salesAmount - cogsAmount;
+    const netProfit = grossProfit - expensesAmount;
+
+    return {
+        salesCount: daySales.length,
+        salesAmount: salesAmount,
+        purchasesCount: dayPurchases.length,
+        purchasesAmount: purchasesAmount,
+        expensesCount: dayExpenses.length,
+        expensesAmount: expensesAmount,
+        cogs: cogsAmount,
+        grossProfit: grossProfit,
+        netProfit: netProfit
+    };
+};
+
+window.renderReport = function(type) {
+    const container = document.getElementById('reportContent');
+    if (!container) return;
+
+    // ═══ تقارير الفترات (يومي/شهري/سنوي) ═══
+    if (type === 'daily' || type === 'monthly' || type === 'yearly') {
+        const periods = window.getDateRange(type);
+        const dataList = periods.map(function(p) {
+            return Object.assign({}, p, window.getReportData(type, p.date));
+        });
+
+        let totals = {
+            salesAmount: 0, salesCount: 0, purchasesAmount: 0,
+            expensesAmount: 0, grossProfit: 0, netProfit: 0
+        };
+
+        dataList.forEach(function(d) {
+            totals.salesAmount += d.salesAmount;
+            totals.salesCount += d.salesCount;
+            totals.purchasesAmount += d.purchasesAmount;
+            totals.expensesAmount += d.expensesAmount;
+            totals.grossProfit += d.grossProfit;
+            totals.netProfit += d.netProfit;
+        });
+
+        window.currentReportData = { type: type, dataList: dataList, totals: totals };
+
+        let tableHtml = '';
+        dataList.forEach(function(d) {
+            tableHtml += '<div class="report-table-row" style="grid-template-columns: 1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr;">' +
+                '<span>' + d.label + '</span>' +
+                '<span class="green">' + window.formatMoney(d.salesAmount) + '</span>' +
+                '<span class="red">' + window.formatMoney(d.purchasesAmount) + '</span>' +
+                '<span class="orange">' + window.formatMoney(d.expensesAmount) + '</span>' +
+                '<span class="gold">' + window.formatMoney(d.grossProfit) + '</span>' +
+                '<span class="' + (d.netProfit >= 0 ? 'green' : 'red') + '">' +
+                    window.formatMoney(d.netProfit) + '</span>' +
+            '</div>';
+        });
+
+        container.innerHTML =
+            '<div class="report-summary">' +
+                '<div class="report-stat green"><div class="num">' + window.formatMoney(totals.salesAmount) + '</div><div class="lbl">💰 إجمالي المبيعات</div></div>' +
+                '<div class="report-stat red"><div class="num">' + window.formatMoney(totals.purchasesAmount) + '</div><div class="lbl">🛒 إجمالي المشتريات</div></div>' +
+                '<div class="report-stat orange"><div class="num">' + window.formatMoney(totals.expensesAmount) + '</div><div class="lbl">💸 إجمالي المصروفات</div></div>' +
+                '<div class="report-stat gold"><div class="num">' + window.formatMoney(totals.grossProfit) + '</div><div class="lbl">📈 إجمالي الربح</div></div>' +
+                '<div class="report-stat ' + (totals.netProfit >= 0 ? 'green' : 'red') + '"><div class="num">' + window.formatMoney(totals.netProfit) + '</div><div class="lbl">💵 صافي الربح</div></div>' +
+                '<div class="report-stat blue"><div class="num">' + totals.salesCount + '</div><div class="lbl">🧾 عدد الفواتير</div></div>' +
+            '</div>' +
+            '<h3 style="color:#C9A94E;font-size:14px;margin:14px 0 8px;">📋 التفاصيل</h3>' +
+            '<div class="report-table-header" style="grid-template-columns: 1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr;">' +
+                '<span>الفترة</span><span>مبيعات</span><span>مشتريات</span>' +
+                '<span>مصروفات</span><span>إجمالي ربح</span><span>صافي ربح</span>' +
+            '</div>' + tableHtml;
+    }
+
+    // ═══ تقرير البائعين ═══
+    else if (type === 'sellers') {
+        const sellerStats = {};
+        (window.sales || []).forEach(function(s) {
+            const seller = s.seller || 'غير محدد';
+            if (!sellerStats[seller]) sellerStats[seller] = { name: seller, total: 0, count: 0, profit: 0 };
+            sellerStats[seller].total += parseFloat(s.total) || 0;
+            sellerStats[seller].count++;
+            sellerStats[seller].profit += parseFloat(s.profit) || 0;
+        });
+
+        const list = Object.values(sellerStats).sort(function(a, b) { return b.total - a.total; });
+
+        let html = '<div class="report-summary">' +
+            '<div class="report-stat green"><div class="num">' + list.length + '</div><div class="lbl">عدد البائعين</div></div>' +
+            '</div>';
+
+        if (list.length === 0) {
+            html += '<div class="empty-state"><i class="fas fa-users"></i><span>لا توجد بيانات</span></div>';
+        } else {
+            html += '<div class="report-table-header" style="grid-template-columns: 0.5fr 1.5fr 1fr 0.8fr 1fr;">' +
+                '<span>#</span><span>البائع</span><span>المبيعات</span><span>الفواتير</span><span>الربح</span>' +
+            '</div>';
+
+            list.forEach(function(s, i) {
+                html += '<div class="report-table-row" style="grid-template-columns: 0.5fr 1.5fr 1fr 0.8fr 1fr;">' +
+                    '<span>' + (i + 1) + '</span>' +
+                    '<span><strong>' + window.escapeHtml(s.name) + '</strong></span>' +
+                    '<span class="green">' + window.formatMoney(s.total) + '</span>' +
+                    '<span class="blue">' + s.count + '</span>' +
+                    '<span class="gold">' + window.formatMoney(s.profit) + '</span>' +
+                '</div>';
+            });
+        }
+
+        container.innerHTML = html;
+    }
+
+    // ═══ تقرير المنتجات ═══
+    else if (type === 'products') {
+        const productStats = {};
+        (window.sales || []).forEach(function(s) {
+            (s.items || []).forEach(function(it) {
+                if (!productStats[it.productId]) {
+                    productStats[it.productId] = { name: it.name, qty: 0, total: 0, profit: 0 };
+                }
+                productStats[it.productId].qty += parseInt(it.qty) || 0;
+                productStats[it.productId].total += parseFloat(it.total) || 0;
+                productStats[it.productId].profit += ((parseFloat(it.price) || 0) - (parseFloat(it.costPrice) || 0)) * (parseInt(it.qty) || 0);
+            });
+        });
+
+        const list = Object.values(productStats).sort(function(a, b) { return b.total - a.total; });
+
+        let html = '<div class="report-summary">' +
+            '<div class="report-stat green"><div class="num">' + list.length + '</div><div class="lbl">منتجات مباعة</div></div>' +
+            '</div>';
+
+        if (list.length === 0) {
+            html += '<div class="empty-state"><i class="fas fa-box"></i><span>لا توجد بيانات</span></div>';
+        } else {
+            html += '<div class="report-table-header" style="grid-template-columns: 0.5fr 1.8fr 0.8fr 1fr 1fr;">' +
+                '<span>#</span><span>المنتج</span><span>الكمية</span><span>المبيعات</span><span>الربح</span>' +
+            '</div>';
+
+            list.forEach(function(p, i) {
+                html += '<div class="report-table-row" style="grid-template-columns: 0.5fr 1.8fr 0.8fr 1fr 1fr;">' +
+                    '<span>' + (i + 1) + '</span>' +
+                    '<span><strong>' + window.escapeHtml(p.name) + '</strong></span>' +
+                    '<span class="blue">' + p.qty + '</span>' +
+                    '<span class="green">' + window.formatMoney(p.total) + '</span>' +
+                    '<span class="gold">' + window.formatMoney(p.profit) + '</span>' +
+                '</div>';
+            });
+        }
+
+        container.innerHTML = html;
+    }
+
+    // ═══ تقرير العملاء ═══
+    else if (type === 'customers') {
+        const customerStats = {};
+        (window.sales || []).forEach(function(s) {
+            const c = s.customer || 'عميل نقدي';
+            if (!customerStats[c]) customerStats[c] = { name: c, total: 0, count: 0 };
+            customerStats[c].total += parseFloat(s.total) || 0;
+            customerStats[c].count++;
+        });
+
+        const list = Object.values(customerStats).sort(function(a, b) { return b.total - a.total; });
+
+        let html = '<div class="report-summary">' +
+            '<div class="report-stat green"><div class="num">' + list.length + '</div><div class="lbl">عدد العملاء</div></div>' +
+            '</div>';
+
+        if (list.length === 0) {
+            html += '<div class="empty-state"><i class="fas fa-users"></i><span>لا توجد بيانات</span></div>';
+        } else {
+            html += '<div class="report-table-header" style="grid-template-columns: 0.5fr 1.8fr 1fr 1fr;">' +
+                '<span>#</span><span>العميل</span><span>المشتريات</span><span>الفواتير</span>' +
+            '</div>';
+
+            list.forEach(function(c, i) {
+                html += '<div class="report-table-row" style="grid-template-columns: 0.5fr 1.8fr 1fr 1fr;">' +
+                    '<span>' + (i + 1) + '</span>' +
+                    '<span><strong>' + window.escapeHtml(c.name) + '</strong></span>' +
+                    '<span class="green">' + window.formatMoney(c.total) + '</span>' +
+                    '<span class="blue">' + c.count + '</span>' +
+                '</div>';
+            });
+        }
+
+        container.innerHTML = html;
+    }
+};
+
+window.printCurrentReport = function() {
+    const container = document.getElementById('reportContent');
+    if (!container || !container.innerHTML.trim()) {
+        window.showToast('⚠️ اختر تقرير أولاً', 'warning');
+        return;
+    }
+
+    const w = window.open('', '_blank');
+    if (!w) {
+        window.showToast('⚠️ يرجى السماح بالنوافذ المنبثقة', 'warning');
+        return;
+    }
+
+    const company = window.companyData || { name: 'الميزان' };
+    const reportNames = {
+        'daily': 'تقرير يومي',
+        'monthly': 'تقرير شهري',
+        'yearly': 'تقرير سنوي',
+        'sellers': 'تقرير البائعين',
+        'products': 'تقرير المنتجات',
+        'customers': 'تقرير العملاء'
+    };
+
+    w.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">' +
+        '<title>' + (reportNames[window.currentReport] || 'تقرير') + '</title>' +
+        '<style>body{font-family:Arial;padding:20px;background:#fff;color:#000;}' +
+        'h1{color:#C9A94E;text-align:center;}table{width:100%;border-collapse:collapse;margin-top:20px;}' +
+        'th{background:#C9A94E;color:#fff;padding:10px;text-align:right;}td{padding:8px;border-bottom:1px solid #ddd;}' +
+        '.report-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}' +
+        '.report-stat{background:#f9f9f9;padding:12px;border-radius:8px;text-align:center;border-right:4px solid #C9A94E;}' +
+        '.report-stat .num{font-size:20px;font-weight:900;color:#C9A94E;}' +
+        '.report-stat .lbl{font-size:12px;color:#666;}' +
+        '</style></head><body>' +
+        '<h1>⚖️ ' + window.escapeHtml(company.name) + '</h1>' +
+        '<p style="text-align:center;">' + (reportNames[window.currentReport] || '') + ' - ' + window.getTodayDate() + '</p>' +
+        container.innerHTML +
+        '<script>window.onload=function(){setTimeout(function(){window.print();},500);};<\/script>' +
+        '</body></html>');
+
+    w.document.close();
+};
+
+window.exportReportCSV = function() {
+    const type = window.currentReport;
+
+    let csv = '\uFEFF';
+    let filename = 'report-' + type + '-' + window.getTodayDate() + '.csv';
+
+    // يومي/شهري/سنوي
+    if (type === 'daily' || type === 'monthly' || type === 'yearly') {
+        if (!window.currentReportData || !window.currentReportData.dataList) {
+            window.showToast('⚠️ لا توجد بيانات', 'warning');
+            return;
+        }
+
+        csv += 'الفترة,المبيعات,المشتريات,المصروفات,إجمالي الربح,صافي الربح\n';
+
+        window.currentReportData.dataList.forEach(function(d) {
+            csv += '"' + d.label + '",' +
+                d.salesAmount.toFixed(2) + ',' +
+                d.purchasesAmount.toFixed(2) + ',' +
+                d.expensesAmount.toFixed(2) + ',' +
+                d.grossProfit.toFixed(2) + ',' +
+                d.netProfit.toFixed(2) + '\n';
+        });
+    }
+
+    // بائعين
+    else if (type === 'sellers') {
+        csv += 'البائع,المبيعات,عدد الفواتير,الربح\n';
+        const sellerStats = {};
+        (window.sales || []).forEach(function(s) {
+            const seller = s.seller || 'غير محدد';
+            if (!sellerStats[seller]) sellerStats[seller] = { total: 0, count: 0, profit: 0 };
+            sellerStats[seller].total += parseFloat(s.total) || 0;
+            sellerStats[seller].count++;
+            sellerStats[seller].profit += parseFloat(s.profit) || 0;
+        });
+        Object.keys(sellerStats).forEach(function(name) {
+            csv += '"' + name + '",' +
+                sellerStats[name].total.toFixed(2) + ',' +
+                sellerStats[name].count + ',' +
+                sellerStats[name].profit.toFixed(2) + '\n';
+        });
+    }
+
+    // منتجات
+    else if (type === 'products') {
+        csv += 'المنتج,الكمية,المبيعات,الربح\n';
+        const productStats = {};
+        (window.sales || []).forEach(function(s) {
+            (s.items || []).forEach(function(it) {
+                if (!productStats[it.name]) productStats[it.name] = { qty: 0, total: 0, profit: 0 };
+                productStats[it.name].qty += parseInt(it.qty) || 0;
+                productStats[it.name].total += parseFloat(it.total) || 0;
+                productStats[it.name].profit += ((parseFloat(it.price) || 0) - (parseFloat(it.costPrice) || 0)) * (parseInt(it.qty) || 0);
+            });
+        });
+        Object.keys(productStats).forEach(function(name) {
+            csv += '"' + name + '",' +
+                productStats[name].qty + ',' +
+                productStats[name].total.toFixed(2) + ',' +
+                productStats[name].profit.toFixed(2) + '\n';
+        });
+    }
+
+    // عملاء
+    else if (type === 'customers') {
+        csv += 'العميل,المشتريات,عدد الفواتير\n';
+        const customerStats = {};
+        (window.sales || []).forEach(function(s) {
+            const c = s.customer || 'عميل نقدي';
+            if (!customerStats[c]) customerStats[c] = { total: 0, count: 0 };
+            customerStats[c].total += parseFloat(s.total) || 0;
+            customerStats[c].count++;
+        });
+        Object.keys(customerStats).forEach(function(name) {
+            csv += '"' + name + '",' +
+                customerStats[name].total.toFixed(2) + ',' +
+                customerStats[name].count + '\n';
+        });
+    }
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+
+    window.showToast('✅ تم تصدير التقرير', 'success');
+};
+
 window.__posLoaded = true;
 console.log('✅ pos.js v18.0 جاهز');
 
