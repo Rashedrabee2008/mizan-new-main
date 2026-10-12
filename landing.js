@@ -11,6 +11,56 @@
     // رقم الواتساب
     const WHATSAPP_NUMBER = '201158767633';
 
+    
+// ═══════════════════════════════════════════════════════════
+// الجزء: نسخ النصوص (حساب InstaPay + رقم فودافون)
+// ═══════════════════════════════════════════════════════════
+
+window.copyToClipboard = function(text, btn) {
+    try {
+        // للموبايل
+        const tempInput = document.createElement('textarea');
+        tempInput.value = text;
+        tempInput.style.position = 'fixed';
+        tempInput.style.opacity = '0';
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        tempInput.setSelectionRange(0, 99999);
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+
+        // تأثير بصري
+        if (btn) {
+            const originalText = btn.innerHTML;
+            btn.classList.add('copied');
+            btn.innerHTML = '<i class="fas fa-check"></i> تم النسخ';
+            setTimeout(function() {
+                btn.classList.remove('copied');
+                btn.innerHTML = originalText;
+            }, 2000);
+        }
+
+        return true;
+    } catch (e) {
+        // بديل للمتصفحات الحديثة
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function() {
+                if (btn) {
+                    const originalText = btn.innerHTML;
+                    btn.classList.add('copied');
+                    btn.innerHTML = '<i class="fas fa-check"></i> تم النسخ';
+                    setTimeout(function() {
+                        btn.classList.remove('copied');
+                        btn.innerHTML = originalText;
+                    }, 2000);
+                }
+            });
+            return true;
+        }
+        return false;
+    }
+};
+    
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: روابط واتساب ديناميكية
     // ═══════════════════════════════════════════════════════════
