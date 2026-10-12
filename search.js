@@ -1,18 +1,17 @@
 // ============================================================
-// الميزان Pro - search.js v2.0
-// مكون بحث ذكي للحقول المنسدلة (يستبدل select من HTML)
+// الميزان Pro - search.js v3.0
+// مكون بحث ذكي مع إصلاح كامل للمزامنة مع الحقول الأصلية
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🔍 search.js v2.0 - بدء التحميل');
+    console.log('🔍 search.js v3.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: الإعدادات
     // ═══════════════════════════════════════════════════════════
 
-    // خريطة: نوع البحث لكل حقل
     const SEARCH_CONFIG = {
         'customers': {
             getData: function() { return window.customers || []; },
@@ -38,7 +37,30 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 2: توليد قائمة النتائج
+    // الجزء 2: دوال مساعدة
+    // ═══════════════════════════════════════════════════════════
+
+    function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function escapeAttr(s) {
+        if (s == null) return '';
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 3: بناء النتائج
     // ═══════════════════════════════════════════════════════════
 
     function getResultsHTML(type, query) {
@@ -67,7 +89,6 @@
             return '<div class="smart-search-empty">لا توجد نتائج لـ "' + escapeHtml(query) + '"</div>';
         }
 
-        // حد أقصى 50 نتيجة
         const MAX = 50;
         const total = filtered.length;
         const limited = filtered.slice(0, MAX);
@@ -110,27 +131,61 @@
         return parts.join(' • ');
     }
 
-    function escapeHtml(s) {
-        if (s == null) return '';
-        return String(s)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
-    }
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 4: ضبط الحقل المخفي (القلب)
+    // ═══════════════════════════════════════════════════════════
 
-    function escapeAttr(s) {
-        if (s == null) return '';
-        return String(s)
-            .replace(/&/g, '&amp;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
+    function setSelectValue(selectEl, value) {
+        if (!selectEl) return;
+
+        // مسح كل الاختيارات
+        Array.from(selectEl.options).forEach(function(opt) {
+            opt.selected = false;
+        });
+
+        // البحث عن option موجود
+        let foundIndex = -1;
+        for (let i = 0; i < selectEl.options.length; i++) {
+            if (String(selectEl.options[i].value) === String(value)) {
+                foundIndex = i;
+                break;
+            }
+        }
+
+        // لو مش موجود، نضيف واحد جديد
+        if (foundIndex === -1) {
+            const newOption = document.createElement('option');
+            newOption.value = value;
+            newOption.text = value;
+            selectEl.appendChild(newOption);
+            foundIndex = selectEl.options.length - 1;
+        }
+
+        // ضبط القيمة
+        selectEl.selectedIndex = foundIndex;
+        selectEl.value = value;
+
+        // إطلاق الأحداث بطريقة مضمونة
+        try {
+            selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+        } catch (e) {
+            // بديل للمتصفحات القديمة
+            const evt = document.createEvent('HTMLEvents');
+            evt.initEvent('change', true, false);
+            selectEl.dispatchEvent(evt);
+        }
+
+        try {
+            selectEl.dispatchEvent(new Event('input', { bubbles: true }));
+        } catch (e) {
+            const evt = document.createEvent('HTMLEvents');
+            evt.initEvent('input', true, false);
+            selectEl.dispatchEvent(evt);
+        }
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 3: تهيئة مكون بحث واحد
+    // الجزء 5: تهيئة مكون بحث واحد
     // ═══════════════════════════════════════════════════════════
 
     function initSearchComponent(container) {
@@ -139,10 +194,9 @@
 
         const type = container.dataset.searchType;
         const targetId = container.dataset.searchTarget;
-        const hiddenValue = container.dataset.searchValue || '';
 
         if (!type || !targetId) {
-            console.warn('⚠️ مكون بحث بدون type أو target:', container);
+            console.warn('⚠️ مكون بحث بدون type أو target');
             return;
         }
 
@@ -152,22 +206,22 @@
             return;
         }
 
-        // البحث عن الحقل المخفي (الـ select الأصلي)
         const hiddenSelect = document.getElementById(targetId);
 
-        // البحث عن الـ input
+        // البحث/إنشاء الـ input
         let input = container.querySelector('.smart-search-input');
         if (!input) {
             input = document.createElement('input');
             input.type = 'text';
             input.className = 'smart-search-input';
-            input.placeholder = config.placeholder;
             input.autocomplete = 'off';
             input.setAttribute('inputmode', 'search');
             container.insertBefore(input, container.firstChild);
         }
 
-        // البحث عن قائمة النتائج
+        input.placeholder = config.placeholder;
+
+        // البحث/إنشاء قائمة النتائج
         let results = container.querySelector('.smart-search-results');
         if (!results) {
             results = document.createElement('div');
@@ -177,21 +231,18 @@
 
         // ═══ الأحداث ═══
 
-        // عند الكتابة
         input.addEventListener('input', function() {
             const html = getResultsHTML(type, input.value);
             results.innerHTML = html;
             results.classList.add('show');
         });
 
-        // عند التركيز
         input.addEventListener('focus', function() {
             const html = getResultsHTML(type, input.value);
             results.innerHTML = html;
             results.classList.add('show');
         });
 
-        // عند الضغط على ESC
         input.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 results.classList.remove('show');
@@ -199,7 +250,7 @@
             }
         });
 
-        // عند اختيار نتيجة
+        // الاختيار من النتائج
         results.addEventListener('click', function(e) {
             const item = e.target.closest('.smart-search-item');
             if (!item) return;
@@ -207,41 +258,32 @@
             const value = item.dataset.value;
             const id = item.dataset.id;
 
-            // ضبط الـ select المخفي
+            // 1️⃣ ضبط الـ select المخفي (القلب)
             if (hiddenSelect) {
-                // البحث عن option بالقيمة
-                let found = false;
-                Array.from(hiddenSelect.options).forEach(function(opt) {
-                    if (opt.value == value) {
-                        opt.selected = true;
-                        found = true;
-                    }
-                });
+                setSelectValue(hiddenSelect, value);
 
-                // لو مفيش option، نضيف واحد جديد
-                if (!found) {
-                    const newOption = document.createElement('option');
-                    newOption.value = value;
-                    newOption.text = value;
-                    newOption.selected = true;
-                    hiddenSelect.appendChild(newOption);
+                // 2️⃣ لو فيه data-id، نحفظه كسمة إضافية
+                if (id) {
+                    hiddenSelect.dataset.selectedId = id;
                 }
-
-                // ضبط القيمة
-                hiddenSelect.value = value;
-
-                // إطلاق الأحداث
-                hiddenSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                hiddenSelect.dispatchEvent(new Event('input', { bubbles: true }));
             }
 
-            // ضبط الـ input
+            // 3️⃣ ضبط الـ input
             input.value = value;
 
-            // إخفاء النتائج
+            // 4️⃣ إخفاء النتائج
             results.classList.remove('show');
             results.innerHTML = '';
             input.blur();
+
+            // 5️⃣ إطلاق أحداث إضافية بعد 50ms (لضمان الالتقاط)
+            setTimeout(function() {
+                if (hiddenSelect) {
+                    try {
+                        hiddenSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                    } catch (err) {}
+                }
+            }, 50);
         });
 
         // إغلاق النتائج عند النقر خارج المكون
@@ -250,35 +292,32 @@
                 results.classList.remove('show');
             }
         });
-
-        // تحديث placeholder
-        if (config.placeholder) {
-            input.placeholder = config.placeholder;
-        }
-
-        // لو في قيمة موجودة
-        if (hiddenValue && !input.value) {
-            input.value = hiddenValue;
-        }
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: تحديث الحقول بعد تغيير البيانات
+    // الجزء 6: مساعدات — قراءة القيمة الحالية من أي حقل بحث
     // ═══════════════════════════════════════════════════════════
 
-    function refreshAllSearches() {
-        // تحديث placeholder والقيم لو اتغيرت
-        document.querySelectorAll('.smart-search-container').forEach(function(container) {
+    // هذه الدالة تُستخدم في pos.js لو احتجنا قراءة القيمة
+    window.getSmartSearchValue = function(targetId) {
+        const selectEl = document.getElementById(targetId);
+        if (!selectEl) return '';
+
+        // الأولوية للـ select.value
+        if (selectEl.value) return selectEl.value;
+
+        // بديل: نقرأ من حقل البحث نفسه
+        const container = document.querySelector('.smart-search-container[data-search-target="' + targetId + '"]');
+        if (container) {
             const input = container.querySelector('.smart-search-input');
-            const results = container.querySelector('.smart-search-results');
-            if (input && results) {
-                results.classList.remove('show');
-            }
-        });
-    }
+            if (input && input.value) return input.value.trim();
+        }
+
+        return '';
+    };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 5: التهيئة
+    // الجزء 7: التهيئة
     // ═══════════════════════════════════════════════════════════
 
     window.initSmartSearch = function() {
@@ -298,19 +337,63 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 6: ربط الأحداث
+    // الجزء 8: تحديث المرتجعات حسب النوع
+    // ═══════════════════════════════════════════════════════════
+
+    function updateRetPartySearch() {
+        const retTypeEl = document.getElementById('retType');
+        if (!retTypeEl) return;
+
+        const container = document.getElementById('retPartySearch');
+        if (!container) return;
+
+        const type = retTypeEl.value === 'purchase' ? 'suppliers' : 'customers';
+        const config = SEARCH_CONFIG[type];
+
+        container.dataset.searchType = type;
+
+        const input = container.querySelector('.smart-search-input');
+        if (input && config) {
+            input.placeholder = config.placeholder;
+            input.value = '';
+        }
+
+        const results = container.querySelector('.smart-search-results');
+        if (results) {
+            results.classList.remove('show');
+            results.innerHTML = '';
+        }
+
+        // نفرغ الـ select
+        const retPartySelect = document.getElementById('retParty');
+        if (retPartySelect) {
+            retPartySelect.value = '';
+        }
+    }
+
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.id === 'retType') {
+            setTimeout(updateRetPartySearch, 100);
+        }
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 9: ربط الأحداث
     // ═══════════════════════════════════════════════════════════
 
     if (window.EventBus) {
         ['products', 'customers', 'suppliers'].forEach(function(key) {
             window.EventBus.on('data:' + key + ':changed', function() {
-                refreshAllSearches();
+                document.querySelectorAll('.smart-search-container').forEach(function(c) {
+                    const results = c.querySelector('.smart-search-results');
+                    if (results) results.classList.remove('show');
+                });
             });
         });
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 7: التحميل التلقائي
+    // الجزء 10: التحميل
     // ═══════════════════════════════════════════════════════════
 
     function tryInit() {
@@ -319,8 +402,8 @@
             setTimeout(tryInit, 500);
             return;
         }
-
         window.initSmartSearch();
+        setTimeout(updateRetPartySearch, 1500);
     }
 
     if (document.readyState === 'loading') {
@@ -331,7 +414,7 @@
         setTimeout(tryInit, 800);
     }
 
-    // إعادة الفحص كل ثانيتين (لو حقل جديد ظهر)
+    // إعادة الفحص كل 2 ثانية (لو حقل جديد ظهر)
     setInterval(function() {
         const containers = document.querySelectorAll('.smart-search-container:not([data-search-init="true"])');
         if (containers.length > 0) {
@@ -341,46 +424,7 @@
         }
     }, 2000);
 
-    // ═══════════════════════════════════════════════════════════
-// تحديث بحث المرتجعات حسب النوع (عميل/مورد)
-// ═══════════════════════════════════════════════════════════
-
-function updateRetPartySearch() {
-    const retTypeEl = document.getElementById('retType');
-    if (!retTypeEl) return;
-
-    const container = document.getElementById('retPartySearch');
-    if (!container) return;
-
-    const type = retTypeEl.value === 'purchase' ? 'suppliers' : 'customers';
-    const config = SEARCH_CONFIG[type];
-
-    // تحديث الـ type
-    container.dataset.searchType = type;
-
-    // تحديث placeholder
-    const input = container.querySelector('.smart-search-input');
-    if (input && config) {
-        input.placeholder = config.placeholder;
-        input.value = '';
-    }
-
-    // إعادة تهيئة المكون
-    container.dataset.searchInit = 'false';
-    initSearchComponent(container);
-}
-
-// ربط التحديث مع تغيير نوع المرتجع
-document.addEventListener('change', function(e) {
-    if (e.target && e.target.id === 'retType') {
-        setTimeout(updateRetPartySearch, 100);
-    }
-});
-
-// تحديث أولي
-setTimeout(updateRetPartySearch, 2000);
-
     window.__searchLoaded = true;
-    console.log('✅ search.js v2.0 جاهز');
+    console.log('✅ search.js v3.0 جاهز');
 
 })();
