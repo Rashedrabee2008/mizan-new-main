@@ -392,9 +392,13 @@
                     <div class="pos-customer-icon">👤</div>
                     <div class="pos-customer-info">
                         <label class="pos-customer-label">العميل</label>
-                        <select id="saleCustomer" class="pos-customer-select">
-                            <option value="">عميل نقدي</option>
-                        </select>
+                        <div class="smart-search-container" data-search-type="customers" data-search-target="saleCustomer">
+                            <input type="text" class="smart-search-input" placeholder="🔍 ابحث باسم العميل أو الموبايل..." />
+                            <div class="smart-search-results"></div>
+                            <select id="saleCustomer" class="pos-customer-select" style="display:none;">
+                                <option value="">عميل نقدي</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -448,9 +452,13 @@
 
                 <div class="pos-section-title" style="margin-top:16px;">📦 إضافة صنف</div>
                 <div class="pos-add-item">
-                    <select id="saleProduct" class="pos-select" onchange="updateSalePrice()" style="flex:2;">
-                        <option value="">اختر منتج...</option>
-                    </select>
+                    <div class="smart-search-container" data-search-type="products" data-search-target="saleProduct" style="flex:2;">
+                        <input type="text" class="smart-search-input" placeholder="🔍 ابحث باسم المنتج أو الباركود..." />
+                        <div class="smart-search-results"></div>
+                        <select id="saleProduct" class="pos-select" onchange="updateSalePrice()" style="display:none;">
+                            <option value="">اختر منتج...</option>
+                        </select>
+                    </div>
                     <input type="number" id="saleQty" class="pos-input" value="1" min="1" placeholder="كمية" style="flex:0.6;" />
                     <input type="number" id="salePrice" class="pos-input" min="0" step="0.01" placeholder="سعر" style="flex:0.8;" />
                     <button class="pos-btn pos-btn-add" onclick="addSaleItem()">
@@ -541,9 +549,13 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>المورد *</label>
-                            <select id="purSupplier" class="inv-select">
-                                <option value="">اختر مورد...</option>
-                            </select>
+                            <div class="smart-search-container" data-search-type="suppliers" data-search-target="purSupplier">
+                                <input type="text" class="smart-search-input" placeholder="🔍 ابحث باسم المورد أو الموبايل..." />
+                                <div class="smart-search-results"></div>
+                                <select id="purSupplier" class="inv-select" style="display:none;">
+                                    <option value="">اختر مورد...</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>طريقة الدفع</label>
@@ -573,9 +585,13 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>المنتج</label>
-                            <select id="purProduct" onchange="updatePurPrice()">
-                                <option value="">اختر...</option>
-                            </select>
+                            <div class="smart-search-container" data-search-type="products" data-search-target="purProduct">
+                                <input type="text" class="smart-search-input" placeholder="🔍 ابحث باسم المنتج أو الباركود..." />
+                                <div class="smart-search-results"></div>
+                                <select id="purProduct" onchange="updatePurPrice()" style="display:none;">
+                                    <option value="">اختر...</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>الكمية</label>
@@ -624,829 +640,854 @@
             </div>
         </div>
 
+        <!-- ═══════════ (يتبع في الجزء 2) ═══════════ -->
         <!-- ═══════════ العملاء ═══════════ -->
-        <div id="page-customers" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-users"></i> العملاء</h2>
+<div id="page-customers" class="page-container">
+    <div class="page-content">
+        <h2><i class="fas fa-users"></i> العملاء</h2>
 
-                <div class="form-card">
-                    <h3 id="customerFormTitle">➕ إضافة عميل</h3>
-                    <input type="hidden" id="customerId" />
-                    <div class="form-row">
-                        <div class="form-group"><label>الاسم *</label><input type="text" id="customerName" /></div>
-                        <div class="form-group"><label>الهاتف</label><input type="text" id="customerPhone" /></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>واتساب</label><input type="text" id="customerWhatsapp" /></div>
-                        <div class="form-group"><label>العنوان</label><input type="text" id="customerAddress" /></div>
-                    </div>
-                    <div class="form-actions">
-                        <button class="btn btn-primary" onclick="saveCustomer()">
-                            <i class="fas fa-save"></i> <span id="customerSaveBtnText">إضافة</span>
-                        </button>
-                        <button class="btn btn-secondary" onclick="resetCustomerForm()">
-                            <i class="fas fa-times"></i> إلغاء
-                        </button>
-                    </div>
-                </div>
-
-                <div class="search-box">
-                    <input type="text" id="customerSearch" placeholder="🔍 بحث..." oninput="renderCustomers()" />
-                </div>
-
-                <div id="customerList"></div>
+        <div class="form-card">
+            <h3 id="customerFormTitle">➕ إضافة عميل</h3>
+            <input type="hidden" id="customerId" />
+            <div class="form-row">
+                <div class="form-group"><label>الاسم *</label><input type="text" id="customerName" /></div>
+                <div class="form-group"><label>الهاتف</label><input type="text" id="customerPhone" /></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>واتساب</label><input type="text" id="customerWhatsapp" /></div>
+                <div class="form-group"><label>العنوان</label><input type="text" id="customerAddress" /></div>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary" onclick="saveCustomer()">
+                    <i class="fas fa-save"></i> <span id="customerSaveBtnText">إضافة</span>
+                </button>
+                <button class="btn btn-secondary" onclick="resetCustomerForm()">
+                    <i class="fas fa-times"></i> إلغاء
+                </button>
             </div>
         </div>
 
-        <!-- ═══════════ الموردين ═══════════ -->
-        <div id="page-suppliers" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-truck"></i> الموردين</h2>
+        <div class="search-box">
+            <input type="text" id="customerSearch" placeholder="🔍 بحث..." oninput="renderCustomers()" />
+        </div>
 
-                <div class="form-card">
-                    <h3 id="supplierFormTitle">➕ إضافة مورد</h3>
-                    <input type="hidden" id="supplierId" />
-                    <div class="form-row">
-                        <div class="form-group"><label>الاسم *</label><input type="text" id="supplierName" /></div>
-                        <div class="form-group"><label>الهاتف</label><input type="text" id="supplierPhone" /></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>واتساب</label><input type="text" id="supplierWhatsapp" /></div>
-                        <div class="form-group"><label>العنوان</label><input type="text" id="supplierAddress" /></div>
-                    </div>
-                    <div class="form-actions">
-                        <button class="btn btn-primary" onclick="saveSupplier()">
-                            <i class="fas fa-save"></i> <span id="supplierSaveBtnText">إضافة</span>
-                        </button>
-                        <button class="btn btn-secondary" onclick="resetSupplierForm()">
-                            <i class="fas fa-times"></i> إلغاء
-                        </button>
-                    </div>
-                </div>
+        <div id="customerList"></div>
+    </div>
+</div>
 
-                <div class="search-box">
-                    <input type="text" id="supplierSearch" placeholder="🔍 بحث..." oninput="renderSuppliers()" />
-                </div>
+<!-- ═══════════ الموردين ═══════════ -->
+<div id="page-suppliers" class="page-container">
+    <div class="page-content">
+        <h2><i class="fas fa-truck"></i> الموردين</h2>
 
-                <div id="supplierList"></div>
+        <div class="form-card">
+            <h3 id="supplierFormTitle">➕ إضافة مورد</h3>
+            <input type="hidden" id="supplierId" />
+            <div class="form-row">
+                <div class="form-group"><label>الاسم *</label><input type="text" id="supplierName" /></div>
+                <div class="form-group"><label>الهاتف</label><input type="text" id="supplierPhone" /></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>واتساب</label><input type="text" id="supplierWhatsapp" /></div>
+                <div class="form-group"><label>العنوان</label><input type="text" id="supplierAddress" /></div>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary" onclick="saveSupplier()">
+                    <i class="fas fa-save"></i> <span id="supplierSaveBtnText">إضافة</span>
+                </button>
+                <button class="btn btn-secondary" onclick="resetSupplierForm()">
+                    <i class="fas fa-times"></i> إلغاء
+                </button>
             </div>
         </div>
 
-        <!-- ═══════════ الخزائن ═══════════ -->
-        <div id="page-cash-boxes" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-money-bill-wave"></i> الخزائن</h2>
+        <div class="search-box">
+            <input type="text" id="supplierSearch" placeholder="🔍 بحث..." oninput="renderSuppliers()" />
+        </div>
 
-                <div class="cash-boxes-summary">
-                    <div class="summary-item">
-                        <div class="summary-label">عدد الخزائن</div>
-                        <div class="summary-value" id="cbCount">0</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-label">إجمالي الرصيد</div>
-                        <div class="summary-value" id="cbTotal">0.00</div>
-                    </div>
-                </div>
+        <div id="supplierList"></div>
+    </div>
+</div>
 
-                <div class="form-card">
-                    <h3 id="cashBoxFormTitle">➕ إضافة خزنة جديدة</h3>
-                    <input type="hidden" id="cashBoxId" />
-                    <div class="form-row">
-                        <div class="form-group"><label>اسم الخزنة *</label><input type="text" id="cashBoxName" /></div>
-                        <div class="form-group">
-                            <label>الأيقونة</label>
-                            <select id="cashBoxIcon">
-                                <option value="💵">💵 نقدي</option>
-                                <option value="📱">📱 محفظة</option>
-                                <option value="💳">💳 كارت</option>
-                                <option value="🏦">🏦 بنك</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>النوع</label>
-                            <select id="cashBoxType">
-                                <option value="cash">💵 نقدي</option>
-                                <option value="wallet">📱 محفظة</option>
-                                <option value="bank">🏦 بنكي</option>
-                                <option value="visa">💳 فيزا</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>الرصيد الافتتاحي</label>
-                            <input type="number" id="cashBoxOpeningBalance" value="0" step="0.01" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>تفاصيل</label>
-                        <input type="text" id="cashBoxDetails" />
-                    </div>
-                    <div class="form-group">
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input type="checkbox" id="cashBoxIsDefault" style="width:auto;" />
-                            <span>⭐ تعيين كافتراضية</span>
-                        </label>
-                    </div>
-                    <div class="form-actions">
-                        <button class="btn btn-primary" onclick="saveCashBox()">
-                            <i class="fas fa-save"></i> <span id="cashBoxSaveBtnText">إضافة</span>
-                        </button>
-                        <button class="btn btn-secondary" onclick="resetCashBoxForm()">
-                            <i class="fas fa-times"></i> إلغاء
-                        </button>
-                    </div>
-                </div>
+<!-- ═══════════ الخزائن ═══════════ -->
+<div id="page-cash-boxes" class="page-container">
+    <div class="page-content">
+        <h2><i class="fas fa-money-bill-wave"></i> الخزائن</h2>
 
-                <div id="cashBoxList"></div>
+        <div class="cash-boxes-summary">
+            <div class="summary-item">
+                <div class="summary-label">عدد الخزائن</div>
+                <div class="summary-value" id="cbCount">0</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">إجمالي الرصيد</div>
+                <div class="summary-value" id="cbTotal">0.00</div>
             </div>
         </div>
 
-        <!-- ═══════════ المصروفات ═══════════ -->
-        <div id="page-expenses" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-money-bill-wave"></i> المصروفات</h2>
-
-                <div class="stats-mini">
-                    <div class="stat-mini"><div class="num" id="expTotalCount">0</div><div class="lbl">العدد</div></div>
-                    <div class="stat-mini"><div class="num" id="expTotalAmount">0.00</div><div class="lbl">الإجمالي</div></div>
-                    <div class="stat-mini"><div class="num" id="expTodayAmount">0.00</div><div class="lbl">اليوم</div></div>
-                    <div class="stat-mini"><div class="num" id="expMonthAmount">0.00</div><div class="lbl">الشهر</div></div>
+        <div class="form-card">
+            <h3 id="cashBoxFormTitle">➕ إضافة خزنة جديدة</h3>
+            <input type="hidden" id="cashBoxId" />
+            <div class="form-row">
+                <div class="form-group"><label>اسم الخزنة *</label><input type="text" id="cashBoxName" /></div>
+                <div class="form-group">
+                    <label>الأيقونة</label>
+                    <select id="cashBoxIcon">
+                        <option value="💵">💵 نقدي</option>
+                        <option value="📱">📱 محفظة</option>
+                        <option value="💳">💳 كارت</option>
+                        <option value="🏦">🏦 بنك</option>
+                    </select>
                 </div>
-
-                <div class="form-card">
-                    <h3>➕ إضافة مصروف</h3>
-                    <div class="form-row">
-                        <div class="form-group"><label>البيان *</label><input type="text" id="expNote" /></div>
-                        <div class="form-group"><label>المبلغ *</label><input type="number" id="expAmount" min="0" step="0.01" /></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>التصنيف</label>
-                            <select id="expCategory">
-                                <option value="عام">📋 عام</option>
-                                <option value="كهرباء">💡 كهرباء</option>
-                                <option value="مياه">💧 مياه</option>
-                                <option value="إيجار">🏠 إيجار</option>
-                                <option value="مرتبات">💰 مرتبات</option>
-                                <option value="مواصلات">🚗 مواصلات</option>
-                                <option value="صيانة">🔧 صيانة</option>
-                                <option value="أخرى">📌 أخرى</option>
-                            </select>
-                        </div>
-                        <div class="form-group"><label>التاريخ</label><input type="date" id="expDate" /></div>
-                    </div>
-                    <div class="form-group">
-                        <label>💰 الخزنة *</label>
-                        <select id="expCashBox" class="inv-select"><option value="">اختر...</option></select>
-                    </div>
-                    <button class="btn btn-primary btn-block" onclick="saveExpense()">
-                        <i class="fas fa-save"></i> إضافة
-                    </button>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>النوع</label>
+                    <select id="cashBoxType">
+                        <option value="cash">💵 نقدي</option>
+                        <option value="wallet">📱 محفظة</option>
+                        <option value="bank">🏦 بنكي</option>
+                        <option value="visa">💳 فيزا</option>
+                    </select>
                 </div>
-
-                <h2 style="margin-top:20px;"><i class="fas fa-list"></i> السجل</h2>
-                <div id="expensesList"></div>
+                <div class="form-group">
+                    <label>الرصيد الافتتاحي</label>
+                    <input type="number" id="cashBoxOpeningBalance" value="0" step="0.01" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label>تفاصيل</label>
+                <input type="text" id="cashBoxDetails" />
+            </div>
+            <div class="form-group">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input type="checkbox" id="cashBoxIsDefault" style="width:auto;" />
+                    <span>⭐ تعيين كافتراضية</span>
+                </label>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary" onclick="saveCashBox()">
+                    <i class="fas fa-save"></i> <span id="cashBoxSaveBtnText">إضافة</span>
+                </button>
+                <button class="btn btn-secondary" onclick="resetCashBoxForm()">
+                    <i class="fas fa-times"></i> إلغاء
+                </button>
             </div>
         </div>
 
-        <!-- ═══════════ حركات الخزنة ═══════════ -->
-        <div id="page-treasury" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-vault"></i> حركات الخزنة</h2>
+        <div id="cashBoxList"></div>
+    </div>
+</div>
 
-                <div class="balance-card">
-                    <div class="label">إجمالي رصيد الخزائن</div>
-                    <div class="amount" id="treasuryBalance">0.00 🇪🇬</div>
+<!-- ═══════════ المصروفات ═══════════ -->
+<div id="page-expenses" class="page-container">
+    <div class="page-content">
+        <h2><i class="fas fa-money-bill-wave"></i> المصروفات</h2>
+
+        <div class="stats-mini">
+            <div class="stat-mini"><div class="num" id="expTotalCount">0</div><div class="lbl">العدد</div></div>
+            <div class="stat-mini"><div class="num" id="expTotalAmount">0.00</div><div class="lbl">الإجمالي</div></div>
+            <div class="stat-mini"><div class="num" id="expTodayAmount">0.00</div><div class="lbl">اليوم</div></div>
+            <div class="stat-mini"><div class="num" id="expMonthAmount">0.00</div><div class="lbl">الشهر</div></div>
+        </div>
+
+        <div class="form-card">
+            <h3>➕ إضافة مصروف</h3>
+            <div class="form-row">
+                <div class="form-group"><label>البيان *</label><input type="text" id="expNote" /></div>
+                <div class="form-group"><label>المبلغ *</label><input type="number" id="expAmount" min="0" step="0.01" /></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>التصنيف</label>
+                    <select id="expCategory">
+                        <option value="عام">📋 عام</option>
+                        <option value="كهرباء">💡 كهرباء</option>
+                        <option value="مياه">💧 مياه</option>
+                        <option value="إيجار">🏠 إيجار</option>
+                        <option value="مرتبات">💰 مرتبات</option>
+                        <option value="مواصلات">🚗 مواصلات</option>
+                        <option value="صيانة">🔧 صيانة</option>
+                        <option value="أخرى">📌 أخرى</option>
+                    </select>
                 </div>
+                <div class="form-group"><label>التاريخ</label><input type="date" id="expDate" /></div>
+            </div>
+            <div class="form-group">
+                <label>💰 الخزنة *</label>
+                <select id="expCashBox" class="inv-select"><option value="">اختر...</option></select>
+            </div>
+            <button class="btn btn-primary btn-block" onclick="saveExpense()">
+                <i class="fas fa-save"></i> إضافة
+            </button>
+        </div>
 
-                <div class="stats-mini">
-                    <div class="stat-mini">
-                        <div class="num" style="color:#2D8F5E;" id="treasuryDeposits">0.00</div>
-                        <div class="lbl">إيداعات</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="num" style="color:#E06060;" id="treasuryWithdrawals">0.00</div>
-                        <div class="lbl">مسحوبات</div>
+        <h2 style="margin-top:20px;"><i class="fas fa-list"></i> السجل</h2>
+        <div id="expensesList"></div>
+    </div>
+</div>
+
+<!-- ═══════════ حركات الخزنة ═══════════ -->
+<div id="page-treasury" class="page-container">
+    <div class="page-content">
+        <h2><i class="fas fa-vault"></i> حركات الخزنة</h2>
+
+        <div class="balance-card">
+            <div class="label">إجمالي رصيد الخزائن</div>
+            <div class="amount" id="treasuryBalance">0.00 🇪🇬</div>
+        </div>
+
+        <div class="stats-mini">
+            <div class="stat-mini">
+                <div class="num" style="color:#2D8F5E;" id="treasuryDeposits">0.00</div>
+                <div class="lbl">إيداعات</div>
+            </div>
+            <div class="stat-mini">
+                <div class="num" style="color:#E06060;" id="treasuryWithdrawals">0.00</div>
+                <div class="lbl">مسحوبات</div>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <h3>➕ حركة يدوية</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>النوع</label>
+                    <select id="treasuryType">
+                        <option value="deposit">💚 إيداع</option>
+                        <option value="withdraw">❤️ سحب</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>المبلغ</label>
+                    <input type="number" id="treasuryAmount" min="0" step="0.01" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label>💰 الخزنة</label>
+                <select id="manualCashBox" class="inv-select"><option value="">اختر...</option></select>
+            </div>
+            <div class="form-group">
+                <label>البيان</label>
+                <input type="text" id="treasuryNote" />
+            </div>
+            <button class="btn btn-primary btn-block" onclick="addTreasuryTransaction()">
+                <i class="fas fa-plus"></i> إضافة
+            </button>
+        </div>
+
+        <div class="filter-chips">
+            <button class="filter-chip active" onclick="filterTreasury('all', this)">📊 الكل</button>
+            <button class="filter-chip" onclick="filterTreasury('sale', this)">💰 مبيعات</button>
+            <button class="filter-chip" onclick="filterTreasury('purchase', this)">🛒 مشتريات</button>
+            <button class="filter-chip" onclick="filterTreasury('expense', this)">💸 مصروفات</button>
+            <button class="filter-chip" onclick="filterTreasury('collect', this)">💵 تحصيلات</button>
+            <button class="filter-chip" onclick="filterTreasury('pay', this)">💳 سدادات</button>
+            <button class="filter-chip" onclick="filterTreasury('manual', this)">✋ يدوي</button>
+        </div>
+
+        <h2 style="margin-top:20px;"><i class="fas fa-history"></i> السجل</h2>
+        <div id="treasuryList"></div>
+    </div>
+</div>
+
+<!-- ═══════════ الفواتير ═══════════ -->
+<div id="page-invoices" class="page-container">
+    <div class="page-content">
+        <h2><i class="fas fa-file-invoice"></i> فواتير البيع</h2>
+
+        <div class="stats-mini">
+            <div class="stat-mini"><div class="num" id="invTotalCount">0</div><div class="lbl">عدد الفواتير</div></div>
+            <div class="stat-mini"><div class="num" id="invTotalAmount">0.00</div><div class="lbl">الإجمالي</div></div>
+            <div class="stat-mini"><div class="num" id="invPendingAmount">0.00</div><div class="lbl">آجل غير مدفوع</div></div>
+            <div class="stat-mini"><div class="num" id="invTodayAmount">0.00</div><div class="lbl">اليوم</div></div>
+        </div>
+
+        <div class="filter-chips">
+            <button class="filter-chip active" onclick="filterInvoices('all', this)">📊 الكل</button>
+            <button class="filter-chip" onclick="filterInvoices('paid', this)">✅ مدفوعة</button>
+            <button class="filter-chip" onclick="filterInvoices('partial', this)">⚠️ جزئية</button>
+            <button class="filter-chip" onclick="filterInvoices('unpaid', this)">❌ غير مدفوعة</button>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="invoiceSearch" placeholder="🔍 بحث..." oninput="renderInvoices()" />
+        </div>
+
+        <div id="invoiceList"></div>
+    </div>
+</div>
+
+<!-- ═══════════ التحصيل والسداد ═══════════ -->
+<div id="page-payments" class="page-container">
+    <div class="page-content">
+        <h2><i class="fas fa-hand-holding-usd"></i> التحصيل والسداد</h2>
+
+        <div class="stats-mini">
+            <div class="stat-mini">
+                <div class="num" style="color:#2D8F5E;" id="payTotalCollected">0.00</div>
+                <div class="lbl">إجمالي التحصيلات</div>
+            </div>
+            <div class="stat-mini">
+                <div class="num" style="color:#E06060;" id="payTotalPaid">0.00</div>
+                <div class="lbl">إجمالي السدادات</div>
+            </div>
+        </div>
+
+        <div class="tabs-row">
+            <button class="tab-btn active" onclick="switchPayTab('collect', this)">💰 تحصيل</button>
+            <button class="tab-btn" onclick="switchPayTab('pay', this)">💸 سداد</button>
+        </div>
+
+        <div id="payTabCollect" class="pay-tab-content">
+            <div class="form-card">
+                <h3>💰 تسجيل تحصيل من عميل</h3>
+                <div class="form-group">
+                    <label>العميل *</label>
+                    <div class="smart-search-container" data-search-type="customers" data-search-target="collectCustomer">
+                        <input type="text" class="smart-search-input" placeholder="🔍 ابحث باسم العميل أو الموبايل..." />
+                        <div class="smart-search-results"></div>
+                        <select id="collectCustomer" class="inv-select" onchange="updateCollectInfo()" style="display:none;">
+                            <option value="">اختر...</option>
+                        </select>
                     </div>
                 </div>
+                <div class="credit-info" id="collectInfoBox" style="display:none;">
+                    <span>💳 المديونية الحالية: </span>
+                    <strong id="collectCurrentDebt" style="color:#E06060;">0.00</strong>
+                    <span> 🇪🇬</span>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>المبلغ *</label><input type="number" id="collectAmount" min="0.01" step="0.01" /></div>
+                    <div class="form-group"><label>التاريخ</label><input type="date" id="collectDate" /></div>
+                </div>
+                <div class="form-group">
+                    <label>💰 الخزنة *</label>
+                    <select id="collectCashBox" class="inv-select"><option value="">اختر...</option></select>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><input type="text" id="collectNote" /></div>
+                <button class="btn btn-success btn-block" onclick="saveCollect()">
+                    <i class="fas fa-hand-holding-usd"></i> حفظ التحصيل
+                </button>
+            </div>
+        </div>
 
-                <div class="form-card">
-                    <h3>➕ حركة يدوية</h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>النوع</label>
-                            <select id="treasuryType">
-                                <option value="deposit">💚 إيداع</option>
-                                <option value="withdraw">❤️ سحب</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>المبلغ</label>
-                            <input type="number" id="treasuryAmount" min="0" step="0.01" />
-                        </div>
+        <div id="payTabPay" class="pay-tab-content" style="display:none;">
+            <div class="form-card">
+                <h3>💸 تسجيل سداد لمورد</h3>
+                <div class="form-group">
+                    <label>المورد *</label>
+                    <div class="smart-search-container" data-search-type="suppliers" data-search-target="paySupplier">
+                        <input type="text" class="smart-search-input" placeholder="🔍 ابحث باسم المورد أو الموبايل..." />
+                        <div class="smart-search-results"></div>
+                        <select id="paySupplier" class="inv-select" onchange="updatePayInfo()" style="display:none;">
+                            <option value="">اختر...</option>
+                        </select>
                     </div>
-                    <div class="form-group">
-                        <label>💰 الخزنة</label>
-                        <select id="manualCashBox" class="inv-select"><option value="">اختر...</option></select>
+                </div>
+                <div class="credit-info" id="payInfoBox" style="display:none;">
+                    <span>📋 المديونية للمورد: </span>
+                    <strong id="payCurrentDebt" style="color:#E6A830;">0.00</strong>
+                    <span> 🇪🇬</span>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>المبلغ *</label><input type="number" id="payAmount" min="0.01" step="0.01" /></div>
+                    <div class="form-group"><label>التاريخ</label><input type="date" id="payDate" /></div>
+                </div>
+                <div class="form-group">
+                    <label>💰 الخزنة *</label>
+                    <select id="payCashBox" class="inv-select"><option value="">اختر...</option></select>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><input type="text" id="payNote" /></div>
+                <button class="btn btn-danger btn-block" onclick="savePay()">
+                    <i class="fas fa-money-bill-wave"></i> حفظ السداد
+                </button>
+            </div>
+        </div>
+
+        <h2 style="margin-top:20px;"><i class="fas fa-history"></i> سجل العمليات</h2>
+        <div id="paymentsList"></div>
+    </div>
+</div>
+
+<!-- ═══════════ المرتجعات ═══════════ -->
+<div id="page-returns" class="page-container">
+    <div class="page-content">
+        <h2><i class="fas fa-undo-alt"></i> المرتجعات</h2>
+
+        <div class="stats-mini">
+            <div class="stat-mini"><div class="num" id="retTotalCount">0</div><div class="lbl">عدد المرتجعات</div></div>
+            <div class="stat-mini"><div class="num" id="retTotalAmount">0.00</div><div class="lbl">الإجمالي</div></div>
+        </div>
+
+        <div class="form-card">
+            <h3>🔄 تسجيل مرتجع</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>النوع</label>
+                    <select id="retType" onchange="toggleReturnParty()">
+                        <option value="sale">🔄 مرتجع بيع</option>
+                        <option value="purchase">🔄 مرتجع شراء</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label id="retPartyLabel">العميل</label>
+                    <div class="smart-search-container" data-search-type="customers" data-search-target="retParty" id="retPartySearch">
+                        <input type="text" class="smart-search-input" placeholder="🔍 ابحث..." />
+                        <div class="smart-search-results"></div>
+                        <select id="retParty" class="inv-select" style="display:none;">
+                            <option value="">اختر...</option>
+                        </select>
                     </div>
-                    <div class="form-group">
-                        <label>البيان</label>
-                        <input type="text" id="treasuryNote" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>💰 الخزنة *</label>
+                    <select id="retCashBox" class="inv-select"><option value="">اختر...</option></select>
+                </div>
+                <div class="form-group">
+                    <label>🏭 المستودع *</label>
+                    <select id="retWarehouse" class="inv-select"><option value="">اختر المستودع...</option></select>
+                </div>
+            </div>
+            <div class="form-group"><label>ملاحظات</label><input type="text" id="retNotes" /></div>
+
+            <div class="divider">— إضافة أصناف —</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>المنتج</label>
+                    <div class="smart-search-container" data-search-type="products" data-search-target="retProduct">
+                        <input type="text" class="smart-search-input" placeholder="🔍 ابحث باسم المنتج أو الباركود..." />
+                        <div class="smart-search-results"></div>
+                        <select id="retProduct" onchange="updateRetPrice()" style="display:none;">
+                            <option value="">اختر...</option>
+                        </select>
                     </div>
-                    <button class="btn btn-primary btn-block" onclick="addTreasuryTransaction()">
+                </div>
+                <div class="form-group"><label>الكمية</label><input type="number" id="retQty" value="1" min="1" /></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>السعر</label><input type="number" id="retPrice" min="0" step="0.01" /></div>
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-success btn-block" onclick="addRetItem()">
                         <i class="fas fa-plus"></i> إضافة
                     </button>
                 </div>
-
-                <div class="filter-chips">
-                    <button class="filter-chip active" onclick="filterTreasury('all', this)">📊 الكل</button>
-                    <button class="filter-chip" onclick="filterTreasury('sale', this)">💰 مبيعات</button>
-                    <button class="filter-chip" onclick="filterTreasury('purchase', this)">🛒 مشتريات</button>
-                    <button class="filter-chip" onclick="filterTreasury('expense', this)">💸 مصروفات</button>
-                    <button class="filter-chip" onclick="filterTreasury('collect', this)">💵 تحصيلات</button>
-                    <button class="filter-chip" onclick="filterTreasury('pay', this)">💳 سدادات</button>
-                    <button class="filter-chip" onclick="filterTreasury('manual', this)">✋ يدوي</button>
-                </div>
-
-                <h2 style="margin-top:20px;"><i class="fas fa-history"></i> السجل</h2>
-                <div id="treasuryList"></div>
             </div>
         </div>
 
-        <!-- ═══════════ الفواتير ═══════════ -->
-        <div id="page-invoices" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-file-invoice"></i> فواتير البيع</h2>
-
-                <div class="stats-mini">
-                    <div class="stat-mini"><div class="num" id="invTotalCount">0</div><div class="lbl">عدد الفواتير</div></div>
-                    <div class="stat-mini"><div class="num" id="invTotalAmount">0.00</div><div class="lbl">الإجمالي</div></div>
-                    <div class="stat-mini"><div class="num" id="invPendingAmount">0.00</div><div class="lbl">آجل غير مدفوع</div></div>
-                    <div class="stat-mini"><div class="num" id="invTodayAmount">0.00</div><div class="lbl">اليوم</div></div>
-                </div>
-
-                <div class="filter-chips">
-                    <button class="filter-chip active" onclick="filterInvoices('all', this)">📊 الكل</button>
-                    <button class="filter-chip" onclick="filterInvoices('paid', this)">✅ مدفوعة</button>
-                    <button class="filter-chip" onclick="filterInvoices('partial', this)">⚠️ جزئية</button>
-                    <button class="filter-chip" onclick="filterInvoices('unpaid', this)">❌ غير مدفوعة</button>
-                </div>
-
-                <div class="search-box">
-                    <input type="text" id="invoiceSearch" placeholder="🔍 بحث..." oninput="renderInvoices()" />
-                </div>
-
-                <div id="invoiceList"></div>
+        <div id="retItemsContainer">
+            <div class="empty-items">
+                <i class="fas fa-undo-alt"></i>
+                <span>لا توجد أصناف</span>
             </div>
         </div>
 
-        <!-- ═══════════ التحصيل والسداد ═══════════ -->
-        <div id="page-payments" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-hand-holding-usd"></i> التحصيل والسداد</h2>
-
-                <div class="stats-mini">
-                    <div class="stat-mini">
-                        <div class="num" style="color:#2D8F5E;" id="payTotalCollected">0.00</div>
-                        <div class="lbl">إجمالي التحصيلات</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="num" style="color:#E06060;" id="payTotalPaid">0.00</div>
-                        <div class="lbl">إجمالي السدادات</div>
-                    </div>
-                </div>
-
-                <div class="tabs-row">
-                    <button class="tab-btn active" onclick="switchPayTab('collect', this)">💰 تحصيل</button>
-                    <button class="tab-btn" onclick="switchPayTab('pay', this)">💸 سداد</button>
-                </div>
-
-                <div id="payTabCollect" class="pay-tab-content">
-                    <div class="form-card">
-                        <h3>💰 تسجيل تحصيل من عميل</h3>
-                        <div class="form-group">
-                            <label>العميل *</label>
-                            <select id="collectCustomer" class="inv-select" onchange="updateCollectInfo()">
-                                <option value="">اختر...</option>
-                            </select>
-                        </div>
-                        <div class="credit-info" id="collectInfoBox" style="display:none;">
-                            <span>💳 المديونية الحالية: </span>
-                            <strong id="collectCurrentDebt" style="color:#E06060;">0.00</strong>
-                            <span> 🇪🇬</span>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>المبلغ *</label><input type="number" id="collectAmount" min="0.01" step="0.01" /></div>
-                            <div class="form-group"><label>التاريخ</label><input type="date" id="collectDate" /></div>
-                        </div>
-                        <div class="form-group">
-                            <label>💰 الخزنة *</label>
-                            <select id="collectCashBox" class="inv-select"><option value="">اختر...</option></select>
-                        </div>
-                        <div class="form-group"><label>ملاحظات</label><input type="text" id="collectNote" /></div>
-                        <button class="btn btn-success btn-block" onclick="saveCollect()">
-                            <i class="fas fa-hand-holding-usd"></i> حفظ التحصيل
-                        </button>
-                    </div>
-                </div>
-
-                <div id="payTabPay" class="pay-tab-content" style="display:none;">
-                    <div class="form-card">
-                        <h3>💸 تسجيل سداد لمورد</h3>
-                        <div class="form-group">
-                            <label>المورد *</label>
-                            <select id="paySupplier" class="inv-select" onchange="updatePayInfo()">
-                                <option value="">اختر...</option>
-                            </select>
-                        </div>
-                        <div class="credit-info" id="payInfoBox" style="display:none;">
-                            <span>📋 المديونية للمورد: </span>
-                            <strong id="payCurrentDebt" style="color:#E6A830;">0.00</strong>
-                            <span> 🇪🇬</span>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>المبلغ *</label><input type="number" id="payAmount" min="0.01" step="0.01" /></div>
-                            <div class="form-group"><label>التاريخ</label><input type="date" id="payDate" /></div>
-                        </div>
-                        <div class="form-group">
-                            <label>💰 الخزنة *</label>
-                            <select id="payCashBox" class="inv-select"><option value="">اختر...</option></select>
-                        </div>
-                        <div class="form-group"><label>ملاحظات</label><input type="text" id="payNote" /></div>
-                        <button class="btn btn-danger btn-block" onclick="savePay()">
-                            <i class="fas fa-money-bill-wave"></i> حفظ السداد
-                        </button>
-                    </div>
-                </div>
-
-                <h2 style="margin-top:20px;"><i class="fas fa-history"></i> سجل العمليات</h2>
-                <div id="paymentsList"></div>
+        <div class="totals-box" id="retTotalBox" style="display:none;">
+            <div class="grand-total-box" style="background:linear-gradient(135deg,#E6A830,#C99028);">
+                <div class="grand-label">إجمالي المرتجع</div>
+                <div class="grand-value" id="retTotal">0.00 ج.م</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
+                <button class="btn btn-primary" onclick="saveReturn()"><i class="fas fa-check"></i> حفظ</button>
+                <button class="btn btn-secondary" onclick="clearReturn()"><i class="fas fa-times"></i> إلغاء</button>
             </div>
         </div>
 
-        <!-- ═══════════ المرتجعات ═══════════ -->
-        <div id="page-returns" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-undo-alt"></i> المرتجعات</h2>
+        <h2 style="margin-top:20px;"><i class="fas fa-list"></i> السجل</h2>
+        <div id="returnsList"></div>
+    </div>
+</div>
 
-                <div class="stats-mini">
-                    <div class="stat-mini"><div class="num" id="retTotalCount">0</div><div class="lbl">عدد المرتجعات</div></div>
-                    <div class="stat-mini"><div class="num" id="retTotalAmount">0.00</div><div class="lbl">الإجمالي</div></div>
-                </div>
+<!-- ═══════════ الحسابات ═══════════ -->
+<div id="page-accounts" class="page-container">
+    <div class="page-content">
+        <h2><i class="fas fa-book"></i> الحسابات</h2>
 
-                <div class="form-card">
-                    <h3>🔄 تسجيل مرتجع</h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>النوع</label>
-                            <select id="retType" onchange="toggleReturnParty()">
-                                <option value="sale">🔄 مرتجع بيع</option>
-                                <option value="purchase">🔄 مرتجع شراء</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label id="retPartyLabel">العميل</label>
-                            <select id="retParty" class="inv-select"><option value="">اختر...</option></select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>💰 الخزنة *</label>
-                            <select id="retCashBox" class="inv-select"><option value="">اختر...</option></select>
-                        </div>
-                        <div class="form-group">
-                            <label>🏭 المستودع *</label>
-                            <select id="retWarehouse" class="inv-select"><option value="">اختر المستودع...</option></select>
-                        </div>
-                    </div>
-                    <div class="form-group"><label>ملاحظات</label><input type="text" id="retNotes" /></div>
-
-                    <div class="divider">— إضافة أصناف —</div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>المنتج</label>
-                            <select id="retProduct" onchange="updateRetPrice()"><option value="">اختر...</option></select>
-                        </div>
-                        <div class="form-group"><label>الكمية</label><input type="number" id="retQty" value="1" min="1" /></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>السعر</label><input type="number" id="retPrice" min="0" step="0.01" /></div>
-                        <div class="form-group">
-                            <label>&nbsp;</label>
-                            <button class="btn btn-success btn-block" onclick="addRetItem()">
-                                <i class="fas fa-plus"></i> إضافة
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="retItemsContainer">
-                    <div class="empty-items">
-                        <i class="fas fa-undo-alt"></i>
-                        <span>لا توجد أصناف</span>
-                    </div>
-                </div>
-
-                <div class="totals-box" id="retTotalBox" style="display:none;">
-                    <div class="grand-total-box" style="background:linear-gradient(135deg,#E6A830,#C99028);">
-                        <div class="grand-label">إجمالي المرتجع</div>
-                        <div class="grand-value" id="retTotal">0.00 ج.م</div>
-                    </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
-                        <button class="btn btn-primary" onclick="saveReturn()"><i class="fas fa-check"></i> حفظ</button>
-                        <button class="btn btn-secondary" onclick="clearReturn()"><i class="fas fa-times"></i> إلغاء</button>
-                    </div>
-                </div>
-
-                <h2 style="margin-top:20px;"><i class="fas fa-list"></i> السجل</h2>
-                <div id="returnsList"></div>
+        <div class="dashboard-stats">
+            <div class="dashboard-card" style="border-right-color:#2D8F5E;">
+                <div class="number" id="accAssets" style="color:#2D8F5E;">0.00</div>
+                <div class="label">💎 الأصول</div>
+            </div>
+            <div class="dashboard-card" style="border-right-color:#E06060;">
+                <div class="number" id="accLiabilities" style="color:#E06060;">0.00</div>
+                <div class="label">📋 الالتزامات</div>
+            </div>
+            <div class="dashboard-card" style="border-right-color:#C9A94E;">
+                <div class="number" id="accEquity" style="color:#C9A94E;">0.00</div>
+                <div class="label">👑 حقوق الملكية</div>
+            </div>
+            <div class="dashboard-card" style="border-right-color:#4A8AB5;">
+                <div class="number" id="accRevenue" style="color:#4A8AB5;">0.00</div>
+                <div class="label">💰 الإيرادات</div>
+            </div>
+            <div class="dashboard-card" style="border-right-color:#E6A830;">
+                <div class="number" id="accExpenses" style="color:#E6A830;">0.00</div>
+                <div class="label">💸 المصروفات</div>
             </div>
         </div>
 
-        <!-- ═══════════ الحسابات ═══════════ -->
-        <div id="page-accounts" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-book"></i> الحسابات</h2>
+        <div class="report-buttons-grid">
+            <button class="btn btn-info" onclick="showTrialBalance()">
+                <i class="fas fa-balance-scale"></i><span>ميزان المراجعة</span>
+            </button>
+            <button class="btn btn-success" onclick="showIncomeStatement()">
+                <i class="fas fa-chart-line"></i><span>قائمة الدخل</span>
+            </button>
+            <button class="btn btn-warning" onclick="showBalanceSheet()">
+                <i class="fas fa-file-invoice-dollar"></i><span>الميزانية</span>
+            </button>
+        </div>
 
-                <div class="dashboard-stats">
-                    <div class="dashboard-card" style="border-right-color:#2D8F5E;">
-                        <div class="number" id="accAssets" style="color:#2D8F5E;">0.00</div>
-                        <div class="label">💎 الأصول</div>
-                    </div>
-                    <div class="dashboard-card" style="border-right-color:#E06060;">
-                        <div class="number" id="accLiabilities" style="color:#E06060;">0.00</div>
-                        <div class="label">📋 الالتزامات</div>
-                    </div>
-                    <div class="dashboard-card" style="border-right-color:#C9A94E;">
-                        <div class="number" id="accEquity" style="color:#C9A94E;">0.00</div>
-                        <div class="label">👑 حقوق الملكية</div>
-                    </div>
-                    <div class="dashboard-card" style="border-right-color:#4A8AB5;">
-                        <div class="number" id="accRevenue" style="color:#4A8AB5;">0.00</div>
-                        <div class="label">💰 الإيرادات</div>
-                    </div>
-                    <div class="dashboard-card" style="border-right-color:#E6A830;">
-                        <div class="number" id="accExpenses" style="color:#E6A830;">0.00</div>
-                        <div class="label">💸 المصروفات</div>
+        <h3 style="color:#C9A94E;margin:14px 0 10px;font-size:15px;">
+            <i class="fas fa-list"></i> دليل الحسابات
+        </h3>
+        <div id="accountList"></div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;">
+            <h3 style="color:#C9A94E;font-size:15px;"><i class="fas fa-history"></i> القيود اليومية</h3>
+            <button class="btn btn-success btn-sm" onclick="showAddJournalDialog()">
+                <i class="fas fa-plus"></i> قيد جديد
+            </button>
+        </div>
+        <div id="journalList" style="margin-top:10px;"></div>
+    </div>
+</div>
+
+<!-- ═══════════ الموارد (ERP) ═══════════ -->
+<div id="page-erp" class="page-container">
+    <div class="page-content">
+        <h2><i class="fas fa-warehouse"></i> إدارة الموارد</h2>
+
+        <div class="tabs-row">
+            <button class="tab-btn active" onclick="showERPTab('warehouses', this)">📦 مستودعات</button>
+            <button class="tab-btn" onclick="showERPTab('branches', this)">🏢 فروع</button>
+            <button class="tab-btn" onclick="showERPTab('currencies', this)">💱 عملات</button>
+        </div>
+
+        <div id="erpTabWarehouses" class="erp-tab-content">
+            <div class="form-card">
+                <h3 id="warehouseFormTitle">➕ إضافة مستودع جديد</h3>
+                <input type="hidden" id="warehouseId" />
+                <div class="form-row">
+                    <div class="form-group"><label>اسم المستودع *</label><input type="text" id="warehouseName" /></div>
+                    <div class="form-group">
+                        <label>النوع</label>
+                        <select id="warehouseType">
+                            <option value="main">🏭 رئيسي</option>
+                            <option value="branch">🏪 فرع</option>
+                            <option value="storage" selected>📦 مخزن</option>
+                            <option value="returns">🔄 مرتجعات</option>
+                        </select>
                     </div>
                 </div>
+                <div class="form-row">
+                    <div class="form-group"><label>الموقع</label><input type="text" id="warehouseLocation" /></div>
+                    <div class="form-group"><label>المسؤول</label><input type="text" id="warehouseManager" /></div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" onclick="saveWarehouse()"><i class="fas fa-save"></i> حفظ</button>
+                    <button class="btn btn-secondary" onclick="resetWarehouseForm()"><i class="fas fa-times"></i> إلغاء</button>
+                </div>
+            </div>
+            <div id="warehouseList"></div>
+        </div>
 
-                <div class="report-buttons-grid">
-                    <button class="btn btn-info" onclick="showTrialBalance()">
-                        <i class="fas fa-balance-scale"></i><span>ميزان المراجعة</span>
-                    </button>
-                    <button class="btn btn-success" onclick="showIncomeStatement()">
-                        <i class="fas fa-chart-line"></i><span>قائمة الدخل</span>
-                    </button>
-                    <button class="btn btn-warning" onclick="showBalanceSheet()">
-                        <i class="fas fa-file-invoice-dollar"></i><span>الميزانية</span>
+        <div id="erpTabBranches" class="erp-tab-content" style="display:none;">
+            <div class="form-card">
+                <h3>➕ إضافة فرع جديد</h3>
+                <input type="hidden" id="branchId" />
+                <div class="form-row">
+                    <div class="form-group"><label>اسم الفرع *</label><input type="text" id="branchName" /></div>
+                    <div class="form-group"><label>الكود</label><input type="text" id="branchCode" /></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>العنوان</label><input type="text" id="branchAddress" /></div>
+                    <div class="form-group"><label>الهاتف</label><input type="text" id="branchPhone" /></div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" onclick="saveBranch()"><i class="fas fa-save"></i> حفظ</button>
+                </div>
+            </div>
+            <div id="branchList"></div>
+        </div>
+
+        <div id="erpTabCurrencies" class="erp-tab-content" style="display:none;">
+            <div id="currencyList"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ المخازن ═══════════ -->
+<div id="page-warehouses" class="page-container">
+    <div class="page-content">
+        <h2><i class="fas fa-boxes"></i> إدارة المخازن</h2>
+
+        <div class="tabs-row">
+            <button class="tab-btn active" onclick="showWarehouseTab('receipts', this)">📥 إضافة</button>
+            <button class="tab-btn" onclick="showWarehouseTab('issues', this)">📤 صرف</button>
+            <button class="tab-btn" onclick="showWarehouseTab('transfers', this)">🔄 تحويل</button>
+            <button class="tab-btn" onclick="showWarehouseTab('adjustments', this)">⚖️ تسوية</button>
+            <button class="tab-btn" onclick="showWarehouseTab('opening', this)">📊 أول المدة</button>
+            <button class="tab-btn" onclick="showWarehouseTab('reports', this)">📈 تقارير</button>
+        </div>
+
+        <!-- الأصناف المشتركة -->
+        <div class="form-card" id="whVoucherItemsCard" style="border-right:3px solid #C9A94E;">
+            <h3>📦 إضافة أصناف للإذن</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>المنتج *</label>
+                    <div class="smart-search-container" data-search-type="products" data-search-target="whVoucherProduct">
+                        <input type="text" class="smart-search-input" placeholder="🔍 ابحث باسم المنتج أو الباركود..." />
+                        <div class="smart-search-results"></div>
+                        <select id="whVoucherProduct" class="inv-select" style="display:none;">
+                            <option value="">اختر منتج...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>الكمية *</label>
+                    <input type="number" id="whVoucherQty" value="1" min="1" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>السعر</label>
+                    <input type="number" id="whVoucherPrice" min="0" step="0.01" />
+                </div>
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-success btn-block" onclick="addVoucherItemFromGlobal()">
+                        <i class="fas fa-plus"></i> إضافة صنف
                     </button>
                 </div>
+            </div>
+        </div>
 
-                <h3 style="color:#C9A94E;margin:14px 0 10px;font-size:15px;">
-                    <i class="fas fa-list"></i> دليل الحسابات
-                </h3>
-                <div id="accountList"></div>
+        <div id="whVoucherItemsContainer">
+            <div class="empty-items">
+                <i class="fas fa-boxes"></i>
+                <span>لا توجد أصناف</span>
+                <small>أضف صنف من الأعلى</small>
+            </div>
+        </div>
 
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;">
-                    <h3 style="color:#C9A94E;font-size:15px;"><i class="fas fa-history"></i> القيود اليومية</h3>
-                    <button class="btn btn-success btn-sm" onclick="showAddJournalDialog()">
-                        <i class="fas fa-plus"></i> قيد جديد
+        <div class="totals-box" id="whVoucherTotalsBox" style="display:none;margin-bottom:14px;">
+            <div class="totals-grid">
+                <div class="total-stat"><span class="total-label">الأصناف</span><span class="total-value" id="whVoucherItemsCount">0</span></div>
+                <div class="total-stat"><span class="total-label">الكمية</span><span class="total-value" id="whVoucherTotalQty">0</span></div>
+                <div class="total-stat"><span class="total-label">القيمة</span><span class="total-value" id="whVoucherTotalValue">0.00</span></div>
+            </div>
+        </div>
+
+        <!-- تبويب الإضافة -->
+        <div id="whTabReceipts" class="warehouse-tab">
+            <div class="form-card">
+                <h3>📥 إنشاء إذن إضافة للمخزن</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>المستودع *</label>
+                        <select id="whReceiptWarehouse" class="inv-select"><option value="">اختر...</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>التاريخ</label>
+                        <input type="date" id="whReceiptDate" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>المصدر</label>
+                        <input type="text" id="whReceiptSource" placeholder="اسم المصدر (اختياري)" />
+                    </div>
+                    <div class="form-group">
+                        <label>المورد</label>
+                        <select id="whReceiptSupplier" class="inv-select"><option value="">اختر مورد</option></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات</label>
+                    <input type="text" id="whReceiptNotes" />
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
+                    <button class="btn btn-success" onclick="createWarehouseReceipt()">
+                        <i class="fas fa-check"></i> حفظ الإذن
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetVoucherForm('receipt')">
+                        <i class="fas fa-times"></i> إلغاء
                     </button>
                 </div>
-                <div id="journalList" style="margin-top:10px;"></div>
             </div>
+            <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;">
+                <i class="fas fa-list"></i> السجل
+            </h3>
+            <div id="whReceiptsList"></div>
         </div>
 
-        <!-- ═══════════ الموارد (ERP) ═══════════ -->
-        <div id="page-erp" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-warehouse"></i> إدارة الموارد</h2>
-
-                <div class="tabs-row">
-                    <button class="tab-btn active" onclick="showERPTab('warehouses', this)">📦 مستودعات</button>
-                    <button class="tab-btn" onclick="showERPTab('branches', this)">🏢 فروع</button>
-                    <button class="tab-btn" onclick="showERPTab('currencies', this)">💱 عملات</button>
-                </div>
-
-                <div id="erpTabWarehouses" class="erp-tab-content">
-                    <div class="form-card">
-                        <h3 id="warehouseFormTitle">➕ إضافة مستودع جديد</h3>
-                        <input type="hidden" id="warehouseId" />
-                        <div class="form-row">
-                            <div class="form-group"><label>اسم المستودع *</label><input type="text" id="warehouseName" /></div>
-                            <div class="form-group">
-                                <label>النوع</label>
-                                <select id="warehouseType">
-                                    <option value="main">🏭 رئيسي</option>
-                                    <option value="branch">🏪 فرع</option>
-                                    <option value="storage" selected>📦 مخزن</option>
-                                    <option value="returns">🔄 مرتجعات</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>الموقع</label><input type="text" id="warehouseLocation" /></div>
-                            <div class="form-group"><label>المسؤول</label><input type="text" id="warehouseManager" /></div>
-                        </div>
-                        <div class="form-actions">
-                            <button class="btn btn-primary" onclick="saveWarehouse()"><i class="fas fa-save"></i> حفظ</button>
-                            <button class="btn btn-secondary" onclick="resetWarehouseForm()"><i class="fas fa-times"></i> إلغاء</button>
-                        </div>
+        <!-- تبويب الصرف -->
+        <div id="whTabIssues" class="warehouse-tab" style="display:none;">
+            <div class="form-card">
+                <h3>📤 إنشاء إذن صرف من المخزن</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>المستودع *</label>
+                        <select id="whIssueWarehouse" class="inv-select"><option value="">اختر...</option></select>
                     </div>
-                    <div id="warehouseList"></div>
-                </div>
-
-                <div id="erpTabBranches" class="erp-tab-content" style="display:none;">
-                    <div class="form-card">
-                        <h3>➕ إضافة فرع جديد</h3>
-                        <input type="hidden" id="branchId" />
-                        <div class="form-row">
-                            <div class="form-group"><label>اسم الفرع *</label><input type="text" id="branchName" /></div>
-                            <div class="form-group"><label>الكود</label><input type="text" id="branchCode" /></div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>العنوان</label><input type="text" id="branchAddress" /></div>
-                            <div class="form-group"><label>الهاتف</label><input type="text" id="branchPhone" /></div>
-                        </div>
-                        <div class="form-actions">
-                            <button class="btn btn-primary" onclick="saveBranch()"><i class="fas fa-save"></i> حفظ</button>
-                        </div>
+                    <div class="form-group">
+                        <label>التاريخ</label>
+                        <input type="date" id="whIssueDate" />
                     </div>
-                    <div id="branchList"></div>
                 </div>
-
-                <div id="erpTabCurrencies" class="erp-tab-content" style="display:none;">
-                    <div id="currencyList"></div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>الوجهة</label>
+                        <input type="text" id="whIssueDestination" placeholder="مكان الصرف (اختياري)" />
+                    </div>
+                    <div class="form-group">
+                        <label>العميل</label>
+                        <select id="whIssueCustomer" class="inv-select"><option value="">اختر عميل</option></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات</label>
+                    <input type="text" id="whIssueNotes" />
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
+                    <button class="btn btn-danger" onclick="createWarehouseIssue()">
+                        <i class="fas fa-check"></i> حفظ الإذن
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetVoucherForm('issue')">
+                        <i class="fas fa-times"></i> إلغاء
+                    </button>
                 </div>
             </div>
+            <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;">
+                <i class="fas fa-list"></i> السجل
+            </h3>
+            <div id="whIssuesList"></div>
         </div>
 
-        <!-- ═══════════ المخازن 🆕 ═══════════ -->
-        <div id="page-warehouses" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-boxes"></i> إدارة المخازن</h2>
-
-                <div class="tabs-row">
-                    <button class="tab-btn active" onclick="showWarehouseTab('receipts', this)">📥 إضافة</button>
-                    <button class="tab-btn" onclick="showWarehouseTab('issues', this)">📤 صرف</button>
-                    <button class="tab-btn" onclick="showWarehouseTab('transfers', this)">🔄 تحويل</button>
-                    <button class="tab-btn" onclick="showWarehouseTab('adjustments', this)">⚖️ تسوية</button>
-                    <button class="tab-btn" onclick="showWarehouseTab('opening', this)">📊 أول المدة</button>
-                    <button class="tab-btn" onclick="showWarehouseTab('reports', this)">📈 تقارير</button>
-                </div>
-
-                <!-- ═══ الأصناف المشتركة (تظهر في كل التبويبات) ═══ -->
-                <div class="form-card" id="whVoucherItemsCard" style="border-right:3px solid #C9A94E;">
-                    <h3>📦 إضافة أصناف للإذن</h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>المنتج *</label>
-                            <select id="whVoucherProduct" class="inv-select">
-                                <option value="">اختر منتج...</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>الكمية *</label>
-                            <input type="number" id="whVoucherQty" value="1" min="1" />
-                        </div>
+        <!-- تبويب التحويل -->
+        <div id="whTabTransfers" class="warehouse-tab" style="display:none;">
+            <div class="form-card">
+                <h3>🔄 تحويل بين المستودعات</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>من مستودع *</label>
+                        <select id="whTransferFrom" class="inv-select"><option value="">اختر...</option></select>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>السعر</label>
-                            <input type="number" id="whVoucherPrice" min="0" step="0.01" />
-                        </div>
-                        <div class="form-group">
-                            <label>&nbsp;</label>
-                            <button class="btn btn-success btn-block" onclick="addVoucherItemFromGlobal()">
-                                <i class="fas fa-plus"></i> إضافة صنف
-                            </button>
-                        </div>
+                    <div class="form-group">
+                        <label>إلى مستودع *</label>
+                        <select id="whTransferTo" class="inv-select"><option value="">اختر...</option></select>
                     </div>
                 </div>
-
-                <div id="whVoucherItemsContainer">
-                    <div class="empty-items">
-                        <i class="fas fa-boxes"></i>
-                        <span>لا توجد أصناف</span>
-                        <small>أضف صنف من الأعلى</small>
-                    </div>
+                <div class="form-group">
+                    <label>التاريخ</label>
+                    <input type="date" id="whTransferDate" />
                 </div>
-
-                <div class="totals-box" id="whVoucherTotalsBox" style="display:none;margin-bottom:14px;">
-                    <div class="totals-grid">
-                        <div class="total-stat"><span class="total-label">الأصناف</span><span class="total-value" id="whVoucherItemsCount">0</span></div>
-                        <div class="total-stat"><span class="total-label">الكمية</span><span class="total-value" id="whVoucherTotalQty">0</span></div>
-                        <div class="total-stat"><span class="total-label">القيمة</span><span class="total-value" id="whVoucherTotalValue">0.00</span></div>
-                    </div>
+                <div class="form-group">
+                    <label>ملاحظات</label>
+                    <input type="text" id="whTransferNotes" />
                 </div>
-
-                <!-- ═══ تبويب 1: أذون الإضافة ═══ -->
-                <div id="whTabReceipts" class="warehouse-tab">
-                    <div class="form-card">
-                        <h3>📥 إنشاء إذن إضافة للمخزن</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>المستودع *</label>
-                                <select id="whReceiptWarehouse" class="inv-select"><option value="">اختر...</option></select>
-                            </div>
-                            <div class="form-group">
-                                <label>التاريخ</label>
-                                <input type="date" id="whReceiptDate" />
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>المصدر</label>
-                                <input type="text" id="whReceiptSource" placeholder="اسم المصدر (اختياري)" />
-                            </div>
-                            <div class="form-group">
-                                <label>المورد</label>
-                                <select id="whReceiptSupplier" class="inv-select"><option value="">اختر مورد</option></select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>ملاحظات</label>
-                            <input type="text" id="whReceiptNotes" />
-                        </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
-                            <button class="btn btn-success" onclick="createWarehouseReceipt()">
-                                <i class="fas fa-check"></i> حفظ الإذن
-                            </button>
-                            <button class="btn btn-secondary" onclick="resetVoucherForm('receipt')">
-                                <i class="fas fa-times"></i> إلغاء
-                            </button>
-                        </div>
-                    </div>
-                    <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;">
-                        <i class="fas fa-list"></i> السجل
-                    </h3>
-                    <div id="whReceiptsList"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
+                    <button class="btn btn-info" onclick="createWarehouseTransfer()">
+                        <i class="fas fa-check"></i> حفظ التحويل
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetVoucherForm('transfer')">
+                        <i class="fas fa-times"></i> إلغاء
+                    </button>
                 </div>
-
-                <!-- ═══ تبويب 2: أذون الصرف ═══ -->
-                <div id="whTabIssues" class="warehouse-tab" style="display:none;">
-                    <div class="form-card">
-                        <h3>📤 إنشاء إذن صرف من المخزن</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>المستودع *</label>
-                                <select id="whIssueWarehouse" class="inv-select"><option value="">اختر...</option></select>
-                            </div>
-                            <div class="form-group">
-                                <label>التاريخ</label>
-                                <input type="date" id="whIssueDate" />
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>الوجهة</label>
-                                <input type="text" id="whIssueDestination" placeholder="مكان الصرف (اختياري)" />
-                            </div>
-                            <div class="form-group">
-                                <label>العميل</label>
-                                <select id="whIssueCustomer" class="inv-select"><option value="">اختر عميل</option></select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>ملاحظات</label>
-                            <input type="text" id="whIssueNotes" />
-                        </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
-                            <button class="btn btn-danger" onclick="createWarehouseIssue()">
-                                <i class="fas fa-check"></i> حفظ الإذن
-                            </button>
-                            <button class="btn btn-secondary" onclick="resetVoucherForm('issue')">
-                                <i class="fas fa-times"></i> إلغاء
-                            </button>
-                        </div>
-                    </div>
-                    <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;">
-                        <i class="fas fa-list"></i> السجل
-                    </h3>
-                    <div id="whIssuesList"></div>
-                </div>
-
-                <!-- ═══ تبويب 3: التحويلات ═══ -->
-                <div id="whTabTransfers" class="warehouse-tab" style="display:none;">
-                    <div class="form-card">
-                        <h3>🔄 تحويل بين المستودعات</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>من مستودع *</label>
-                                <select id="whTransferFrom" class="inv-select"><option value="">اختر...</option></select>
-                            </div>
-                            <div class="form-group">
-                                <label>إلى مستودع *</label>
-                                <select id="whTransferTo" class="inv-select"><option value="">اختر...</option></select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>التاريخ</label>
-                            <input type="date" id="whTransferDate" />
-                        </div>
-                        <div class="form-group">
-                            <label>ملاحظات</label>
-                            <input type="text" id="whTransferNotes" />
-                        </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
-                            <button class="btn btn-info" onclick="createWarehouseTransfer()">
-                                <i class="fas fa-check"></i> حفظ التحويل
-                            </button>
-                            <button class="btn btn-secondary" onclick="resetVoucherForm('transfer')">
-                                <i class="fas fa-times"></i> إلغاء
-                            </button>
-                        </div>
-                    </div>
-                    <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;">
-                        <i class="fas fa-list"></i> السجل
-                    </h3>
-                    <div id="whTransfersList"></div>
-                </div>
-
-                <!-- ═══ تبويب 4: التسويات ═══ -->
-                <div id="whTabAdjustments" class="warehouse-tab" style="display:none;">
-                    <div class="form-card">
-                        <h3>⚖️ تسوية الجرد</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>المستودع *</label>
-                                <select id="whAdjustWarehouse" class="inv-select"><option value="">اختر...</option></select>
-                            </div>
-                            <div class="form-group">
-                                <label>التاريخ</label>
-                                <input type="date" id="whAdjustDate" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>ملاحظات</label>
-                            <input type="text" id="whAdjustNotes" />
-                        </div>
-                        <div style="background:#0D0D0D;border-radius:8px;padding:10px;margin-top:10px;font-size:11px;color:#A89070;">
-                            💡 اكتب الكمية الفعلية في خانة "الكمية" عند إضافة الأصناف.
-                        </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
-                            <button class="btn btn-warning" onclick="createWarehouseAdjustment()">
-                                <i class="fas fa-check"></i> حفظ التسوية
-                            </button>
-                            <button class="btn btn-secondary" onclick="resetVoucherForm('adjustment')">
-                                <i class="fas fa-times"></i> إلغاء
-                            </button>
-                        </div>
-                    </div>
-                    <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;">
-                        <i class="fas fa-list"></i> السجل
-                    </h3>
-                    <div id="whAdjustmentsList"></div>
-                </div>
-
-                <!-- ═══ تبويب 5: أول المدة ═══ -->
-                <div id="whTabOpening" class="warehouse-tab" style="display:none;">
-                    <div class="form-card">
-                        <h3>📊 رصيد أول المدة</h3>
-                        <div style="background:#0D0D0D;border-radius:8px;padding:10px;margin-bottom:10px;font-size:11px;color:#A89070;">
-                            💡 استخدمه <strong>مرة واحدة</strong> عند بدء استخدام التطبيق، لتسجيل البضاعة الموجودة عندك حالياً.
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>المستودع *</label>
-                                <select id="obWarehouse" class="inv-select"><option value="">اختر...</option></select>
-                            </div>
-                            <div class="form-group">
-                                <label>التاريخ</label>
-                                <input type="date" id="obDate" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>ملاحظات</label>
-                            <input type="text" id="obNotes" />
-                        </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
-                            <button class="btn btn-primary" onclick="saveOpeningBalance()">
-                                <i class="fas fa-check"></i> حفظ الرصيد
-                            </button>
-                            <button class="btn btn-secondary" onclick="resetVoucherForm('opening')">
-                                <i class="fas fa-times"></i> إلغاء
-                            </button>
-                        </div>
-                    </div>
-                    <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;">
-                        <i class="fas fa-list"></i> السجل
-                    </h3>
-                    <div id="obList"></div>
-                </div>
-
-                <!-- ═══ تبويب 6: التقارير ═══ -->
-                <div id="whTabReports" class="warehouse-tab" style="display:none;">
-                    <div id="whReportsList"></div>
-                </div>
-
             </div>
+            <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;">
+                <i class="fas fa-list"></i> السجل
+            </h3>
+            <div id="whTransfersList"></div>
         </div>
 
-        <!-- ═══════════ التقارير ═══════════ -->
+        <!-- تبويب التسوية -->
+        <div id="whTabAdjustments" class="warehouse-tab" style="display:none;">
+            <div class="form-card">
+                <h3>⚖️ تسوية الجرد</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>المستودع *</label>
+                        <select id="whAdjustWarehouse" class="inv-select"><option value="">اختر...</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>التاريخ</label>
+                        <input type="date" id="whAdjustDate" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات</label>
+                    <input type="text" id="whAdjustNotes" />
+                </div>
+                <div style="background:#0D0D0D;border-radius:8px;padding:10px;margin-top:10px;font-size:11px;color:#A89070;">
+                    💡 اكتب الكمية الفعلية في خانة "الكمية" عند إضافة الأصناف.
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
+                    <button class="btn btn-warning" onclick="createWarehouseAdjustment()">
+                        <i class="fas fa-check"></i> حفظ التسوية
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetVoucherForm('adjustment')">
+                        <i class="fas fa-times"></i> إلغاء
+                    </button>
+                </div>
+            </div>
+            <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;">
+                <i class="fas fa-list"></i> السجل
+            </h3>
+            <div id="whAdjustmentsList"></div>
+        </div>
+
+        <!-- تبويب أول المدة -->
+        <div id="whTabOpening" class="warehouse-tab" style="display:none;">
+            <div class="form-card">
+                <h3>📊 رصيد أول المدة</h3>
+                <div style="background:#0D0D0D;border-radius:8px;padding:10px;margin-bottom:10px;font-size:11px;color:#A89070;">
+                    💡 استخدمه <strong>مرة واحدة</strong> عند بدء استخدام التطبيق، لتسجيل البضاعة الموجودة عندك حالياً.
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>المستودع *</label>
+                        <select id="obWarehouse" class="inv-select"><option value="">اختر...</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>التاريخ</label>
+                        <input type="date" id="obDate" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات</label>
+                    <input type="text" id="obNotes" />
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
+                    <button class="btn btn-primary" onclick="saveOpeningBalance()">
+                        <i class="fas fa-check"></i> حفظ الرصيد
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetVoucherForm('opening')">
+                        <i class="fas fa-times"></i> إلغاء
+                    </button>
+                </div>
+            </div>
+            <h3 style="color:#C9A94E;margin:20px 0 10px;font-size:15px;">
+                <i class="fas fa-list"></i> السجل
+            </h3>
+            <div id="obList"></div>
+        </div>
+
+        <!-- تبويب التقارير -->
+        <div id="whTabReports" class="warehouse-tab" style="display:none;">
+            <div id="whReportsList"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ (يتبع في الجزء 3) ═══════════ -->
+                <!-- ═══════════ التقارير ═══════════ -->
         <div id="page-reports" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-chart-bar"></i> التقارير</h2>
@@ -1555,7 +1596,7 @@
 
                 <div class="settings-section">
                     <h3>ℹ️ عن التطبيق</h3>
-                    <div class="settings-info-row"><span>الإصدار</span><span>18.0.0 Pro</span></div>
+                    <div class="settings-info-row"><span>الإصدار</span><span>18.2.0 Pro</span></div>
                     <div class="settings-info-row"><span>المنتجات</span><span id="setProductsCount">0</span></div>
                     <div class="settings-info-row"><span>الفواتير</span><span id="setSalesCount">0</span></div>
                     <div class="settings-info-row"><span>العملاء</span><span id="setCustomersCount">0</span></div>
