@@ -1,5 +1,5 @@
 /* ============================================================
-   الميزان Pro - style.css v18.0
+   الميزان Pro - style.css v18.1
    ============================================================ */
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
@@ -57,9 +57,14 @@ body {
 }
 .login-box .btn { margin-top: 10px; }
 .login-box .error-msg { 
-    color: #E06060; font-size: 13px; margin-top: 12px; 
-    display: none; font-weight: 800; padding: 10px; 
-    background: rgba(224, 96, 96, 0.1); border-radius: 8px; 
+    color: #E06060; 
+    font-size: 13px; 
+    margin-top: 12px; 
+    display: none; 
+    font-weight: 800; 
+    padding: 10px; 
+    background: rgba(224, 96, 96, 0.1); 
+    border-radius: 8px; 
     border: 1px solid #E06060; 
 }
 .login-box .error-msg.show { display: block; animation: shake 0.3s; }
@@ -421,13 +426,15 @@ body {
 }
 .pos-field { display: flex; flex-direction: column; gap: 4px; }
 .pos-field label { font-size: 11px; font-weight: 800; color: #A89070; }
-.pos-input, .pos-select { 
+.pos-input, .pos-select, .inv-select { 
     font-size: 14px; padding: 10px 12px; border-radius: 8px; 
     border: 2px solid #3D3D3D; background: #0D0D0D; 
     color: #F5E6C8; font-family: inherit; 
     width: 100%; box-sizing: border-box; 
 }
-.pos-input:focus, .pos-select:focus { outline: none; border-color: #C9A94E; }
+.pos-input:focus, .pos-select:focus, .inv-select:focus { 
+    outline: none; border-color: #C9A94E; 
+}
 .pos-add-item { display: flex; gap: 6px; align-items: stretch; margin-bottom: 10px; }
 .pos-items-box { 
     background: #0D0D0D; border-radius: 12px; 
@@ -801,7 +808,7 @@ body {
     font-family: inherit; color: #F5E6C8; 
 }
 
-/* ═══════════════ أزرار تقارير الحسابات ═══════════════ */
+/* ═══════════════ تقارير الحسابات ═══════════════ */
 .report-buttons-grid { 
     display: grid; grid-template-columns: repeat(3, 1fr); 
     gap: 8px; margin-bottom: 16px; 
@@ -846,19 +853,6 @@ body {
     body { padding: 20px 40px 100px; max-width: 1000px; }
     #moreMenu { max-width: 520px; }
     #moreMenu > div { grid-template-columns: repeat(3, 1fr); }
-}
-
-/* ═══════════════ الطباعة ═══════════════ */
-@media print {
-    body * { visibility: hidden; }
-    #modalOverlay, #modalOverlay * { visibility: visible; }
-    #modalOverlay { 
-        position: absolute; top: 0; background: #fff; 
-        padding: 10px; display: block; 
-    }
-    .modal-box { background: #fff; border: none; }
-    .modal-close { display: none; }
-    .top-header, .bottom-nav, #moreMenu { display: none; }
 }
 
 /* ═══════════════ Scrollbar ═══════════════ */
