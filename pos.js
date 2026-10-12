@@ -537,20 +537,58 @@ window.updatePurPrice = function() {
 };
 
 window.addPurItem = function() {
-    const productSelect = document.getElementById('purProduct');
     const qtyInput = document.getElementById('purQty');
     const priceInput = document.getElementById('purPrice');
-    const id = productSelect ? productSelect.value : '';
-    let qty = parseInt(qtyInput ? qtyInput.value : 0) || 0;
-    let price = parseFloat(priceInput ? priceInput.value : 0) || 0;
+
+    // ⚡ البحث الذكي عن المنتج
+    let id = '';
+
+    // 1️⃣ جرب من الـ select أولاً
+    const productSelect = document.getElementById('purProduct');
+    if (productSelect && productSelect.value) {
+        id = productSelect.value;
+    }
+
+    // 2️⃣ لو مفيش، جرب من حقل البحث الذكي
+    if (!id) {
+        const searchInput = document.querySelector('.smart-search-container[data-search-target="purProduct"] .smart-search-input');
+        if (searchInput && searchInput.value.trim()) {
+            const searchValue = searchInput.value.trim();
+            // ابحث عن المنتج بالاسم
+            const foundProduct = (window.products || []).find(function(p) {
+                return p.name === searchValue;
+            });
+            if (foundProduct) {
+                id = foundProduct.id;
+            }
+        }
+    }
+
+    // 3️⃣ لو لسه مفيش، جرب data-id من أول نتيجة
+    if (!id) {
+        const searchContainer = document.querySelector('.smart-search-container[data-search-target="purProduct"]');
+        if (searchContainer) {
+            const firstResult = searchContainer.querySelector('.smart-search-item');
+            if (firstResult && firstResult.dataset.id) {
+                id = firstResult.dataset.id;
+            }
+        }
+    }
 
     if (!id) {
         window.showToast('⚠️ اختر منتج', 'error');
         return;
     }
 
+    let qty = parseInt(qtyInput ? qtyInput.value : 0) || 0;
+    let price = parseFloat(priceInput ? priceInput.value : 0) || 0;
+
     const p = (window.products || []).find(function(pr) { return pr.id == id; });
-    if (!p) return;
+    if (!p) {
+        window.showToast('⚠️ المنتج غير موجود', 'error');
+        return;
+    }
+
     if (price <= 0) price = p.buy || 0;
     if (qty <= 0) qty = 1;
 
@@ -569,13 +607,18 @@ window.addPurItem = function() {
         });
     }
 
+    // إعادة تعيين الحقول
     if (qtyInput) qtyInput.value = 1;
     if (priceInput) priceInput.value = '';
+
+    // إعادة تعيين حقل البحث
     if (productSelect) productSelect.value = '';
+    const searchInput = document.querySelector('.smart-search-container[data-search-target="purProduct"] .smart-search-input');
+    if (searchInput) searchInput.value = '';
 
     window.renderPurItems();
     window.updatePurTotals();
-    window.showToast('✅ تم الإضافة', 'success');
+    window.showToast('✅ تم إضافة ' + p.name, 'success');
 };
 
 window.removePurItem = function(i) {
