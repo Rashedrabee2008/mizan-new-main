@@ -178,6 +178,37 @@
         </div>
 
         <!-- ═══════════ بيانات الشركة ═══════════ -->
+
+        <div class="form-card">
+    <h3>📸 لوجو الشركة</h3>
+    
+    <!-- معاينة اللوجو -->
+    <div id="companyLogoPreview" style="display:none;text-align:center;margin-bottom:15px;">
+        <img id="companyLogoImg" src="" 
+             style="max-width:200px;max-height:200px;border-radius:10px;border:2px solid #C9A94E;" />
+    </div>
+    
+    <!-- أزرار التحكم -->
+    <input type="file" id="companyLogoInput" 
+           accept="image/*" 
+           style="display:none" 
+           onchange="uploadCompanyLogo(event)" />
+    
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button class="btn btn-primary" 
+                onclick="document.getElementById('companyLogoInput').click()">
+            📤 رفع لوجو
+        </button>
+        <button class="btn btn-danger" onclick="removeCompanyLogo()">
+            🗑️ حذف
+        </button>
+    </div>
+    
+    <div style="margin-top:10px;font-size:11px;color:#A89070;text-align:center;">
+        💡 يُفضل صورة بحجم 200×200 بكسل (PNG أو JPG)
+    </div>
+</div>
+        
         <div id="page-company" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-building"></i> بيانات الشركة</h2>
@@ -1858,7 +1889,8 @@ window.addEventListener('offline', function() {
 <script src="app.js"></script>
 <script src="pos.js"></script>
 <script src="search.js"></script>
-<script src="tenant.js"></script>       <!-- ← جديد -->
+<script src="tenant.js"></script>
+<script src="themes.js"></script>       <!-- 🆕 -->
 <script src="inventory.js"></script>
 <script src="accounting.js"></script>
 <script src="dashboard.js"></script>
