@@ -448,8 +448,8 @@
         </div>
 
         <!-- Actions -->
-        <div class="actions">
-            <a href="app.html" class="btn btn-primary">
+                <div class="actions">
+            <a href="app.html" class="btn btn-primary" id="openAppBtn">
                 <i class="fas fa-rocket"></i>
                 افتح التطبيق الآن
             </a>
@@ -607,17 +607,8 @@
             // حفظ الكود في التطبيق تلقائياً
             // ═══════════════════════════════════════════════════════════
 
-            // لما يضغط "افتح التطبيق الآن":
-            const openAppBtn = document.querySelector('a[href="app.html"]');
-            if (openAppBtn && code) {
-                openAppBtn.addEventListener('click', function() {
-                    try {
-                        localStorage.setItem('mizan_pending_activation', code);
-                    } catch (e) {}
-                });
-            }
-
-            console.log('✅ صفحة الشكر جاهزة — الكود:', code || 'لا يوجد');
+                       // ✅ التطبيق مفعّل بالفعل — مفيش حاجة نحفظها
+            console.log('✅ العميل مفعّل — جاهز للانتقال للتطبيق');
 
         })();
     </script>
