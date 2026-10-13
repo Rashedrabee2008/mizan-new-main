@@ -2423,106 +2423,190 @@
     window.showToast('🖨️ جاري الطباعة...', 'info');
 };
     
-    window.exportReportCSV = function() {
-    const type = window.currentReport;
-    const SEP = '\t';  // ← Tab (بيفتح صح في Excel و Google Sheets)
-    let csv = '\uFEFF';
-    const filename = 'report-' + type + '-' + window.getTodayDate() + '.tsv';
+        // ═══════════════════════════════════════════════════════════
+    // تصدير التقارير — Excel حقيقي (.xlsx)
+    // ═══════════════════════════════════════════════════════════
 
-    if (type === 'daily' || type === 'monthly' || type === 'yearly') {
-        if (!window.currentReportData || !window.currentReportData.dataList) {
-            window.showToast('⚠️ لا توجد بيانات', 'warning');
+    window.exportReportCSV = function() {
+        // نتأكد إن SheetJS محمّل
+        if (typeof XLSX === 'undefined') {
+            if (typeof window.showToast === 'function') {
+                window.showToast('⚠️ جاري تحميل مكتبة Excel...', 'info');
+            }
+            // جرب تاني بعد ثانية
+            setTimeout(window.exportReportCSV, 1500);
             return;
         }
 
-        csv += ['الفترة', 'المبيعات', 'المشتريات', 'المصروفات', 'إجمالي الربح', 'صافي الربح'].join(SEP) + '\n';
+        const type = window.currentReport;
+        const filename = 'report-' + type + '-' + window.getTodayDate() + '.xlsx';
 
-        window.currentReportData.dataList.forEach(function(d) {
-            csv += [
-                d.label,
-                d.salesAmount.toFixed(2),
-                d.purchasesAmount.toFixed(2),
-                d.expensesAmount.toFixed(2),
-                d.grossProfit.toFixed(2),
-                d.netProfit.toFixed(2)
-            ].join(SEP) + '\n';
-        });
-    }
+        try {
+            const wb = XLSX.utils.book_new();
+            let ws;
 
-    else if (type === 'sellers') {
-        csv += ['البائع', 'المبيعات', 'عدد الفواتير', 'الربح'].join(SEP) + '\n';
+            // ═══ التقارير الزمنية (يومي / شهري / سنوي) ═══
+            if (type === 'daily' || type === 'monthly' || type === 'yearly') {
+                if (!window.currentReportData || !window.currentReportData.dataList) {
+                    window.showToast('⚠️ لا توجد بيانات', 'warning');
+                    return;
+                }
 
-        const stats = {};
-        (window.sales || []).forEach(function(s) {
-            const seller = s.seller || 'غير محدد';
-            if (!stats[seller]) stats[seller] = { total: 0, count: 0, profit: 0 };
-            stats[seller].total += parseFloat(s.total) || 0;
-            stats[seller].count++;
-            stats[seller].profit += parseFloat(s.profit) || 0;
-        });
+                // بناء البيانات
+                const rows = [];
 
-        Object.keys(stats).forEach(function(name) {
-            csv += [
-                name,
-                stats[name].total.toFixed(2),
-                stats[name].count,
-                stats[name].profit.toFixed(2)
-            ].join(SEP) + '\n';
-        });
-    }
+                // العنوان
+                rows.push(['تقرير ' + (type === 'daily' ? 'يومي' : type === 'monthly' ? 'شهري' : 'سنوي'), '', '', '', '', '']);
+                rows.push(['التاريخ: ' + window.getTodayDate(), '', '', '', '', '']);
+                rows.push([]);
 
-    else if (type === 'products') {
-        csv += ['المنتج', 'الكمية', 'المبيعات', 'الربح'].join(SEP) + '\n';
+                // الرؤوس
+                rows.push(['الفترة', 'المبيعات', 'المشتريات', 'المصروفات', 'إجمالي الربح', 'صافي الربح']);
 
-        const stats = {};
-        (window.sales || []).forEach(function(s) {
-            (s.items || []).forEach(function(it) {
-                if (!stats[it.name]) stats[it.name] = { qty: 0, total: 0, profit: 0 };
-                stats[it.name].qty += parseInt(it.qty) || 0;
-                stats[it.name].total += parseFloat(it.total) || 0;
-                stats[it.name].profit += ((parseFloat(it.price) || 0) - (parseFloat(it.costPrice) || 0)) * (parseInt(it.qty) || 0);
-            });
-        });
+                // البيانات
+                window.currentReportData.dataList.forEach(function(d) {
+                    rows.push([
+                        d.label,
+                        d.salesAmount,
+                        d.purchasesAmount,
+                        d.expensesAmount,
+                        d.grossProfit,
+                        d.netProfit
+                    ]);
+                });
 
-        Object.keys(stats).forEach(function(name) {
-            csv += [
-                name,
-                stats[name].qty,
-                stats[name].total.toFixed(2),
-                stats[name].profit.toFixed(2)
-            ].join(SEP) + '\n';
-        });
-    }
+                // الإجماليات
+                rows.push([]);
+                rows.push(['الإجمالي',
+                    window.currentReportData.totals.salesAmount,
+                    window.currentReportData.totals.purchasesAmount,
+                    window.currentReportData.totals.expensesAmount,
+                    window.currentReportData.totals.grossProfit,
+                    window.currentReportData.totals.netProfit
+                ]);
 
-    else if (type === 'customers') {
-        csv += ['العميل', 'المشتريات', 'عدد الفواتير'].join(SEP) + '\n';
+                ws = XLSX.utils.aoa_to_sheet(rows);
+            }
 
-        const stats = {};
-        (window.sales || []).forEach(function(s) {
-            const c = s.customer || 'عميل نقدي';
-            if (!stats[c]) stats[c] = { total: 0, count: 0 };
-            stats[c].total += parseFloat(s.total) || 0;
-            stats[c].count++;
-        });
+            // ═══ تقرير البائعين ═══
+            else if (type === 'sellers') {
+                const sellerStats = {};
+                (window.sales || []).forEach(function(s) {
+                    const seller = s.seller || 'غير محدد';
+                    if (!sellerStats[seller]) sellerStats[seller] = { name: seller, total: 0, count: 0, profit: 0 };
+                    sellerStats[seller].total += parseFloat(s.total) || 0;
+                    sellerStats[seller].count++;
+                    sellerStats[seller].profit += parseFloat(s.profit) || 0;
+                });
 
-        Object.keys(stats).forEach(function(name) {
-            csv += [
-                name,
-                stats[name].total.toFixed(2),
-                stats[name].count
-            ].join(SEP) + '\n';
-        });
-    }
+                const list = Object.values(sellerStats).sort(function(a, b) { return b.total - a.total; });
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(a.href);
+                const rows = [];
+                rows.push(['تقرير البائعين']);
+                rows.push(['التاريخ: ' + window.getTodayDate()]);
+                rows.push([]);
+                rows.push(['#', 'البائع', 'المبيعات', 'عدد الفواتير', 'الربح']);
 
-    window.showToast('✅ تم تصدير التقرير', 'success');
-};
+                list.forEach(function(s, i) {
+                    rows.push([i + 1, s.name, s.total, s.count, s.profit]);
+                });
+
+                ws = XLSX.utils.aoa_to_sheet(rows);
+            }
+
+            // ═══ تقرير المنتجات ═══
+            else if (type === 'products') {
+                const productStats = {};
+                (window.sales || []).forEach(function(s) {
+                    (s.items || []).forEach(function(it) {
+                        if (!productStats[it.name]) productStats[it.name] = { name: it.name, qty: 0, total: 0, profit: 0 };
+                        productStats[it.name].qty += parseInt(it.qty) || 0;
+                        productStats[it.name].total += parseFloat(it.total) || 0;
+                        productStats[it.name].profit += ((parseFloat(it.price) || 0) - (parseFloat(it.costPrice) || 0)) * (parseInt(it.qty) || 0);
+                    });
+                });
+
+                const list = Object.values(productStats).sort(function(a, b) { return b.total - a.total; });
+
+                const rows = [];
+                rows.push(['تقرير المنتجات']);
+                rows.push(['التاريخ: ' + window.getTodayDate()]);
+                rows.push([]);
+                rows.push(['#', 'المنتج', 'الكمية', 'المبيعات', 'الربح']);
+
+                list.forEach(function(p, i) {
+                    rows.push([i + 1, p.name, p.qty, p.total, p.profit]);
+                });
+
+                ws = XLSX.utils.aoa_to_sheet(rows);
+            }
+
+            // ═══ تقرير العملاء ═══
+            else if (type === 'customers') {
+                const customerStats = {};
+                (window.sales || []).forEach(function(s) {
+                    const c = s.customer || 'عميل نقدي';
+                    if (!customerStats[c]) customerStats[c] = { name: c, total: 0, count: 0 };
+                    customerStats[c].total += parseFloat(s.total) || 0;
+                    customerStats[c].count++;
+                });
+
+                const list = Object.values(customerStats).sort(function(a, b) { return b.total - a.total; });
+
+                const rows = [];
+                rows.push(['تقرير العملاء']);
+                rows.push(['التاريخ: ' + window.getTodayDate()]);
+                rows.push([]);
+                rows.push(['#', 'العميل', 'المشتريات', 'عدد الفواتير']);
+
+                list.forEach(function(c, i) {
+                    rows.push([i + 1, c.name, c.total, c.count]);
+                });
+
+                ws = XLSX.utils.aoa_to_sheet(rows);
+            }
+
+            // ═══ ضبط عرض الأعمدة ═══
+            if (ws && ws['!ref']) {
+                const range = XLSX.utils.decode_range(ws['!ref']);
+                const cols = [];
+
+                for (let i = range.s.c; i <= range.e.c; i++) {
+                    cols.push({ wch: 18 });  // عرض كل عمود 18
+                }
+
+                // العمود الأول أعرض شوية
+                if (cols.length > 0) cols[0].wch = 22;
+
+                ws['!cols'] = cols;
+            }
+
+            // ═══ إضافة الورقة للملف ═══
+            const sheetName = {
+                'daily': 'يومي',
+                'monthly': 'شهري',
+                'yearly': 'سنوي',
+                'sellers': 'البائعين',
+                'products': 'المنتجات',
+                'customers': 'العملاء'
+            }[type] || 'تقرير';
+
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+            // ═══ حفظ الملف ═══
+            XLSX.writeFile(wb, filename);
+
+            if (typeof window.showToast === 'function') {
+                window.showToast('✅ تم تصدير ملف Excel', 'success');
+            }
+
+        } catch (e) {
+            console.error('❌ خطأ في التصدير:', e);
+            if (typeof window.showToast === 'function') {
+                window.showToast('❌ فشل التصدير: ' + e.message, 'error');
+            }
+        }
+    };
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 8: الكوبونات
