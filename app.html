@@ -1788,6 +1788,66 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
+    
+<!-- Service Worker للـ PWA -->
+<script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('sw.js')
+            .then(function(registration) {
+                console.log('✅ Service Worker مسجل:', registration.scope);
+
+                // مراقبة التحديثات
+                registration.addEventListener('updatefound', function() {
+                    const newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', function() {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // نسخة جديدة متاحة
+                            if (confirm('🔄 تم تحديث التطبيق. هل تريد إعادة التحميل؟')) {
+                                window.location.reload();
+                            }
+                        }
+                    });
+                });
+            })
+            .catch(function(err) {
+                console.warn('⚠️ فشل تسجيل Service Worker:', err);
+            });
+
+        // التعامل مع رسائل من SW
+        navigator.serviceWorker.addEventListener('message', function(event) {
+            const data = event.data;
+
+            if (data && data.type === 'SYNC_NOW') {
+                if (typeof window.CloudSync !== 'undefined' && window.CloudSync.isReady()) {
+                    window.CloudSync.pushAll(true);
+                }
+            }
+        });
+    });
+
+    // كشف حالة الاتصال
+    window.addEventListener('online', function() {
+        console.log('🟢 عاد الاتصال');
+        if (typeof window.showToast === 'function') {
+            window.showToast('🟢 عاد الاتصال — جاري المزامنة...', 'success');
+        }
+        if (typeof window.CloudSync !== 'undefined' && window.CloudSync.isReady()) {
+            setTimeout(function() {
+                window.CloudSync.pushAll(true);
+            }, 1000);
+        }
+    });
+
+    window.addEventListener('offline', function() {
+        console.log('🔴 انقطع الاتصال');
+        if (typeof window.showToast === 'function') {
+            window.showToast('🔴 انقطع الاتصال — التطبيق شغال محلياً', 'warning');
+        }
+    });
+}
+</script>
+    
     <!-- ملفات التطبيق -->
 <script src="activation.js"></script>
 <script src="core.js"></script>
