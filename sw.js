@@ -1,18 +1,22 @@
 // ============================================================
-// الميزان Pro - sw.js (Service Worker)
-// PWA — Offline Support
+// الميزان Pro - sw.js v1.0
+// Service Worker — PWA Offline Support
 // ============================================================
 
-const CACHE_NAME = 'mizan-pro-v1.0.0';
-const RUNTIME_CACHE = 'mizan-runtime-v1.0.0';
+const CACHE_NAME = 'mizan-pro-v2.0.0';
+const RUNTIME_CACHE = 'mizan-runtime-v2.0.0';
 
-// الملفات الأساسية اللي هتتخزن
+// ═══════════════════════════════════════════════════════════
+// الملفات الأساسية
+// ═══════════════════════════════════════════════════════════
+
 const CORE_FILES = [
     './',
     './index.html',
     './app.html',
     './style.css',
     './landing.css',
+    './manifest.json',
 
     './core.js',
     './data.js',
@@ -28,15 +32,13 @@ const CORE_FILES = [
     './extras.js',
     './warehouses.js',
 
-    './manifest.json',
-
     // مكتبات خارجية
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
     'https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap'
 ];
 
 // ═══════════════════════════════════════════════════════════
-// Install — تخزين الملفات الأساسية
+// Install — تخزين الملفات
 // ═══════════════════════════════════════════════════════════
 
 self.addEventListener('install', function(event) {
@@ -44,12 +46,12 @@ self.addEventListener('install', function(event) {
 
     event.waitUntil(
         caches.open(CACHE_NAME).then(function(cache) {
-            console.log('📦 SW: تخزين الملفات الأساسية');
+            console.log('📦 SW: تخزين ' + CORE_FILES.length + ' ملف');
 
             return Promise.all(
                 CORE_FILES.map(function(url) {
                     return cache.add(url).catch(function(err) {
-                        console.warn('⚠️ SW: فشل تخزين ' + url, err);
+                        console.warn('⚠️ SW: فشل ' + url);
                     });
                 })
             );
@@ -90,20 +92,21 @@ self.addEventListener('activate', function(event) {
 
 self.addEventListener('fetch', function(event) {
     const url = event.request.url;
+    const method = event.request.method;
 
     // تجاهل Firebase
     if (url.includes('firebase') ||
-        url.includes('googleapis.com') ||
+        url.includes('googleapis.com/identitytoolkit') ||
         url.includes('gstatic.com/firebasejs')) {
         return;
     }
 
     // تجاهل الطلبات غير GET
-    if (event.request.method !== 'GET') {
+    if (method !== 'GET') {
         return;
     }
 
-    // استراتيجية: Cache First للـ CDN
+    // CDN → Cache First
     if (url.includes('cdnjs.cloudflare.com') ||
         url.includes('fonts.googleapis.com') ||
         url.includes('fonts.gstatic.com')) {
@@ -123,27 +126,23 @@ self.addEventListener('fetch', function(event) {
         return;
     }
 
-    // استراتيجية: Network First للملفات المحلية
+    // الملفات المحلية → Network First مع fallback للـ Cache
     event.respondWith(
         fetch(event.request)
             .then(function(response) {
-                // لو نجح، خزنه
-                if (response && response.status === 200) {
+                if (response && response.status === 200 && response.type === 'basic') {
                     const clone = response.clone();
                     caches.open(RUNTIME_CACHE).then(function(cache) {
-                        cache.put(event.request, clone);
+                        cache.put(event.request, clone).catch(function() {});
                     });
                 }
                 return response;
             })
             .catch(function() {
-                // لو فشل، جيب من الـ cache
                 return caches.match(event.request).then(function(response) {
-                    if (response) {
-                        return response;
-                    }
+                    if (response) return response;
 
-                    // لو الملف مش موجود في الـ cache
+                    // لو التنقل، رجّع index.html
                     if (event.request.mode === 'navigate') {
                         return caches.match('./index.html');
                     }
@@ -161,7 +160,7 @@ self.addEventListener('fetch', function(event) {
 });
 
 // ═══════════════════════════════════════════════════════════
-// رسائل من التطبيق
+// Messages
 // ═══════════════════════════════════════════════════════════
 
 self.addEventListener('message', function(event) {
@@ -176,22 +175,28 @@ self.addEventListener('message', function(event) {
             return Promise.all(names.map(function(name) {
                 return caches.delete(name);
             }));
+        }).then(function() {
+            console.log('🗑️ SW: تم مسح الـ Cache');
         });
+    }
+
+    if (data && data.type === 'GET_VERSION') {
+        event.ports[0].postMessage({ version: CACHE_NAME });
     }
 });
 
 // ═══════════════════════════════════════════════════════════
-// Sync in Background
+// Background Sync
 // ═══════════════════════════════════════════════════════════
 
 self.addEventListener('sync', function(event) {
     if (event.tag === 'mizan-sync') {
-        console.log('🔄 SW: بدء المزامنة في الخلفية');
-        event.waitUntil(syncData());
+        console.log('🔄 SW: مزامنة في الخلفية');
+        event.waitUntil(notifyClientsToSync());
     }
 });
 
-async function syncData() {
+async function notifyClientsToSync() {
     try {
         const clients = await self.clients.matchAll();
         clients.forEach(function(client) {
@@ -201,5 +206,31 @@ async function syncData() {
         console.error('❌ SW: فشل المزامنة', e);
     }
 }
+
+// ═══════════════════════════════════════════════════════════
+// Push Notifications (اختياري)
+// ═══════════════════════════════════════════════════════════
+
+self.addEventListener('push', function(event) {
+    const data = event.data ? event.data.json() : {};
+    const title = data.title || 'الميزان Pro';
+    const options = {
+        body: data.body || 'إشعار جديد',
+        icon: data.icon || './icon.png',
+        badge: './icon.png',
+        vibrate: [200, 100, 200]
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(title, options)
+    );
+});
+
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close();
+    event.waitUntil(
+        clients.openWindow('./app.html')
+    );
+});
 
 console.log('✅ SW: جاهز');
