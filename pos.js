@@ -2427,7 +2427,7 @@
     const type = window.currentReport;
     const SEP = '\t';  // ← Tab (بيفتح صح في Excel و Google Sheets)
     let csv = '\uFEFF';
-    const filename = 'report-' + type + '-' + window.getTodayDate() + '.csv';
+    const filename = 'report-' + type + '-' + window.getTodayDate() + '.tsv';
 
     if (type === 'daily' || type === 'monthly' || type === 'yearly') {
         if (!window.currentReportData || !window.currentReportData.dataList) {
