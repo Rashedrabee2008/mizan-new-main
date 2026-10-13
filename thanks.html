@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0D0D0D" />
+    <meta name="robots" content="noindex, nofollow" />
+    
+    <title>شكراً — الميزان Pro</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230D0D0D'/><text x='50' y='75' font-size='70' text-anchor='middle' fill='%23C9A94E'>⚖</text></svg>" />
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        body {
+            background: #0D0D0D;
+            color: #F5E6C8;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            direction: rtl;
+            background: radial-gradient(ellipse at center, rgba(201, 169, 78, 0.1) 0%, transparent 70%);
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: linear-gradient(135deg, #1C1C1C, #0D0D0D);
+            border-radius: 24px;
+            padding: 40px 32px;
+            border: 2px solid #C9A94E;
+            box-shadow: 0 30px 80px rgba(201, 169, 78, 0.15);
+            text-align: center;
+            animation: fadeIn 0.6s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, #2D8F5E, #1A7A4A);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 52px;
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(45, 143, 94, 0.3);
+            animation: scaleIn 0.6s ease 0.2s backwards;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 900;
+            color: #C9A94E;
+            margin-bottom: 12px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #A89070;
+            margin-bottom: 32px;
+            line-height: 1.7;
+        }
+
+        .subtitle strong {
+            color: #C9A94E;
+        }
+
+        /* Steps Section */
+        .steps {
+            background: #0D0D0D;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            text-align: right;
+            border: 1px solid #2D2D2D;
+        }
+
+        .steps-title {
+            font-size: 15px;
+            font-weight: 900;
+            color: #C9A94E;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .step {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 14px;
+            align-items: flex-start;
+        }
+
+        .step:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-num {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #C9A94E, #B8953A);
+            color: #0D0D0D;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .step-text {
+            flex: 1;
+            font-size: 14px;
+            line-height: 1.7;
+            color: #F5E6C8;
+            padding-top: 5px;
+        }
+
+        .step-text strong {
+            color: #C9A94E;
+        }
+
+        /* Code Box */
+        .code-box {
+            background: linear-gradient(135deg, #1A1500, #0D0D0D);
+            border: 2px solid #C9A94E;
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .code-label {
+            font-size: 12px;
+            font-weight: 800;
+            color: #A89070;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .code-value {
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            font-weight: 900;
+            color: #C9A94E;
+            direction: ltr;
+            text-align: center;
+            padding: 12px;
+            background: #0D0D0D;
+            border-radius: 10px;
+            word-break: break-all;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+
+        .copy-btn {
+            background: linear-gradient(135deg, #2D8F5E, #1A7A4A);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .copy-btn.copied {
+            background: linear-gradient(135deg, #C9A94E, #B8953A);
+            color: #0D0D0D;
+        }
+
+        /* Warning */
+        .warning {
+            background: linear-gradient(135deg, #2D0D0D, #1A0000);
+            border-right: 4px solid #E06060;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            text-align: right;
+            align-items: flex-start;
+        }
+
+        .warning-icon {
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .warning-text {
+            flex: 1;
+            font-size: 13px;
+            line-height: 1.7;
+            color: #F5E6C8;
+        }
+
+        .warning-text strong {
+            color: #E06060;
+            font-weight: 900;
+        }
+
+        /* Action Buttons */
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .btn {
+            padding: 16px 24px;
+            border-radius: 12px;
+            border: none;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 900;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #C9A94E, #B8953A);
+            color: #0D0D0D;
+            box-shadow: 0 8px 24px rgba(201, 169, 78, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(201, 169, 78, 0.4);
+        }
+
+        .btn-whatsapp {
+            background: linear-gradient(135deg, #25D366, #1DA851);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(37, 211, 102, 0.3);
+        }
+
+        .btn-whatsapp:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(37, 211, 102, 0.4);
+        }
+
+        .btn-secondary {
+            background: #2D2D2D;
+            color: #F5E6C8;
+        }
+
+        /* Tips */
+        .tips {
+            background: #0D0D0D;
+            border-radius: 14px;
+            padding: 20px;
+            border: 1px dashed #3D3D3D;
+            text-align: right;
+        }
+
+        .tips-title {
+            font-size: 14px;
+            font-weight: 900;
+            color: #C9A94E;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tip {
+            font-size: 13px;
+            line-height: 1.7;
+            color: #A89070;
+            margin-bottom: 8px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .tip:last-child {
+            margin-bottom: 0;
+        }
+
+        .tip-icon {
+            color: #C9A94E;
+            font-weight: 900;
+            flex-shrink: 0;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #2D2D2D;
+            font-size: 12px;
+            color: #5D5D5D;
+            text-align: center;
+            line-height: 1.7;
+        }
+
+        .footer strong {
+            color: #C9A94E;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .container {
+                padding: 28px 20px;
+                border-radius: 18px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            .success-icon {
+                width: 84px;
+                height: 84px;
+                font-size: 44px;
+            }
+
+            .code-value {
+                font-size: 16px;
+                letter-spacing: 1px;
+            }
+
+            .step-text {
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- Success Icon -->
+        <div class="success-icon">
+            <i class="fas fa-check"></i>
+        </div>
+
+        <!-- Title -->
+        <h1>🎉 تم تفعيل حسابك!</h1>
+        <p class="subtitle">
+            أهلاً بيك في <strong>الميزان Pro</strong><br>
+            ابدأ رحلة الاحتراف في إدارة متجرك
+        </p>
+
+        <!-- Steps -->
+        <div class="steps">
+            <div class="steps-title">
+                <i class="fas fa-list-ol"></i>
+                خطوات البدء
+            </div>
+
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-text">
+                    اضغط <strong>"افتح التطبيق الآن"</strong> في الأسفل
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-text">
+                    اكتب <strong>كود التفعيل</strong> اللي وصلك على واتساب
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-text">
+                    ادخل باسم <strong>"المدير"</strong> وكلمة المرور <strong>123456</strong>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-num">4</div>
+                <div class="step-text">
+                    ابدأ سجّل منتجاتك وعملائك
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-num">5</div>
+                <div class="step-text">
+                    احفظ كود التفعيل في مكان آمن
+                </div>
+            </div>
+        </div>
+
+        <!-- Code Box -->
+        <div class="code-box">
+            <div class="code-label">🔑 كود التفعيل الخاص بك</div>
+            <div class="code-value" id="activationCodeDisplay">
+                <!-- يتم تعبئته تلقائياً من URL -->
+                MIZAN-XXXX-XXXX
+            </div>
+            <button class="copy-btn" id="copyCodeBtn" onclick="copyActivationCode()">
+                <i class="fas fa-copy"></i>
+                <span id="copyBtnText">نسخ الكود</span>
+            </button>
+        </div>
+
+        <!-- Warning -->
+        <div class="warning">
+            <div class="warning-icon">⚠️</div>
+            <div class="warning-text">
+                <strong>مهم جداً:</strong> احفظ كود التفعيل في مكان آمن. هتحتاجه لو سجلت من جهاز تاني، أو لو مسحت بيانات المتصفح.
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+            <a href="app.html" class="btn btn-primary">
+                <i class="fas fa-rocket"></i>
+                افتح التطبيق الآن
+            </a>
+
+            <a href="https://wa.me/201158767633?text=مرحباً%20أريد%20المساعدة%20في%20بدء%20استخدام%20الميزان%20Pro" 
+               target="_blank" 
+               class="btn btn-whatsapp">
+                <i class="fab fa-whatsapp"></i>
+                تواصل معنا للدعم
+            </a>
+        </div>
+
+        <!-- Tips -->
+        <div class="tips">
+            <div class="tips-title">
+                <i class="fas fa-lightbulb"></i>
+                نصائح للبدء السريع
+            </div>
+
+            <div class="tip">
+                <span class="tip-icon">📦</span>
+                <span>ابدأ بإضافة منتجاتك (اسم + سعر شراء + سعر بيع + كمية)</span>
+            </div>
+
+            <div class="tip">
+                <span class="tip-icon">👥</span>
+                <span>أضف عملائك ومورديك</span>
+            </div>
+
+            <div class="tip">
+                <span class="tip-icon">💰</span>
+                <span>حدّد رصيد خزنتك الافتتاحي</span>
+            </div>
+
+            <div class="tip">
+                <span class="tip-icon">🛒</span>
+                <span>ابدأ سجّل أول بيعة في الكاشير</span>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <strong>⚖️ الميزان Pro</strong> — نظام محاسبة احترافي<br>
+            © 2026 — جميع الحقوق محفوظة
+        </div>
+
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════
+        // الحصول على كود التفعيل من URL
+        // ═══════════════════════════════════════════════════════════
+
+        (function() {
+            'use strict';
+
+            // مثال: thanks.html?code=MIZAN-2026-0001
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code') || urlParams.get('activation') || '';
+
+            const codeDisplay = document.getElementById('activationCodeDisplay');
+
+            if (code) {
+                codeDisplay.textContent = code;
+                // حفظه في localStorage عشان التطبيق يستخدمه
+                try {
+                    localStorage.setItem('mizan_pending_activation', code);
+                } catch (e) {}
+            } else {
+                // لو مفيش كود، نعرض رسالة
+                codeDisplay.textContent = 'MIZAN-XXXX-XXXX';
+                codeDisplay.style.color = '#A89070';
+                codeDisplay.style.fontSize = '14px';
+            }
+
+            // ═══════════════════════════════════════════════════════════
+            // نسخ الكود
+            // ═══════════════════════════════════════════════════════════
+
+            window.copyActivationCode = function() {
+                const codeText = codeDisplay.textContent.trim();
+
+                if (!codeText || codeText.indexOf('XXXX') > -1) {
+                    showToast('⚠️ لا يوجد كود للنسخ');
+                    return;
+                }
+
+                try {
+                    // الطريقة 1: execCommand
+                    const tempInput = document.createElement('textarea');
+                    tempInput.value = codeText;
+                    tempInput.style.position = 'fixed';
+                    tempInput.style.opacity = '0';
+                    document.body.appendChild(tempInput);
+                    tempInput.select();
+                    tempInput.setSelectionRange(0, 99999);
+                    document.execCommand('copy');
+                    document.body.removeChild(tempInput);
+
+                    showCopySuccess();
+                } catch (e) {
+                    // الطريقة 2: clipboard API
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(codeText)
+                            .then(showCopySuccess)
+                            .catch(function() {
+                                showToast('⚠️ فشل النسخ');
+                            });
+                    } else {
+                        showToast('⚠️ فشل النسخ');
+                    }
+                }
+            };
+
+            function showCopySuccess() {
+                const btn = document.getElementById('copyCodeBtn');
+                const btnText = document.getElementById('copyBtnText');
+
+                btn.classList.add('copied');
+                btn.innerHTML = '<i class="fas fa-check"></i><span>تم النسخ!</span>';
+
+                setTimeout(function() {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = '<i class="fas fa-copy"></i><span id="copyBtnText">نسخ الكود</span>';
+                }, 2000);
+
+                showToast('✅ تم نسخ كود التفعيل');
+            }
+
+            // ═══════════════════════════════════════════════════════════
+            // Toast
+            // ═══════════════════════════════════════════════════════════
+
+            function showToast(message) {
+                let toast = document.getElementById('toast');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'toast';
+                    toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);background:#2D8F5E;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:800;z-index:9999;opacity:0;transition:all 0.3s;box-shadow:0 8px 24px rgba(0,0,0,0.4);';
+                    document.body.appendChild(toast);
+                }
+
+                toast.textContent = message;
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateX(-50%) translateY(0)';
+
+                clearTimeout(toast._t);
+                toast._t = setTimeout(function() {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(-50%) translateY(20px)';
+                }, 2500);
+            }
+
+            // ═══════════════════════════════════════════════════════════
+            // حفظ الكود في التطبيق تلقائياً
+            // ═══════════════════════════════════════════════════════════
+
+            // لما يضغط "افتح التطبيق الآن":
+            const openAppBtn = document.querySelector('a[href="app.html"]');
+            if (openAppBtn && code) {
+                openAppBtn.addEventListener('click', function() {
+                    try {
+                        localStorage.setItem('mizan_pending_activation', code);
+                    } catch (e) {}
+                });
+            }
+
+            console.log('✅ صفحة الشكر جاهزة — الكود:', code || 'لا يوجد');
+
+        })();
+    </script>
+
+</body>
+</html>
