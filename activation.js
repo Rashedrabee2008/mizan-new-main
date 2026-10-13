@@ -20,22 +20,65 @@
     // ═══════════════════════════════════════════════════════════
 
     function isActivated() {
-        try {
-            const data = localStorage.getItem(ACTIVATION_KEY);
-            if (!data) return false;
+    try {
+        const data = localStorage.getItem(ACTIVATION_KEY);
+        if (!data) return false;
 
-            const parsed = JSON.parse(data);
-            if (!parsed.code || !parsed.storeId) return false;
+        const parsed = JSON.parse(data);
+        if (!parsed.code || !parsed.storeId) return false;
 
-            // نتأكد إن الكود مربوط بنفس Store ID
-            const currentStoreId = getCurrentStoreId();
-            if (parsed.storeId !== currentStoreId) return false;
+        // نتأكد إن الكود مربوط بنفس Store ID
+        const currentStoreId = getCurrentStoreId();
+        if (parsed.storeId !== currentStoreId) return false;
 
-            return true;
-        } catch (e) {
-            return false;
-        }
+        return true;
+    } catch (e) {
+        return false;
     }
+}
+
+// ⚡ تفعيل offline — لو التطبيق مش قادر يوصل Firebase
+async function handleOfflineActivation(code) {
+    // لو الكود ده كان متسجل قبل كده على الجهاز → اسمح
+    try {
+        const cachedCodes = JSON.parse(localStorage.getItem('mizan_cached_codes') || '{}');
+
+        if (cachedCodes[code]) {
+            // الكود كان متسجل قبل كده
+            return { valid: true, data: cachedCodes[code] };
+        }
+
+        return { valid: false, reason: 'offline_no_cache' };
+    } catch (e) {
+        return { valid: false, reason: 'offline_no_cache' };
+    }
+}
+
+// تخزين الكود محلياً للاستخدام offline
+function cacheActivationCode(code, data) {
+    try {
+        const cachedCodes = JSON.parse(localStorage.getItem('mizan_cached_codes') || '{}');
+        cachedCodes[code] = Object.assign({}, data, {
+            cachedAt: new Date().toISOString()
+        });
+        localStorage.setItem('mizan_cached_codes', JSON.stringify(cachedCodes));
+    } catch (e) {}
+}
+
+// ⚡ التحقق المزدوج: Firebase + Cache
+async function verifyCodeSmart(code) {
+    // جرّب Firebase أولاً
+    if (navigator.onLine && typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+        const result = await verifyCodeWithFirebase(code);
+        if (result.valid) {
+            cacheActivationCode(code, result.data);
+        }
+        return result;
+    }
+
+    // لو مفيش نت → استخدم الكاش
+    return handleOfflineActivation(code);
+}
 
     function getCurrentStoreId() {
         if (typeof window.getStoreId === 'function') {
