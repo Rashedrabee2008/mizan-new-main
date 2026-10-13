@@ -1,27 +1,18 @@
 // ============================================================
-// الميزان Pro - activation.js v4.0
-// نظام كود التفعيل + الدخول لمتجر موجود + Firebase Init
+// الميزان Pro - activation.js v5.0
+// نظام كود التفعيل + الدخول لمتجر موجود + Firebase Init جوهري
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🔐 activation.js v4.0 - بدء التحميل');
+    console.log('🔐 activation.js v5.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 1: الإعدادات
+    // الجزء 1: الإعدادات — Firebase Config (داخل الملف)
     // ═══════════════════════════════════════════════════════════
 
-    const ACTIVATION_KEY = 'mizan_activation_v1';
-    const CACHED_CODES_KEY = 'mizan_cached_codes';
-    const ACTIVATION_PATH = 'activations';
-
-       // ═══════════════════════════════════════════════════════════
-    // الجزء 2: تهيئة Firebase (مهم جداً — من الأول)
-    // ═══════════════════════════════════════════════════════════
-
-    // ⚡ إعدادات Firebase — محفوظة في activation.js مباشرة
-    const ACTIVATION_FIREBASE_CONFIG = {
+    const FIREBASE_CONFIG = {
         apiKey: "AIzaSyB3cnrETONbcrH1d_94w3TzeUEQIF0MSXw",
         authDomain: "mizan-new-main.firebaseapp.com",
         databaseURL: "https://mizan-new-main-default-rtdb.europe-west1.firebasedatabase.app",
@@ -31,18 +22,26 @@
         appId: "1:442192802804:web:8035c27ab7dcf38a547fa1"
     };
 
+    const ACTIVATION_KEY = 'mizan_activation_v1';
+    const CACHED_CODES_KEY = 'mizan_cached_codes';
+    const ACTIVATION_PATH = 'activations';
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 2: تهيئة Firebase — من الأول
+    // ═══════════════════════════════════════════════════════════
+
     function ensureFirebaseInitialized() {
         if (typeof firebase === 'undefined') {
-            console.warn('⚠️ Firebase SDK غير محمّل');
+            console.warn('⚠️ Firebase SDK غير محمّل بعد');
             return false;
         }
 
         try {
             if (!firebase.apps || firebase.apps.length === 0) {
-                // استخدم الإعدادات المحلية في activation.js
-                const config = window.FIREBASE_CONFIG || ACTIVATION_FIREBASE_CONFIG;
+                // استخدم الإعدادات من الملف أو من window
+                const config = window.FIREBASE_CONFIG || FIREBASE_CONFIG;
                 firebase.initializeApp(config);
-                console.log('✅ Firebase تم تهيئته');
+                console.log('✅ Firebase تم تهيئته من activation.js');
             }
 
             window.firebaseReady = true;
@@ -53,19 +52,18 @@
         }
     }
 
-    // تهيئة فورية عند تحميل الملف
-    function initFirebaseNow() {
-        // لو Firebase SDK لسه ما اتحمّلش، ننتظر
+    // محاولة تهيئة Firebase — تعمل بجد لحد ما Firebase SDK يتحمّل
+    function waitForFirebaseAndInit() {
         if (typeof firebase === 'undefined') {
-            setTimeout(initFirebaseNow, 300);
+            // Firebase SDK لسه ما اتحمّلش — نستنى
+            setTimeout(waitForFirebaseAndInit, 300);
             return;
         }
-
         ensureFirebaseInitialized();
     }
 
-    // نبدأ التهيئة فوراً
-    initFirebaseNow();
+    // نبدأ فوراً
+    waitForFirebaseAndInit();
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 3: التحقق من التفعيل
@@ -116,7 +114,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: التخزين المؤقت
+    // الجزء 4: التخزين المؤقت للأكواد
     // ═══════════════════════════════════════════════════════════
 
     function cacheActivationCode(code, data) {
@@ -139,7 +137,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 5: التحقق من Firebase
+    // الجزء 5: التحقق من كود التفعيل
     // ═══════════════════════════════════════════════════════════
 
     async function verifyCodeWithFirebase(code) {
@@ -279,14 +277,14 @@
 
     function linkToExistingStore(storeId) {
         try {
-            // 1. حفظ Store ID
+            // 1. حفظ Store ID الجديد
             if (typeof window.setStoreId === 'function') {
                 window.setStoreId(storeId);
             } else {
                 localStorage.setItem('mizan_store_id_v18', storeId);
             }
 
-            // 2. حفظ تفعيل دائم
+            // 2. حفظ تفعيل دائم (نوع: متجر موجود)
             localStorage.setItem(ACTIVATION_KEY, JSON.stringify({
                 code: 'EXISTING_STORE',
                 storeId: storeId,
@@ -523,7 +521,7 @@
             return;
         }
 
-        // ✅ ربط
+        // ✅ ربط الجهاز
         const linked = linkToExistingStore(storeId);
 
         if (!linked) {
@@ -553,7 +551,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 12: معالجة التفعيل
+    // الجزء 12: معالجة التفعيل بكود
     // ═══════════════════════════════════════════════════════════
 
     async function handleActivation() {
@@ -596,7 +594,6 @@
             return;
         }
 
-        // ✅
         if (!result.fromCache) {
             await registerCodeUsage(code);
         }
@@ -641,7 +638,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 13: فحص التفعيل
+    // الجزء 13: فحص التفعيل عند البدء
     // ═══════════════════════════════════════════════════════════
 
     function checkActivation() {
@@ -696,7 +693,8 @@
         linkStore: linkToExistingStore,
         show: showActivationScreen,
         showExisting: showExistingStoreDialog,
-        initFirebase: ensureFirebaseInitialized
+        initFirebase: ensureFirebaseInitialized,
+        config: FIREBASE_CONFIG
     };
 
     // ═══════════════════════════════════════════════════════════
@@ -716,6 +714,6 @@
     }
 
     window.__activationLoaded = true;
-    console.log('✅ activation.js v4.0 جاهز');
+    console.log('✅ activation.js v5.0 جاهز');
 
 })();
