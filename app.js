@@ -1174,8 +1174,11 @@
     // الجزء 7: التهيئة الأولية
     // ═══════════════════════════════════════════════════════════
 
-    window.init = function() {
+        window.init = function() {
         console.log('🚀 بدء تهيئة التطبيق...');
+
+        // ⚡ لو مفعّل، تخطى شاشة التفعيل
+        skipActivationIfNeeded();
 
         // بيانات أولية
         window.seedInitialData();
