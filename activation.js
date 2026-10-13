@@ -1,84 +1,41 @@
 // ============================================================
-// الميزان Pro - activation.js
-// نظام كود التفعيل (Activation Code)
+// الميزان Pro - activation.js v2.0
+// نظام كود التفعيل (Activation Code) مع دعم Offline
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🔐 activation.js v1.0 - بدء التحميل');
+    console.log('🔐 activation.js v2.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: الإعدادات
     // ═══════════════════════════════════════════════════════════
 
     const ACTIVATION_KEY = 'mizan_activation_v1';
-    const ACTIVATION_PATH = 'activations'; // مسار على Firebase
+    const CACHED_CODES_KEY = 'mizan_cached_codes';
+    const ACTIVATION_PATH = 'activations';
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 2: التحقق من التفعيل المحلي
     // ═══════════════════════════════════════════════════════════
 
     function isActivated() {
-    try {
-        const data = localStorage.getItem(ACTIVATION_KEY);
-        if (!data) return false;
+        try {
+            const data = localStorage.getItem(ACTIVATION_KEY);
+            if (!data) return false;
 
-        const parsed = JSON.parse(data);
-        if (!parsed.code || !parsed.storeId) return false;
+            const parsed = JSON.parse(data);
+            if (!parsed.code || !parsed.storeId) return false;
 
-        // نتأكد إن الكود مربوط بنفس Store ID
-        const currentStoreId = getCurrentStoreId();
-        if (parsed.storeId !== currentStoreId) return false;
+            const currentStoreId = getCurrentStoreId();
+            if (parsed.storeId !== currentStoreId) return false;
 
-        return true;
-    } catch (e) {
-        return false;
-    }
-}
-
-// ⚡ تفعيل offline — لو التطبيق مش قادر يوصل Firebase
-async function handleOfflineActivation(code) {
-    // لو الكود ده كان متسجل قبل كده على الجهاز → اسمح
-    try {
-        const cachedCodes = JSON.parse(localStorage.getItem('mizan_cached_codes') || '{}');
-
-        if (cachedCodes[code]) {
-            // الكود كان متسجل قبل كده
-            return { valid: true, data: cachedCodes[code] };
+            return true;
+        } catch (e) {
+            return false;
         }
-
-        return { valid: false, reason: 'offline_no_cache' };
-    } catch (e) {
-        return { valid: false, reason: 'offline_no_cache' };
     }
-}
-
-// تخزين الكود محلياً للاستخدام offline
-function cacheActivationCode(code, data) {
-    try {
-        const cachedCodes = JSON.parse(localStorage.getItem('mizan_cached_codes') || '{}');
-        cachedCodes[code] = Object.assign({}, data, {
-            cachedAt: new Date().toISOString()
-        });
-        localStorage.setItem('mizan_cached_codes', JSON.stringify(cachedCodes));
-    } catch (e) {}
-}
-
-// ⚡ التحقق المزدوج: Firebase + Cache
-async function verifyCodeSmart(code) {
-    // جرّب Firebase أولاً
-    if (navigator.onLine && typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
-        const result = await verifyCodeWithFirebase(code);
-        if (result.valid) {
-            cacheActivationCode(code, result.data);
-        }
-        return result;
-    }
-
-    // لو مفيش نت → استخدم الكاش
-    return handleOfflineActivation(code);
-}
 
     function getCurrentStoreId() {
         if (typeof window.getStoreId === 'function') {
@@ -108,7 +65,33 @@ async function verifyCodeSmart(code) {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 3: التحقق من Firebase
+    // الجزء 3: التخزين المؤقت للأكواد (Offline Support)
+    // ═══════════════════════════════════════════════════════════
+
+    function cacheActivationCode(code, data) {
+        try {
+            const cachedCodes = JSON.parse(localStorage.getItem(CACHED_CODES_KEY) || '{}');
+            cachedCodes[code] = Object.assign({}, data, {
+                cachedAt: new Date().toISOString()
+            });
+            localStorage.setItem(CACHED_CODES_KEY, JSON.stringify(cachedCodes));
+            console.log('💾 تم تخزين الكود محلياً:', code);
+        } catch (e) {
+            console.warn('⚠️ فشل تخزين الكود');
+        }
+    }
+
+    function getCachedCode(code) {
+        try {
+            const cachedCodes = JSON.parse(localStorage.getItem(CACHED_CODES_KEY) || '{}');
+            return cachedCodes[code] || null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 4: التحقق من Firebase
     // ═══════════════════════════════════════════════════════════
 
     async function verifyCodeWithFirebase(code) {
@@ -117,7 +100,6 @@ async function verifyCodeSmart(code) {
         }
 
         try {
-            // تأكد إن Firebase شغال
             if (!firebase.apps || firebase.apps.length === 0) {
                 return { valid: false, reason: 'no_firebase' };
             }
@@ -132,17 +114,14 @@ async function verifyCodeSmart(code) {
             const data = snapshot.val();
             const currentStoreId = getCurrentStoreId();
 
-            // الكود متسجل لمتجر تاني؟
             if (data.storeId && data.storeId !== currentStoreId) {
                 return { valid: false, reason: 'used_by_another_store' };
             }
 
-            // الكود موقوف؟
             if (data.active === false) {
                 return { valid: false, reason: 'deactivated' };
             }
 
-            // ✅ الكود صحيح
             return {
                 valid: true,
                 data: data
@@ -154,9 +133,45 @@ async function verifyCodeSmart(code) {
         }
     }
 
-    // تسجيل الكود على Firebase (بعد التحقق الناجح)
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 5: التحقق الذكي (Firebase + Offline)
+    // ═══════════════════════════════════════════════════════════
+
+    async function verifyCodeSmart(code) {
+        // 1. لو في نت و Firebase جاهز → استخدم Firebase
+        if (navigator.onLine && typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+            const result = await verifyCodeWithFirebase(code);
+
+            if (result.valid) {
+                // خزّن الكود للاستخدام offline
+                cacheActivationCode(code, result.data);
+            }
+
+            return result;
+        }
+
+        // 2. لو مفيش نت → استخدم الكاش
+        console.log('📴 وضع Offline — البحث في الكاش');
+        const cached = getCachedCode(code);
+
+        if (cached) {
+            return { valid: true, data: cached, fromCache: true };
+        }
+
+        return { valid: false, reason: 'offline_no_cache' };
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 6: تسجيل الكود على Firebase
+    // ═══════════════════════════════════════════════════════════
+
     async function registerCodeUsage(code) {
         if (typeof firebase === 'undefined') return false;
+
+        if (!navigator.onLine) {
+            console.log('📴 وضع Offline — التسجيل سيتأخر');
+            return false;
+        }
 
         try {
             const codeRef = firebase.database().ref(ACTIVATION_PATH + '/' + code);
@@ -184,17 +199,15 @@ async function verifyCodeSmart(code) {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: شاشة التفعيل
+    // الجزء 7: شاشة التفعيل
     // ═══════════════════════════════════════════════════════════
 
     function showActivationScreen() {
-        // إخفاء كل حاجة
         const loginContainer = document.getElementById('loginContainer');
         const appContent = document.getElementById('appContent');
         if (loginContainer) loginContainer.style.display = 'none';
         if (appContent) appContent.style.display = 'none';
 
-        // إنشاء شاشة التفعيل (لو مش موجودة)
         let activationScreen = document.getElementById('activationScreen');
         if (!activationScreen) {
             activationScreen = document.createElement('div');
@@ -244,39 +257,34 @@ async function verifyCodeSmart(code) {
             activationScreen.style.display = 'flex';
         }
 
-        // ربط الأحداث
         const input = document.getElementById('activationCode');
         const btn = document.getElementById('activateBtn');
         const errorEl = document.getElementById('activationError');
 
-        // زر التفعيل
         if (btn) {
             btn.onclick = function() {
                 handleActivation();
             };
         }
 
-        // Enter
         if (input) {
             input.onkeydown = function(e) {
                 if (e.key === 'Enter') {
                     handleActivation();
                 }
             };
-            // تركيز تلقائي
             setTimeout(function() {
                 input.focus();
             }, 300);
         }
 
-        // إخفاء الأخطاء
         if (errorEl) {
             errorEl.classList.remove('show');
         }
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 5: معالجة التفعيل
+    // الجزء 8: معالجة التفعيل
     // ═══════════════════════════════════════════════════════════
 
     async function handleActivation() {
@@ -288,7 +296,6 @@ async function verifyCodeSmart(code) {
 
         const code = input.value.trim().toUpperCase();
 
-        // التحقق من الإدخال
         if (!code) {
             showError('⚠️ أدخل كود التفعيل');
             return;
@@ -303,20 +310,19 @@ async function verifyCodeSmart(code) {
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
-        // التحقق من Firebase
-        const result = await verifyCodeWithFirebase(code);
+        // ⚡ التحقق الذكي (Firebase أو Cache)
+        const result = await verifyCodeSmart(code);
 
         if (!result.valid) {
-            // رجّع الزر
             btn.disabled = false;
             btn.innerHTML = '✅ تفعيل';
 
-            // رسالة الخطأ
             const reasons = {
                 'not_found': '❌ الكود غير صحيح',
                 'used_by_another_store': '❌ الكود مستخدم من متجر آخر',
                 'deactivated': '❌ الكود موقوف',
-                'no_firebase': '⚠️ لا يوجد اتصال بالإنترنت',
+                'no_firebase': '⚠️ لا يوجد اتصال بالإنترنت — يحتاج نت للتفعيل الأول',
+                'offline_no_cache': '⚠️ لا يوجد اتصال — ادخل كودك الصحيح عندما يتوفر النت',
                 'error': '❌ حدث خطأ، حاول مرة أخرى'
             };
 
@@ -324,36 +330,35 @@ async function verifyCodeSmart(code) {
             return;
         }
 
-        // ✅ الكود صحيح — نسجله
-        await registerCodeUsage(code);
+        // ✅ الكود صحيح
+        if (!result.fromCache) {
+            await registerCodeUsage(code);
+        }
 
-        // نحفظ التفعيل محلياً
         saveActivation(code);
 
-        // رجّع الزر
         btn.disabled = false;
         btn.innerHTML = '✅ تم التفعيل';
 
-        // إشعار
         if (typeof window.showToast === 'function') {
-            window.showToast('✅ تم تفعيل التطبيق بنجاح', 'success');
+            const message = result.fromCache
+                ? '✅ تم التفعيل (بدون إنترنت)'
+                : '✅ تم تفعيل التطبيق بنجاح';
+            window.showToast(message, 'success');
         }
 
-        // إخفاء شاشة التفعيل بعد ثانية
         setTimeout(function() {
             const activationScreen = document.getElementById('activationScreen');
             if (activationScreen) {
                 activationScreen.style.display = 'none';
             }
 
-            // إظهار شاشة الدخول
             const loginContainer = document.getElementById('loginContainer');
             if (loginContainer) {
                 loginContainer.style.display = 'flex';
                 loginContainer.classList.remove('hidden');
             }
 
-            // تحديث حالة التطبيق
             if (typeof window.populateLoginUsers === 'function') {
                 window.populateLoginUsers();
             }
@@ -373,37 +378,31 @@ async function verifyCodeSmart(code) {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 6: فحص عند بدء التطبيق
+    // الجزء 9: فحص عند بدء التطبيق
     // ═══════════════════════════════════════════════════════════
 
     function checkActivation() {
-        // لو مفعّل → اكمل عادي
         if (isActivated()) {
             console.log('✅ التطبيق مفعّل');
             return true;
         }
 
-        // لو مش مفعّل → اعرض شاشة التفعيل
         console.log('🔐 التطبيق مش مفعّل — جاري عرض شاشة التفعيل');
 
-        // استنى لحد ما Firebase يشتغل
         let attempts = 0;
         const maxAttempts = 20;
 
         const tryShow = function() {
             attempts++;
 
-            // لو Firebase جاهز، اعرض الشاشة
             if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
                 showActivationScreen();
                 return;
             }
 
-            // استنى
             if (attempts < maxAttempts) {
                 setTimeout(tryShow, 500);
             } else {
-                // لو Firebase ماشتغلش، اعرض الشاشة بردو (عشان ما يبقاش فيه شاشة فاضية)
                 showActivationScreen();
             }
         };
@@ -413,7 +412,25 @@ async function verifyCodeSmart(code) {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 7: APIs عامة
+    // الجزء 10: مراقبة حالة الاتصال
+    // ═══════════════════════════════════════════════════════════
+
+    window.addEventListener('online', function() {
+        console.log('🟢 عاد الاتصال');
+        if (typeof window.showToast === 'function') {
+            window.showToast('🟢 عاد الاتصال', 'success');
+        }
+    });
+
+    window.addEventListener('offline', function() {
+        console.log('🔴 انقطع الاتصال');
+        if (typeof window.showToast === 'function') {
+            window.showToast('🔴 انقطع الاتصال — التطبيق شغال محلياً', 'warning');
+        }
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 11: APIs عامة
     // ═══════════════════════════════════════════════════════════
 
     window.Activation = {
@@ -429,16 +446,26 @@ async function verifyCodeSmart(code) {
         clear: function() {
             clearActivation();
         },
-        verify: verifyCodeWithFirebase,
-        show: showActivationScreen
+        clearAll: function() {
+            clearActivation();
+            localStorage.removeItem(CACHED_CODES_KEY);
+        },
+        verify: verifyCodeSmart,
+        show: showActivationScreen,
+        getCachedCodes: function() {
+            try {
+                return JSON.parse(localStorage.getItem(CACHED_CODES_KEY) || '{}');
+            } catch (e) {
+                return {};
+            }
+        }
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 8: التحميل
+    // الجزء 12: التحميل
     // ═══════════════════════════════════════════════════════════
 
     function init() {
-        // استنى لحد ما الصفحة تحمل
         setTimeout(function() {
             checkActivation();
         }, 1500);
@@ -451,6 +478,6 @@ async function verifyCodeSmart(code) {
     }
 
     window.__activationLoaded = true;
-    console.log('✅ activation.js v1.0 جاهز');
+    console.log('✅ activation.js v2.0 جاهز (يدعم Offline)');
 
 })();
