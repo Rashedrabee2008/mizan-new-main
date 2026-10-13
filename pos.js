@@ -1,12 +1,12 @@
 // ============================================================
-// الميزان Pro - pos.js v19.0
-// الكاشير + المشتريات + المرتجعات + التقارير + التحصيل
+// الميزان Pro - pos.js v21.0
+// الكاشير + المشتريات + المرتجعات + التقارير + اللوجو
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🛒 pos.js v19.0 - الجزء 1');
+    console.log('🛒 pos.js v21.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
     // دوال مساعدة للتاريخ
@@ -42,27 +42,20 @@
         const el = document.getElementById(fieldId);
         if (!el) return '';
 
-        // 1. جرب الـ value مباشرة
         if (el.value) return el.value;
-
-        // 2. جرب data-selected-id
         if (el.dataset && el.dataset.selectedId) return el.dataset.selectedId;
 
-        // 3. جرب نقرأ من حقل البحث الذكي
         const container = document.querySelector('.smart-search-container[data-search-target="' + fieldId + '"]');
         if (container) {
             const input = container.querySelector('.smart-search-input');
             if (input && input.value) {
                 const searchValue = input.value.trim();
-
-                // ابحث في البيانات
                 let data = [];
                 const type = container.dataset.searchType;
                 if (type === 'products') data = window.products || [];
                 if (type === 'customers') data = window.customers || [];
                 if (type === 'suppliers') data = window.suppliers || [];
 
-                // ابحث بالاسم
                 const found = data.find(function(item) {
                     return String(item.name) === searchValue ||
                            String(item.id) === searchValue ||
@@ -87,10 +80,8 @@
             if (input && input.value) return input.value.trim();
         }
 
-        // جرب data-selected-name
         if (el.dataset && el.dataset.selectedName) return el.dataset.selectedName;
 
-        // جرب الـ option المختار
         if (el.options && el.selectedIndex >= 0) {
             return el.options[el.selectedIndex].text || el.value || '';
         }
@@ -121,16 +112,29 @@
     }
 
     // ═══════════════════════════════════════════════════════════
+    // دوال اللوجو
+    // ═══════════════════════════════════════════════════════════
+
+    function getLogoHtml(size) {
+        const company = window.companyData || {};
+        const logoSize = size || 120;
+
+        if (company.logo) {
+            return '<img src="' + company.logo + '" ' +
+                   'style="max-width:' + logoSize + 'px;max-height:' + logoSize + 'px;display:block;margin:0 auto 10px auto;object-fit:contain;" />';
+        }
+
+        return '<div style="font-size:32px;margin-bottom:5px;">⚖️</div>' +
+               '<h1 style="color:#C9A94E;font-size:24px;margin-bottom:5px;font-weight:900;">' +
+               window.escapeHtml(company.name || 'الميزان') + '</h1>';
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // الجزء 1: الكاشير
     // ═══════════════════════════════════════════════════════════
 
-    window.populateSaleProducts = function() {
-        // حقل البحث الذكي بيتعامل مع نفسه
-    };
-
-    window.populateSaleCustomers = function() {
-        // حقل البحث الذكي بيتعامل مع نفسه
-    };
+    window.populateSaleProducts = function() {};
+    window.populateSaleCustomers = function() {};
 
     window.populateCashBoxDropdowns = function() {
         const ids = ['saleCashBox', 'purCashBox', 'expCashBox', 'manualCashBox',
@@ -200,7 +204,6 @@
         const qtyInput = document.getElementById('saleQty');
         const priceInput = document.getElementById('salePrice');
 
-        // ⚡ قراءة المنتج بذكاء
         let id = getFieldValue('saleProduct');
 
         if (!id) {
@@ -223,7 +226,6 @@
         if (price <= 0) price = p.sell || 0;
         if (qty <= 0) qty = 1;
 
-        // التحقق من المخزون
         const saleWarehouseId = document.getElementById('saleWarehouse') ? document.getElementById('saleWarehouse').value : '';
         if (saleWarehouseId) {
             const whQty = (p.warehouseStock && p.warehouseStock[saleWarehouseId]) || 0;
@@ -253,7 +255,6 @@
             });
         }
 
-        // إعادة تعيين
         if (qtyInput) qtyInput.value = 1;
         if (priceInput) priceInput.value = '';
         resetField('saleProduct');
@@ -571,13 +572,8 @@
     // الجزء 2: المشتريات
     // ═══════════════════════════════════════════════════════════
 
-    window.populatePurProducts = function() {
-        // حقل البحث الذكي بيتعامل مع نفسه
-    };
-
-    window.populatePurSuppliers = function() {
-        // حقل البحث الذكي بيتعامل مع نفسه
-    };
+    window.populatePurProducts = function() {};
+    window.populatePurSuppliers = function() {};
 
     window.updatePurPrice = function() {
         const id = getFieldValue('purProduct');
@@ -596,7 +592,6 @@
         const qtyInput = document.getElementById('purQty');
         const priceInput = document.getElementById('purPrice');
 
-        // ⚡ قراءة المنتج بذكاء
         let id = getFieldValue('purProduct');
 
         if (!id) {
@@ -634,7 +629,6 @@
             });
         }
 
-        // إعادة تعيين
         if (qtyInput) qtyInput.value = 1;
         if (priceInput) priceInput.value = '';
         resetField('purProduct');
@@ -903,24 +897,17 @@
         window.showToast('🗑️ تم الحذف', 'info');
     };
 
-    console.log('✅ pos.js v19.0 - الجزء 1 مكتمل');
-
-     // ═══════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════
     // الجزء 3: المرتجعات
     // ═══════════════════════════════════════════════════════════
 
     window.toggleReturnParty = function() {
         const type = document.getElementById('retType') ? document.getElementById('retType').value : 'sale';
         const label = document.getElementById('retPartyLabel');
-
         if (label) label.textContent = type === 'sale' ? 'العميل' : 'المورد';
-
-        // البحث الذكي بيتعامل مع النوع لوحده
     };
 
-    window.populateRetProducts = function() {
-        // حقل البحث الذكي بيتعامل مع نفسه
-    };
+    window.populateRetProducts = function() {};
 
     window.updateRetPrice = function() {
         const id = getFieldValue('retProduct');
@@ -1256,23 +1243,10 @@
 
         if (collect) collect.style.display = tab === 'collect' ? 'block' : 'none';
         if (pay) pay.style.display = tab === 'pay' ? 'block' : 'none';
-
-        if (tab === 'collect') {
-            window.populateCollectCustomers();
-            window.populateCashBoxDropdowns();
-        } else if (tab === 'pay') {
-            window.populatePaySuppliers();
-            window.populateCashBoxDropdowns();
-        }
     };
 
-    window.populateCollectCustomers = function() {
-        // حقل البحث الذكي بيتعامل مع نفسه
-    };
-
-    window.populatePaySuppliers = function() {
-        // حقل البحث الذكي بيتعامل مع نفسه
-    };
+    window.populateCollectCustomers = function() {};
+    window.populatePaySuppliers = function() {};
 
     window.updateCollectInfo = function() {
         const name = getFieldName('collectCustomer');
@@ -1559,14 +1533,15 @@
         const isCollect = pay.type === 'collect';
         const label = isCollect ? 'إيصال استلام نقدية' : 'إيصال دفع نقدية';
         const color = isCollect ? '#2D8F5E' : '#E06060';
+        const company = window.companyData || { name: 'الميزان' };
+        const logoHtml = getLogoHtml(80);
 
         const html = '<button class="modal-close" onclick="closeModal()">&times;</button>' +
             '<h3 style="color:' + color + ';">🧾 ' + label + '</h3>' +
             '<div style="background:#fff;color:#000;padding:20px;border-radius:8px;border:2px solid ' + color + ';">' +
                 '<div style="text-align:center;padding-bottom:12px;border-bottom:2px dashed #333;margin-bottom:12px;">' +
-                    '<h2 style="color:' + color + ';font-size:20px;">' +
-                        window.escapeHtml((window.companyData || {}).name || 'الميزان') + '</h2>' +
-                    '<p style="font-size:12px;">' + label + '</p>' +
+                    logoHtml +
+                    '<p style="font-size:12px;margin-top:5px;">' + label + '</p>' +
                 '</div>' +
                 '<div style="padding:10px 0;border-bottom:1px dashed #333;margin-bottom:12px;">' +
                     '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;">' +
@@ -1587,7 +1562,7 @@
                         window.formatMoney(pay.amount) + ' ج.م</div>' +
                 '</div>' +
                 '<div style="text-align:center;margin-top:12px;padding-top:10px;border-top:2px dashed #333;font-size:11px;color:#666;">' +
-                    window.escapeHtml((window.companyData || {}).footer || 'شكراً لتعاملكم معنا 🌟') +
+                    window.escapeHtml(company.footer || 'شكراً لتعاملكم معنا 🌟') +
                 '</div>' +
             '</div>' +
             '<button class="btn btn-secondary btn-block" onclick="closeModal()" style="margin-top:12px;">إغلاق</button>';
@@ -1731,7 +1706,7 @@
         const pending = (window.sales || []).filter(function(s) {
             return s.status === 'unpaid' || s.status === 'partial';
         }).reduce(function(s, i) {
-            return s + (parseFloat(s.remainingAmount) || 0);
+            return s + (parseFloat(i.remainingAmount) || 0);
         }, 0);
 
         const set = function(id, val) {
@@ -1861,6 +1836,7 @@
         window.openModal(html);
     };
 
+    // ⚡ دالة طباعة الفاتورة — مع اللوجو
     window.printInvoice = function(id) {
         const inv = (window.sales || []).find(function(s) { return String(s.id) === String(id); });
         if (!inv) {
@@ -1880,6 +1856,11 @@
             '</tr>';
         });
 
+        // ⚡ استخدام اللوجو لو موجود
+        const logoHtml = company.logo
+            ? '<img src="' + company.logo + '" style="max-width:150px;max-height:150px;margin:0 auto 10px auto;display:block;object-fit:contain;" />'
+            : '<h1 style="color:#C9A94E;font-size:28px;margin-bottom:5px;">⚖️ ' + window.escapeHtml(company.name || 'الميزان') + '</h1>';
+
         const content = '<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>فاتورة #' + inv.number + '</title>' +
             '<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}body{padding:20px;background:#fff;color:#000;}' +
             '.header{text-align:center;padding-bottom:15px;border-bottom:3px solid #C9A94E;margin-bottom:20px;}' +
@@ -1892,8 +1873,9 @@
             '.totals .final{border-top:2px solid #C9A94E;margin-top:8px;padding-top:8px;font-size:18px;font-weight:900;color:#C9A94E;}' +
             '.footer{text-align:center;margin-top:20px;padding-top:15px;border-top:2px dashed #ddd;font-size:12px;color:#666;}' +
             '</style></head><body>' +
-            '<div class="header"><h1>⚖️ ' + window.escapeHtml(company.name || 'الميزان') + '</h1>' +
-            (company.phone ? '<p>📞 ' + window.escapeHtml(company.phone) + '</p>' : '') + '</div>' +
+            '<div class="header">' + logoHtml +
+            (company.phone ? '<p>📞 ' + window.escapeHtml(company.phone) + '</p>' : '') +
+            (company.address ? '<p style="font-size:12px;color:#666;">🏠 ' + window.escapeHtml(company.address) + '</p>' : '') + '</div>' +
             '<div class="info-box"><div><strong>رقم الفاتورة:</strong> #' + inv.number + '<br>' +
             '<strong>التاريخ:</strong> ' + (inv.date || '') + '<br><strong>الوقت:</strong> ' + (inv.time || '') + '</div>' +
             '<div><strong>العميل:</strong> ' + window.escapeHtml(inv.customer || 'عميل نقدي') + '<br>' +
@@ -2213,227 +2195,67 @@
         }
     };
 
+    // ⚡ طباعة التقرير — مع اللوجو
     window.printCurrentReport = function() {
-    const container = document.getElementById('reportContent');
-    if (!container || !container.innerHTML.trim()) {
-        window.showToast('⚠️ اختر تقرير أولاً', 'warning');
-        return;
-    }
+        const container = document.getElementById('reportContent');
+        if (!container || !container.innerHTML.trim()) {
+            window.showToast('⚠️ اختر تقرير أولاً', 'warning');
+            return;
+        }
 
-    const w = window.open('', '_blank');
-    if (!w) {
-        window.showToast('⚠️ يرجى السماح بالنوافذ المنبثقة', 'warning');
-        return;
-    }
+        const w = window.open('', '_blank');
+        if (!w) {
+            window.showToast('⚠️ يرجى السماح بالنوافذ المنبثقة', 'warning');
+            return;
+        }
 
-    const company = window.companyData || { name: 'الميزان' };
-    const reportNames = {
-        'daily': 'تقرير يومي (آخر 7 أيام)',
-        'monthly': 'تقرير شهري (آخر 12 شهر)',
-        'yearly': 'تقرير سنوي (آخر 3 سنوات)',
-        'sellers': 'تقرير البائعين',
-        'products': 'تقرير المنتجات',
-        'customers': 'تقرير العملاء'
+        const company = window.companyData || { name: 'الميزان' };
+        const reportNames = {
+            'daily': 'تقرير يومي',
+            'monthly': 'تقرير شهري',
+            'yearly': 'تقرير سنوي',
+            'sellers': 'تقرير البائعين',
+            'products': 'تقرير المنتجات',
+            'customers': 'تقرير العملاء'
+        };
+
+        // ⚡ استخدام اللوجو
+        const logoHtml = company.logo
+            ? '<img src="' + company.logo + '" style="max-width:120px;max-height:120px;display:block;margin:0 auto 10px auto;object-fit:contain;" />'
+            : '<h1 style="color:#C9A94E;text-align:center;">⚖️ ' + window.escapeHtml(company.name || 'الميزان') + '</h1>';
+
+        w.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">' +
+            '<title>' + (reportNames[window.currentReport] || 'تقرير') + '</title>' +
+            '<style>body{font-family:Arial;padding:20px;background:#fff;color:#000;}' +
+            'h1{color:#C9A94E;text-align:center;}table{width:100%;border-collapse:collapse;margin-top:20px;}' +
+            'th{background:#C9A94E;color:#fff;padding:10px;text-align:right;}td{padding:8px;border-bottom:1px solid #ddd;}' +
+            '.report-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}' +
+            '.report-stat{background:#f9f9f9;padding:12px;border-radius:8px;text-align:center;border-right:4px solid #C9A94E;}' +
+            '.report-stat .num{font-size:20px;font-weight:900;color:#C9A94E;}' +
+            '.report-stat .lbl{font-size:12px;color:#666;}' +
+            '.report-table-header,.report-table-row{display:grid;gap:6px;padding:8px;border-bottom:1px solid #ddd;}' +
+            '.report-table-header{background:#C9A94E;color:#fff;font-weight:900;}' +
+            '.footer{text-align:center;margin-top:30px;padding-top:20px;border-top:2px dashed #ddd;font-size:12px;color:#666;}' +
+            '</style></head><body>' +
+            logoHtml +
+            '<p style="text-align:center;">' + (reportNames[window.currentReport] || '') + ' - ' + window.getTodayDate() + '</p>' +
+            container.innerHTML +
+            '<div class="footer">' +
+                (company.phone ? '📞 ' + window.escapeHtml(company.phone) + '<br>' : '') +
+                window.escapeHtml(company.footer || 'شكراً لتعاملكم معنا 🌟') +
+            '</div>' +
+            '<script>window.onload=function(){setTimeout(function(){window.print();},500);};<\/script>' +
+            '</body></html>');
+
+        w.document.close();
     };
 
-    const reportTitle = reportNames[window.currentReport] || 'تقرير';
-    const today = window.getTodayDate();
-
-    // ⚡ توليد HTML مخصص للطباعة — مستقل تماماً عن تصميم الويب
-    let content = '';
-
-    if (window.currentReport === 'daily' || window.currentReport === 'monthly' || window.currentReport === 'yearly') {
-        // ═══ تقارير الفترات ═══
-        const data = window.currentReportData || { dataList: [], totals: {} };
-
-        let summaryRows = '<div class="summary-box">' +
-            '<div class="summary-stat"><div class="num">' + window.formatMoney(data.totals.salesAmount || 0) + '</div><div class="lbl">💰 إجمالي المبيعات</div></div>' +
-            '<div class="summary-stat"><div class="num">' + window.formatMoney(data.totals.purchasesAmount || 0) + '</div><div class="lbl">🛒 إجمالي المشتريات</div></div>' +
-            '<div class="summary-stat"><div class="num">' + window.formatMoney(data.totals.expensesAmount || 0) + '</div><div class="lbl">💸 إجمالي المصروفات</div></div>' +
-            '<div class="summary-stat"><div class="num">' + window.formatMoney(data.totals.grossProfit || 0) + '</div><div class="lbl">📈 إجمالي الربح</div></div>' +
-            '<div class="summary-stat"><div class="num">' + window.formatMoney(data.totals.netProfit || 0) + '</div><div class="lbl">💵 صافي الربح</div></div>' +
-            '<div class="summary-stat"><div class="num">' + (data.totals.salesCount || 0) + '</div><div class="lbl">🧾 عدد الفواتير</div></div>' +
-        '</div>';
-
-        let tableRows = '';
-        (data.dataList || []).forEach(function(d) {
-            tableRows += '<tr>' +
-                '<td>' + d.label + '</td>' +
-                '<td class="green">' + window.formatMoney(d.salesAmount) + '</td>' +
-                '<td class="red">' + window.formatMoney(d.purchasesAmount) + '</td>' +
-                '<td class="orange">' + window.formatMoney(d.expensesAmount) + '</td>' +
-                '<td class="gold">' + window.formatMoney(d.grossProfit) + '</td>' +
-                '<td class="' + (d.netProfit >= 0 ? 'green' : 'red') + '">' + window.formatMoney(d.netProfit) + '</td>' +
-            '</tr>';
-        });
-
-        content = summaryRows +
-            '<h3 style="color:#C9A94E;margin-top:30px;">📋 تفاصيل الفترات</h3>' +
-            '<table class="data-table">' +
-                '<thead><tr>' +
-                    '<th>الفترة</th><th>المبيعات</th><th>المشتريات</th>' +
-                    '<th>المصروفات</th><th>إجمالي الربح</th><th>صافي الربح</th>' +
-                '</tr></thead>' +
-                '<tbody>' + tableRows + '</tbody>' +
-            '</table>';
-
-    } else if (window.currentReport === 'sellers') {
-        // ═══ تقرير البائعين ═══
-        const sellerStats = {};
-        (window.sales || []).forEach(function(s) {
-            const seller = s.seller || 'غير محدد';
-            if (!sellerStats[seller]) sellerStats[seller] = { name: seller, total: 0, count: 0, profit: 0 };
-            sellerStats[seller].total += parseFloat(s.total) || 0;
-            sellerStats[seller].count++;
-            sellerStats[seller].profit += parseFloat(s.profit) || 0;
-        });
-
-        const list = Object.values(sellerStats).sort(function(a, b) { return b.total - a.total; });
-
-        let tableRows = '';
-        list.forEach(function(s, i) {
-            tableRows += '<tr>' +
-                '<td>' + (i + 1) + '</td>' +
-                '<td>' + window.escapeHtml(s.name) + '</td>' +
-                '<td class="green">' + window.formatMoney(s.total) + '</td>' +
-                '<td class="blue">' + s.count + '</td>' +
-                '<td class="gold">' + window.formatMoney(s.profit) + '</td>' +
-            '</tr>';
-        });
-
-        content = '<h3 style="color:#C9A94E;">📊 عدد البائعين: ' + list.length + '</h3>' +
-            '<table class="data-table">' +
-                '<thead><tr>' +
-                    '<th>#</th><th>البائع</th><th>المبيعات</th><th>عدد الفواتير</th><th>الربح</th>' +
-                '</tr></thead>' +
-                '<tbody>' + tableRows + '</tbody>' +
-            '</table>';
-
-    } else if (window.currentReport === 'products') {
-        // ═══ تقرير المنتجات ═══
-        const productStats = {};
-        (window.sales || []).forEach(function(s) {
-            (s.items || []).forEach(function(it) {
-                if (!productStats[it.name]) productStats[it.name] = { name: it.name, qty: 0, total: 0, profit: 0 };
-                productStats[it.name].qty += parseInt(it.qty) || 0;
-                productStats[it.name].total += parseFloat(it.total) || 0;
-                productStats[it.name].profit += ((parseFloat(it.price) || 0) - (parseFloat(it.costPrice) || 0)) * (parseInt(it.qty) || 0);
-            });
-        });
-
-        const list = Object.values(productStats).sort(function(a, b) { return b.total - a.total; });
-
-        let tableRows = '';
-        list.forEach(function(p, i) {
-            tableRows += '<tr>' +
-                '<td>' + (i + 1) + '</td>' +
-                '<td>' + window.escapeHtml(p.name) + '</td>' +
-                '<td class="blue">' + p.qty + '</td>' +
-                '<td class="green">' + window.formatMoney(p.total) + '</td>' +
-                '<td class="gold">' + window.formatMoney(p.profit) + '</td>' +
-            '</tr>';
-        });
-
-        content = '<h3 style="color:#C9A94E;">📦 عدد المنتجات المباعة: ' + list.length + '</h3>' +
-            '<table class="data-table">' +
-                '<thead><tr>' +
-                    '<th>#</th><th>المنتج</th><th>الكمية</th><th>المبيعات</th><th>الربح</th>' +
-                '</tr></thead>' +
-                '<tbody>' + tableRows + '</tbody>' +
-            '</table>';
-
-    } else if (window.currentReport === 'customers') {
-        // ═══ تقرير العملاء ═══
-        const customerStats = {};
-        (window.sales || []).forEach(function(s) {
-            const c = s.customer || 'عميل نقدي';
-            if (!customerStats[c]) customerStats[c] = { name: c, total: 0, count: 0 };
-            customerStats[c].total += parseFloat(s.total) || 0;
-            customerStats[c].count++;
-        });
-
-        const list = Object.values(customerStats).sort(function(a, b) { return b.total - a.total; });
-
-        let tableRows = '';
-        list.forEach(function(c, i) {
-            tableRows += '<tr>' +
-                '<td>' + (i + 1) + '</td>' +
-                '<td>' + window.escapeHtml(c.name) + '</td>' +
-                '<td class="green">' + window.formatMoney(c.total) + '</td>' +
-                '<td class="blue">' + c.count + '</td>' +
-            '</tr>';
-        });
-
-        content = '<h3 style="color:#C9A94E;">👥 عدد العملاء: ' + list.length + '</h3>' +
-            '<table class="data-table">' +
-                '<thead><tr>' +
-                    '<th>#</th><th>العميل</th><th>إجمالي المشتريات</th><th>عدد الفواتير</th>' +
-                '</tr></thead>' +
-                '<tbody>' + tableRows + '</tbody>' +
-            '</table>';
-    }
-
-    // ═══ HTML النهائي ═══
-    const htmlContent = '<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">' +
-        '<title>' + reportTitle + ' - ' + today + '</title>' +
-        '<style>' +
-            '* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }' +
-            'body { padding: 20px; background: #fff; color: #000; direction: rtl; }' +
-            '.header { text-align: center; padding-bottom: 20px; border-bottom: 3px solid #C9A94E; margin-bottom: 25px; }' +
-            '.header h1 { color: #C9A94E; font-size: 28px; margin-bottom: 8px; }' +
-            '.header .subtitle { font-size: 14px; color: #666; }' +
-            '.header .date { font-size: 12px; color: #999; margin-top: 5px; }' +
-            '.summary-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 30px; }' +
-            '.summary-stat { background: #f9f9f9; padding: 15px; border-radius: 8px; text-align: center; border-right: 4px solid #C9A94E; }' +
-            '.summary-stat .num { font-size: 22px; font-weight: 900; color: #C9A94E; margin-bottom: 5px; }' +
-            '.summary-stat .lbl { font-size: 12px; color: #666; }' +
-            '.data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }' +
-            '.data-table th { background: #C9A94E; color: #fff; padding: 12px 8px; border: 1px solid #C9A94E; font-size: 13px; text-align: center; }' +
-            '.data-table td { padding: 10px 8px; border: 1px solid #ddd; font-size: 13px; text-align: center; }' +
-            '.data-table tr:nth-child(even) { background: #f9f9f9; }' +
-            '.data-table .green { color: #2D8F5E; font-weight: 700; }' +
-            '.data-table .red { color: #E06060; font-weight: 700; }' +
-            '.data-table .orange { color: #E6A830; font-weight: 700; }' +
-            '.data-table .gold { color: #C9A94E; font-weight: 700; }' +
-            '.data-table .blue { color: #4A8AB5; font-weight: 700; }' +
-            '.footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px dashed #ddd; font-size: 12px; color: #666; }' +
-            '@media print {' +
-                'body { padding: 10px; }' +
-                '.summary-box { page-break-inside: avoid; }' +
-                '.data-table { page-break-inside: auto; }' +
-                '.data-table tr { page-break-inside: avoid; }' +
-            '}' +
-        '</style></head><body>' +
-        '<div class="header">' +
-            '<h1>⚖️ ' + window.escapeHtml(company.name || 'الميزان') + '</h1>' +
-            '<div class="subtitle">' + reportTitle + '</div>' +
-            '<div class="date">📅 ' + today + '</div>' +
-        '</div>' +
-        content +
-        '<div class="footer">' +
-            'تم إنشاء التقرير في: ' + new Date().toLocaleString('ar-EG') +
-            (company.phone ? '<br>📞 ' + window.escapeHtml(company.phone) : '') +
-            '<br>' + window.escapeHtml(company.footer || 'شكراً لتعاملكم معنا 🌟') +
-        '</div>' +
-        '<script>window.onload=function(){setTimeout(function(){window.print();},500);};<\/script>' +
-        '</body></html>';
-
-    w.document.write(htmlContent);
-    w.document.close();
-    window.showToast('🖨️ جاري الطباعة...', 'info');
-};
-    
-        // ═══════════════════════════════════════════════════════════
-    // تصدير التقارير — Excel حقيقي (.xlsx)
-    // ═══════════════════════════════════════════════════════════
-
+    // ⚡ تصدير Excel
     window.exportReportCSV = function() {
-        // نتأكد إن SheetJS محمّل
         if (typeof XLSX === 'undefined') {
             if (typeof window.showToast === 'function') {
                 window.showToast('⚠️ جاري تحميل مكتبة Excel...', 'info');
             }
-            // جرب تاني بعد ثانية
             setTimeout(window.exportReportCSV, 1500);
             return;
         }
@@ -2445,25 +2267,18 @@
             const wb = XLSX.utils.book_new();
             let ws;
 
-            // ═══ التقارير الزمنية (يومي / شهري / سنوي) ═══
             if (type === 'daily' || type === 'monthly' || type === 'yearly') {
                 if (!window.currentReportData || !window.currentReportData.dataList) {
                     window.showToast('⚠️ لا توجد بيانات', 'warning');
                     return;
                 }
 
-                // بناء البيانات
                 const rows = [];
-
-                // العنوان
                 rows.push(['تقرير ' + (type === 'daily' ? 'يومي' : type === 'monthly' ? 'شهري' : 'سنوي'), '', '', '', '', '']);
                 rows.push(['التاريخ: ' + window.getTodayDate(), '', '', '', '', '']);
                 rows.push([]);
-
-                // الرؤوس
                 rows.push(['الفترة', 'المبيعات', 'المشتريات', 'المصروفات', 'إجمالي الربح', 'صافي الربح']);
 
-                // البيانات
                 window.currentReportData.dataList.forEach(function(d) {
                     rows.push([
                         d.label,
@@ -2475,7 +2290,6 @@
                     ]);
                 });
 
-                // الإجماليات
                 rows.push([]);
                 rows.push(['الإجمالي',
                     window.currentReportData.totals.salesAmount,
@@ -2487,8 +2301,6 @@
 
                 ws = XLSX.utils.aoa_to_sheet(rows);
             }
-
-            // ═══ تقرير البائعين ═══
             else if (type === 'sellers') {
                 const sellerStats = {};
                 (window.sales || []).forEach(function(s) {
@@ -2513,8 +2325,6 @@
 
                 ws = XLSX.utils.aoa_to_sheet(rows);
             }
-
-            // ═══ تقرير المنتجات ═══
             else if (type === 'products') {
                 const productStats = {};
                 (window.sales || []).forEach(function(s) {
@@ -2540,8 +2350,6 @@
 
                 ws = XLSX.utils.aoa_to_sheet(rows);
             }
-
-            // ═══ تقرير العملاء ═══
             else if (type === 'customers') {
                 const customerStats = {};
                 (window.sales || []).forEach(function(s) {
@@ -2566,22 +2374,19 @@
                 ws = XLSX.utils.aoa_to_sheet(rows);
             }
 
-            // ═══ ضبط عرض الأعمدة ═══
             if (ws && ws['!ref']) {
                 const range = XLSX.utils.decode_range(ws['!ref']);
                 const cols = [];
 
                 for (let i = range.s.c; i <= range.e.c; i++) {
-                    cols.push({ wch: 18 });  // عرض كل عمود 18
+                    cols.push({ wch: 18 });
                 }
 
-                // العمود الأول أعرض شوية
                 if (cols.length > 0) cols[0].wch = 22;
 
                 ws['!cols'] = cols;
             }
 
-            // ═══ إضافة الورقة للملف ═══
             const sheetName = {
                 'daily': 'يومي',
                 'monthly': 'شهري',
@@ -2593,7 +2398,6 @@
 
             XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
-            // ═══ حفظ الملف ═══
             XLSX.writeFile(wb, filename);
 
             if (typeof window.showToast === 'function') {
@@ -2650,50 +2454,6 @@
         if (!coupon) return;
         coupon.usedCount = (coupon.usedCount || 0) + 1;
         window.DataStore.set('coupons', window.coupons);
-    };
-
-    window.applyCouponCode = function() {
-        const input = document.getElementById('saleCouponCode');
-        if (!input) return;
-
-        const code = input.value.trim();
-        if (!code) { window.showToast('⚠️ أدخل الكود', 'warning'); return; }
-
-        const coupon = window.findCoupon(code);
-        if (!coupon) { window.showToast('❌ كود غير صحيح', 'error'); return; }
-
-        const subtotal = window.currentSaleItems.reduce(function(s, i) { return s + i.total; }, 0);
-        const validation = window.validateCoupon(coupon, subtotal);
-
-        if (!validation.valid) {
-            window.showToast('❌ ' + validation.reason, 'error');
-            return;
-        }
-
-        window.currentCoupon = coupon;
-
-        const box = document.getElementById('couponInfoBox');
-        if (box) {
-            box.style.display = 'block';
-            box.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;">' +
-                '<span style="color:#2D8F5E;font-size:12px;">🎫 ' + window.escapeHtml(coupon.code) +
-                ' - خصم ' + validation.discount.toFixed(2) + ' ج.م</span>' +
-                '<button onclick="removeCoupon()" style="background:#E06060;border:none;color:#fff;padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer;">إلغاء</button>' +
-            '</div>';
-        }
-
-        window.showToast('✅ تم تطبيق الكوبون', 'success');
-        window.updateSaleTotals();
-    };
-
-    window.removeCoupon = function() {
-        window.currentCoupon = null;
-        const input = document.getElementById('saleCouponCode');
-        if (input) input.value = '';
-        const box = document.getElementById('couponInfoBox');
-        if (box) box.style.display = 'none';
-        window.updateSaleTotals();
-        window.showToast('🗑️ تم إلغاء الكوبون', 'info');
     };
 
     // ═══════════════════════════════════════════════════════════
@@ -2760,11 +2520,13 @@
 
     if (window.EventBus) {
         window.EventBus.on('data:products:changed', function() {
-            // البحث الذكي بيتعامل مع نفسه
+            window.populateSaleProducts();
+            window.populatePurProducts();
+            window.populateRetProducts();
         });
     }
 
     window.__posLoaded = true;
-    console.log('✅ pos.js v19.0 كامل جاهز');
+    console.log('✅ pos.js v21.0 كامل جاهز');
 
 })();
