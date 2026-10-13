@@ -31,6 +31,34 @@
     // الجزء 2: تسجيل الدخول
     // ═══════════════════════════════════════════════════════════
 
+        // ⚡ تخطي شاشة التفعيل لو التطبيق مفعّل
+    function skipActivationIfNeeded() {
+        // لو التفعيل موجود في localStorage
+        const activation = localStorage.getItem('mizan_activation_v1');
+        if (activation) {
+            // امسح شاشة التفعيل من DOM
+            const activationScreen = document.getElementById('activationScreen');
+            if (activationScreen) {
+                activationScreen.style.display = 'none';
+            }
+
+            // أظهر شاشة الدخول
+            const loginContainer = document.getElementById('loginContainer');
+            if (loginContainer) {
+                loginContainer.style.display = 'flex';
+                loginContainer.classList.remove('hidden');
+            }
+
+            const appContent = document.getElementById('appContent');
+            if (appContent) {
+                appContent.style.display = 'none';
+            }
+
+            return true;
+        }
+        return false;
+    }
+
     window.populateLoginUsers = function() {
         const sel = document.getElementById('loginUsername');
         if (!sel) return;
