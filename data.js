@@ -1,12 +1,12 @@
 // ============================================================
-// الميزان Pro - data.js v18.1
-// طبقة البيانات الموحدة + Firebase + Multi-Tenant
+// الميزان Pro - data.js v2.0
+// طبقة البيانات + Firebase Sync + Multi-Tenant
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('💾 data.js v18.1 - بدء التحميل');
+    console.log('💾 data.js v2.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: Firebase Config
@@ -142,8 +142,10 @@
                 console.error('❌ خطأ في حفظ ' + key + ':', e.message);
             }
 
-            window.EventBus.emit('data:' + key + ':changed', data);
-            window.EventBus.emit('data:changed', { key: key, data: data });
+            if (window.EventBus) {
+                window.EventBus.emit('data:' + key + ':changed', data);
+                window.EventBus.emit('data:changed', { key: key, data: data });
+            }
 
             if (window.CloudSync && window.CloudSync.isReady()) {
                 window.CloudSync.push(key, data);
@@ -158,33 +160,33 @@
             if (!item.createdAt) item.createdAt = new Date().toISOString();
             arr.push(item);
             window.DataStore.set(key, arr);
-            window.EventBus.emit(key + ':added', item);
+            if (window.EventBus) window.EventBus.emit(key + ':added', item);
             return item;
         },
 
         update: function(key, id, updates) {
             const arr = window[key] || [];
-            const idx = arr.findIndex(function(item) { return item.id == id; });
+            const idx = arr.findIndex(function(item) { return String(item.id) === String(id); });
             if (idx === -1) return null;
 
             arr[idx] = Object.assign({}, arr[idx], updates);
             arr[idx].updatedAt = new Date().toISOString();
             window.DataStore.set(key, arr);
-            window.EventBus.emit(key + ':updated', arr[idx]);
+            if (window.EventBus) window.EventBus.emit(key + ':updated', arr[idx]);
             return arr[idx];
         },
 
         remove: function(key, id) {
             const arr = window[key] || [];
-            const item = arr.find(function(i) { return i.id == id; });
-            const filtered = arr.filter(function(i) { return i.id != id; });
+            const item = arr.find(function(i) { return String(i.id) === String(id); });
+            const filtered = arr.filter(function(i) { return String(i.id) !== String(id); });
             window.DataStore.set(key, filtered);
-            window.EventBus.emit(key + ':removed', item);
+            if (window.EventBus) window.EventBus.emit(key + ':removed', item);
             return item;
         },
 
         find: function(key, id) {
-            return (window[key] || []).find(function(item) { return item.id == id; });
+            return (window[key] || []).find(function(item) { return String(item.id) === String(id); });
         },
 
         filter: function(key, predicate) {
@@ -224,7 +226,7 @@
                     }
                 } catch (e) {}
             });
-            window.EventBus.emit('data:saved:all');
+            if (window.EventBus) window.EventBus.emit('data:saved:all');
             return true;
         },
 
@@ -242,7 +244,7 @@
                 data[key] = window[key];
             });
             return {
-                version: '18.1',
+                version: '2.0',
                 storeId: window.getStoreId(),
                 exportDate: new Date().toISOString(),
                 data: data
@@ -260,18 +262,19 @@
                 }
             });
             window.DataStore.saveAll();
-            window.EventBus.emit('data:imported', json);
+            if (window.EventBus) window.EventBus.emit('data:imported', json);
             return true;
         }
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 6: CloudSync
+    // الجزء 6: CloudSync — Firebase
     // ═══════════════════════════════════════════════════════════
 
     let firebaseListeners = [];
     let autoSyncTimer = null;
     let uploadTimers = {};
+    let syncInProgress = false;
 
     window.CloudSync = {
         isReady: function() {
@@ -320,6 +323,13 @@
                         statusEl.textContent = connected ? '✅ متصل' : '❌ غير متصل';
                         statusEl.style.color = connected ? '#2D8F5E' : '#E06060';
                     }
+
+                    // لو اتصل، ارفع كل البيانات المتأخرة
+                    if (connected && !syncInProgress) {
+                        setTimeout(function() {
+                            window.CloudSync.pushAll(true);
+                        }, 2000);
+                    }
                 });
             } catch (e) {
                 console.warn('⚠️ فشل مراقبة الاتصال');
@@ -349,8 +359,11 @@
 
         pushAll: async function(silent) {
             if (!window.CloudSync.isReady()) return 0;
+            if (syncInProgress) return 0;
 
+            syncInProgress = true;
             let uploaded = 0;
+
             for (const key of window.SYNC_KEYS) {
                 try {
                     const data = window[key];
@@ -364,6 +377,11 @@
                     console.warn('⚠️ فشل رفع ' + key);
                 }
             }
+
+            syncInProgress = false;
+
+            const now = new Date().toLocaleString('ar-EG');
+            localStorage.setItem('mizan_last_sync', now);
 
             if (!silent && typeof window.showToast === 'function') {
                 window.showToast('☁️ تم رفع ' + uploaded + ' عنصر', 'success');
@@ -392,21 +410,28 @@
             if (!window.CloudSync.isReady()) return 0;
 
             let pulled = 0;
+
             for (const key of window.SYNC_KEYS) {
                 try {
                     const arr = await window.CloudSync.pull(key);
+
                     if (arr && arr.length > 0) {
-                        window[key] = arr;
-                        try {
-                            localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(arr));
-                        } catch (e) {}
-                        pulled++;
+                        const localArr = window[key] || [];
+
+                        // ⚡ الدمج الذكي — نختار الأكبر
+                        if (arr.length >= localArr.length) {
+                            window[key] = arr;
+                            try {
+                                localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(arr));
+                            } catch (e) {}
+                            pulled++;
+                        }
                     }
                 } catch (e) {}
             }
 
             if (pulled > 0) {
-                window.EventBus.emit('cloud:pulled', pulled);
+                if (window.EventBus) window.EventBus.emit('cloud:pulled', pulled);
                 if (typeof window.refreshAllUI === 'function') {
                     window.refreshAllUI();
                 }
@@ -448,7 +473,9 @@
                                 localStorage.setItem(STORAGE_PREFIX + key, newStr);
                             } catch (e) {}
 
-                            window.EventBus.emit('data:' + key + ':changed', arr);
+                            if (window.EventBus) {
+                                window.EventBus.emit('data:' + key + ':changed', arr);
+                            }
                         }
                     });
 
@@ -471,6 +498,19 @@
             console.log('✅ Auto push كل 30 ثانية');
         },
 
+        // ⚡ رفع فوري لكل شيء
+        forcePushAll: async function() {
+            if (!window.CloudSync.isReady()) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('⚠️ Firebase غير متصل', 'error');
+                }
+                return 0;
+            }
+
+            syncInProgress = false; // reset
+            return await window.CloudSync.pushAll(false);
+        },
+
         stop: function() {
             firebaseListeners.forEach(function(ref) {
                 try { ref.off(); } catch (e) {}
@@ -485,13 +525,12 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 7: البيانات الأولية (Seed)
+    // الجزء 7: البيانات الأولية
     // ═══════════════════════════════════════════════════════════
 
     window.seedInitialData = function() {
         let changed = false;
 
-        // المستخدمين
         if (!window.users || window.users.length === 0) {
             window.users = [
                 { id: 1, name: 'المدير',  password: '123456', role: 'admin',   active: true, storeId: window.getStoreId() },
@@ -506,7 +545,6 @@
             changed = true;
         }
 
-        // الخزائن
         if (!window.cashBoxes || window.cashBoxes.length === 0) {
             window.cashBoxes = [
                 { id: 1, name: 'نقدي', type: 'cash', icon: '💵', isDefault: true, active: true, openingBalance: 0 },
@@ -520,7 +558,6 @@
             changed = true;
         }
 
-        // المستودع الرئيسي
         if (!window.warehouses || window.warehouses.length === 0) {
             window.warehouses = [
                 { id: 1, name: 'المستودع الرئيسي', type: 'main', location: 'المقر الرئيسي', manager: 'المدير', active: true }
@@ -531,7 +568,6 @@
             changed = true;
         }
 
-        // دليل الحسابات
         if (!window.accounts || window.accounts.length === 0) {
             window.accounts = [
                 { id: 1, code: '1000', name: 'الأصول', type: 'asset', parent: null, level: 0 },
@@ -577,13 +613,13 @@
 
     window.Balance = {
         cashBox: function(boxId) {
-            const box = (window.cashBoxes || []).find(function(b) { return b.id == boxId; });
+            const box = (window.cashBoxes || []).find(function(b) { return String(b.id) === String(boxId); });
             if (!box) return 0;
 
             let balance = parseFloat(box.openingBalance) || 0;
 
             (window.treasury || []).forEach(function(t) {
-                if (t.cashBoxId == boxId) {
+                if (String(t.cashBoxId) === String(boxId)) {
                     const amt = parseFloat(t.amount) || 0;
                     if (t.type === 'deposit') balance += amt;
                     else if (t.type === 'withdraw') balance -= amt;
@@ -641,7 +677,7 @@
             let balance = 0;
             (window.journalEntries || []).forEach(function(entry) {
                 (entry.lines || []).forEach(function(line) {
-                    if (line.accountId == accountId) {
+                    if (String(line.accountId) === String(accountId)) {
                         balance += (parseFloat(line.debit) || 0) - (parseFloat(line.credit) || 0);
                     }
                 });
@@ -717,7 +753,7 @@
             };
 
             window.DataStore.add('journalEntries', entry);
-            window.EventBus.emit('accounting:entry:created', entry);
+            if (window.EventBus) window.EventBus.emit('accounting:entry:created', entry);
 
             return entry;
         },
@@ -836,17 +872,32 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 10: التهيئة الأولية
+    // الجزء 10: مراقبة الاتصال
     // ═══════════════════════════════════════════════════════════
 
-    // تحميل البيانات من localStorage
+    window.addEventListener('online', function() {
+        console.log('🟢 عاد الاتصال');
+        if (window.CloudSync && window.CloudSync.isReady()) {
+            setTimeout(function() {
+                window.CloudSync.pushAll(true);
+            }, 1500);
+        }
+    });
+
+    window.addEventListener('offline', function() {
+        console.log('🔴 انقطع الاتصال');
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 11: التهيئة
+    // ═══════════════════════════════════════════════════════════
+
     window.DataStore.loadAll();
     console.log('✅ تم تحميل البيانات من localStorage');
 
-    // إنشاء البيانات الأولية لو مفيش
     window.seedInitialData();
 
     window.__dataLoaded = true;
-    console.log('✅ data.js v18.1 جاهز');
+    console.log('✅ data.js v2.0 جاهز');
 
 })();
