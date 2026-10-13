@@ -1,12 +1,12 @@
 // ============================================================
-// الميزان Pro - activation.js v3.0
-// نظام كود التفعيل + الدخول لمتجر موجود + دعم Offline
+// الميزان Pro - activation.js v4.0
+// نظام كود التفعيل + الدخول لمتجر موجود + Firebase Init
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🔐 activation.js v3.0 - بدء التحميل');
+    console.log('🔐 activation.js v4.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: الإعدادات
@@ -17,7 +17,45 @@
     const ACTIVATION_PATH = 'activations';
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 2: التحقق من التفعيل
+    // الجزء 2: تهيئة Firebase (مهم جداً — من الأول)
+    // ═══════════════════════════════════════════════════════════
+
+    function ensureFirebaseInitialized() {
+        if (typeof firebase === 'undefined') {
+            console.warn('⚠️ Firebase SDK غير محمّل');
+            return false;
+        }
+
+        try {
+            if (!firebase.apps || firebase.apps.length === 0) {
+                firebase.initializeApp(window.FIREBASE_CONFIG);
+                console.log('✅ Firebase تم تهيئته');
+            }
+
+            window.firebaseReady = true;
+            return true;
+        } catch (e) {
+            console.error('❌ فشل تهيئة Firebase:', e.message);
+            return false;
+        }
+    }
+
+    // تهيئة فورية عند تحميل الملف
+    function initFirebaseNow() {
+        // لو Firebase SDK لسه ما اتحمّلش، ننتظر
+        if (typeof firebase === 'undefined') {
+            setTimeout(initFirebaseNow, 300);
+            return;
+        }
+
+        ensureFirebaseInitialized();
+    }
+
+    // نبدأ التهيئة فوراً
+    initFirebaseNow();
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 3: التحقق من التفعيل
     // ═══════════════════════════════════════════════════════════
 
     function isActivated() {
@@ -26,10 +64,10 @@
             if (!data) return false;
 
             const parsed = JSON.parse(data);
-            if (!parsed.code || !parsed.storeId) return false;
+            if (!parsed.code && !parsed.storeId) return false;
 
             const currentStoreId = getCurrentStoreId();
-            if (parsed.storeId !== currentStoreId) return false;
+            if (parsed.storeId && parsed.storeId !== currentStoreId) return false;
 
             return true;
         } catch (e) {
@@ -65,7 +103,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 3: التخزين المؤقت للأكواد
+    // الجزء 4: التخزين المؤقت
     // ═══════════════════════════════════════════════════════════
 
     function cacheActivationCode(code, data) {
@@ -88,19 +126,15 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: التحقق من Firebase
+    // الجزء 5: التحقق من Firebase
     // ═══════════════════════════════════════════════════════════
 
     async function verifyCodeWithFirebase(code) {
-        if (typeof firebase === 'undefined') {
+        if (!ensureFirebaseInitialized()) {
             return { valid: false, reason: 'no_firebase' };
         }
 
         try {
-            if (!firebase.apps || firebase.apps.length === 0) {
-                return { valid: false, reason: 'no_firebase' };
-            }
-
             const codeRef = firebase.database().ref(ACTIVATION_PATH + '/' + code);
             const snapshot = await codeRef.once('value');
 
@@ -127,12 +161,8 @@
         }
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 5: التحقق الذكي (Firebase + Offline)
-    // ═══════════════════════════════════════════════════════════
-
     async function verifyCodeSmart(code) {
-        if (navigator.onLine && typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+        if (navigator.onLine) {
             const result = await verifyCodeWithFirebase(code);
 
             if (result.valid) {
@@ -155,7 +185,7 @@
     // ═══════════════════════════════════════════════════════════
 
     async function registerCodeUsage(code) {
-        if (typeof firebase === 'undefined') return false;
+        if (!ensureFirebaseInitialized()) return false;
         if (!navigator.onLine) return false;
 
         try {
@@ -184,7 +214,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 7: التحقق من متجر موجود (Store ID)
+    // الجزء 7: التحقق من متجر موجود
     // ═══════════════════════════════════════════════════════════
 
     async function verifyExistingStore(storeId) {
@@ -192,13 +222,11 @@
             return { valid: false, reason: 'empty' };
         }
 
-        // التحقق من الصيغة
         if (storeId.indexOf('store_') !== 0) {
             return { valid: false, reason: 'invalid_format' };
         }
 
-        // تحقق من Firebase
-        if (typeof firebase === 'undefined' || !firebase.apps || firebase.apps.length === 0) {
+        if (!ensureFirebaseInitialized()) {
             return { valid: false, reason: 'no_firebase' };
         }
 
@@ -216,7 +244,6 @@
 
             const data = snapshot.val();
 
-            // نتأكد إن المتجر فيه بيانات حقيقية
             if (!data.products && !data.sales && !data.companyData) {
                 return { valid: false, reason: 'empty_store' };
             }
@@ -233,31 +260,31 @@
         }
     }
 
-    // ربط المتجر الموجود بالجهاز
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 8: ربط المتجر الموجود
+    // ═══════════════════════════════════════════════════════════
+
     function linkToExistingStore(storeId) {
         try {
-            // 1. حفظ Store ID الجديد
+            // 1. حفظ Store ID
             if (typeof window.setStoreId === 'function') {
                 window.setStoreId(storeId);
             } else {
                 localStorage.setItem('mizan_store_id_v18', storeId);
             }
 
-            // 2. مسح أي تفعيل قديم
-            localStorage.removeItem(ACTIVATION_KEY);
-            localStorage.removeItem(CACHED_CODES_KEY);
+            // 2. حفظ تفعيل دائم
+            localStorage.setItem(ACTIVATION_KEY, JSON.stringify({
+                code: 'EXISTING_STORE',
+                storeId: storeId,
+                activatedAt: new Date().toISOString(),
+                type: 'existing'
+            }));
 
-            // 3. مسح البيانات القديمة (بيانات المتجر السابق)
+            // 3. مسح البيانات القديمة
             if (typeof window.DataStore !== 'undefined' && window.DataStore.clearAll) {
                 window.DataStore.clearAll();
             }
-
-            // 4. حفظ بيانات الاتصال بالمتجر (للـ PWA)
-            localStorage.setItem('mizan_linked_store', JSON.stringify({
-                storeId: storeId,
-                linkedAt: new Date().toISOString(),
-                type: 'existing'
-            }));
 
             return true;
         } catch (e) {
@@ -267,7 +294,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 8: شاشة التفعيل
+    // الجزء 9: شاشة التفعيل
     // ═══════════════════════════════════════════════════════════
 
     function showActivationScreen() {
@@ -363,45 +390,18 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 9: نافذة "الدخول لمتجر موجود"
+    // الجزء 10: نافذة "الدخول لمتجر موجود"
     // ═══════════════════════════════════════════════════════════
 
     function showExistingStoreDialog() {
-        // إنشاء نافذة Modal
         let overlay = document.getElementById('existingStoreModal');
         if (!overlay) {
             overlay = document.createElement('div');
             overlay.id = 'existingStoreModal';
-            overlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.85);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                z-index: 10000;
-                padding: 15px;
-                box-sizing: border-box;
-                direction: rtl;
-            `;
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;justify-content:center;align-items:center;z-index:10000;padding:15px;box-sizing:border-box;direction:rtl;';
 
             overlay.innerHTML = `
-                <div style="
-                    background: #1C1C1C;
-                    border-radius: 16px;
-                    padding: 24px 20px;
-                    max-width: 420px;
-                    width: 100%;
-                    border: 2px solid #4A8AB5;
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-                    max-height: 90vh;
-                    overflow-y: auto;
-                    box-sizing: border-box;
-                    animation: modalIn 0.3s ease;
-                ">
+                <div style="background:#1C1C1C;border-radius:16px;padding:24px 20px;max-width:420px;width:100%;border:2px solid #4A8AB5;box-shadow:0 20px 60px rgba(0,0,0,0.6);max-height:90vh;overflow-y:auto;box-sizing:border-box;">
                     <div style="text-align:center;font-size:48px;margin-bottom:12px;">🏢</div>
                     <h3 style="text-align:center;color:#4A8AB5;font-size:20px;font-weight:900;margin-bottom:8px;">الدخول لمتجر موجود</h3>
                     <p style="text-align:center;color:#A89070;font-size:13px;line-height:1.7;margin-bottom:20px;">ادخل كود المتجر (Store ID) عشان تدخل بياناتك من أي جهاز</p>
@@ -411,11 +411,11 @@
                         <div style="color:#A89070;font-size:11px;line-height:1.6;">افتح التطبيق على الجهاز الأصلي → الإعدادات → معلومات المتجر → انسخ Store ID</div>
                     </div>
 
-                    <div class="form-group">
+                    <div style="margin-bottom:14px;">
                         <label style="display:block;font-size:12px;font-weight:800;color:#A89070;margin-bottom:6px;">🔑 كود المتجر (Store ID)</label>
                         <input type="text" id="existingStoreIdInput"
                                placeholder="store_XXXXXXXXXXXXX_XXXX"
-                               style="width:100%;padding:13px;border-radius:10px;border:2px solid #3D3D3D;background:#0D0D0D;color:#F5E6C8;font-family:inherit;font-size:13px;box-sizing:border-box;text-align:center;direction:ltr;letter-spacing:1px;font-family:Courier New,monospace;"
+                               style="width:100%;padding:13px;border-radius:10px;border:2px solid #3D3D3D;background:#0D0D0D;color:#F5E6C8;font-size:13px;box-sizing:border-box;text-align:center;direction:ltr;letter-spacing:1px;font-family:Courier New,monospace;"
                                autocomplete="off" />
                     </div>
 
@@ -425,13 +425,6 @@
                         <button id="closeExistingModal" style="padding:12px;background:#3D3D3D;color:#F5E6C8;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;">❌ إلغاء</button>
                         <button id="confirmExistingStore" style="padding:12px;background:linear-gradient(135deg,#4A8AB5,#3A7AA5);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;">✅ دخول</button>
                     </div>
-
-                    <style>
-                        @keyframes modalIn {
-                            from { opacity: 0; transform: scale(0.9); }
-                            to { opacity: 1; transform: scale(1); }
-                        }
-                    </style>
                 </div>
             `;
 
@@ -440,7 +433,6 @@
             overlay.style.display = 'flex';
         }
 
-        // إخفاء الرسالة
         const errorBox = document.getElementById('existingStoreError');
         if (errorBox) errorBox.style.display = 'none';
 
@@ -448,12 +440,10 @@
         const confirmBtn = document.getElementById('confirmExistingStore');
         const closeBtn = document.getElementById('closeExistingModal');
 
-        // ربط الأحداث
         closeBtn.onclick = function() {
             overlay.style.display = 'none';
         };
 
-        // إغلاق عند النقر خارج النافذة
         overlay.onclick = function(e) {
             if (e.target === overlay) {
                 overlay.style.display = 'none';
@@ -462,7 +452,6 @@
 
         confirmBtn.onclick = handleExistingStoreLogin;
 
-        // Enter
         if (input) {
             input.value = '';
             input.onkeydown = function(e) {
@@ -477,13 +466,12 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 10: معالجة الدخول لمتجر موجود
+    // الجزء 11: معالجة الدخول لمتجر موجود
     // ═══════════════════════════════════════════════════════════
 
     async function handleExistingStoreLogin() {
         const input = document.getElementById('existingStoreIdInput');
         const confirmBtn = document.getElementById('confirmExistingStore');
-        const errorBox = document.getElementById('existingStoreError');
 
         if (!input || !confirmBtn) return;
 
@@ -499,11 +487,9 @@
             return;
         }
 
-        // تعطيل الزر
         confirmBtn.disabled = true;
         confirmBtn.innerHTML = '⏳ جاري التحقق...';
 
-        // التحقق
         const result = await verifyExistingStore(storeId);
 
         if (!result.valid) {
@@ -516,7 +502,7 @@
                 'no_firebase': '⚠️ لا يوجد اتصال بالإنترنت',
                 'offline': '⚠️ لا يوجد اتصال بالإنترنت',
                 'not_found': '❌ الكود غير موجود',
-                'empty_store': '❌ المتجر فاضي (لا يوجد بيانات)',
+                'empty_store': '❌ المتجر فاضي',
                 'error': '❌ حدث خطأ، حاول مرة أخرى'
             };
 
@@ -524,7 +510,7 @@
             return;
         }
 
-        // ✅ تم التحقق — اربط الجهاز
+        // ✅ ربط
         const linked = linkToExistingStore(storeId);
 
         if (!linked) {
@@ -534,14 +520,12 @@
             return;
         }
 
-        // نجاح
         confirmBtn.innerHTML = '✅ تم الدخول';
 
         if (typeof window.showToast === 'function') {
             window.showToast('✅ جاري تحميل بيانات متجرك...', 'success');
         }
 
-        // Reload بعد ثانية
         setTimeout(function() {
             location.reload();
         }, 1200);
@@ -556,7 +540,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 11: معالجة التفعيل بكود
+    // الجزء 12: معالجة التفعيل
     // ═══════════════════════════════════════════════════════════
 
     async function handleActivation() {
@@ -578,7 +562,7 @@
         }
 
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
+        btn.innerHTML = '⏳ جاري التحقق...';
 
         const result = await verifyCodeSmart(code);
 
@@ -591,7 +575,7 @@
                 'used_by_another_store': '❌ الكود مستخدم من متجر آخر',
                 'deactivated': '❌ الكود موقوف',
                 'no_firebase': '⚠️ لا يوجد اتصال بالإنترنت',
-                'offline_no_cache': '⚠️ لا يوجد اتصال — ادخل كودك الصحيح عندما يتوفر النت',
+                'offline_no_cache': '⚠️ لا يوجد اتصال',
                 'error': '❌ حدث خطأ، حاول مرة أخرى'
             };
 
@@ -599,7 +583,7 @@
             return;
         }
 
-        // ✅ الكود صحيح
+        // ✅
         if (!result.fromCache) {
             await registerCodeUsage(code);
         }
@@ -610,10 +594,7 @@
         btn.innerHTML = '✅ تم التفعيل';
 
         if (typeof window.showToast === 'function') {
-            const message = result.fromCache
-                ? '✅ تم التفعيل (بدون إنترنت)'
-                : '✅ تم تفعيل التطبيق بنجاح';
-            window.showToast(message, 'success');
+            window.showToast('✅ تم تفعيل التطبيق بنجاح', 'success');
         }
 
         setTimeout(function() {
@@ -647,7 +628,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 12: فحص التفعيل عند البدء
+    // الجزء 13: فحص التفعيل
     // ═══════════════════════════════════════════════════════════
 
     function checkActivation() {
@@ -656,32 +637,13 @@
             return true;
         }
 
-        console.log('🔐 التطبيق مش مفعّل — جاري عرض شاشة التفعيل');
-
-        let attempts = 0;
-        const maxAttempts = 20;
-
-        const tryShow = function() {
-            attempts++;
-
-            if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
-                showActivationScreen();
-                return;
-            }
-
-            if (attempts < maxAttempts) {
-                setTimeout(tryShow, 500);
-            } else {
-                showActivationScreen();
-            }
-        };
-
-        tryShow();
+        console.log('🔐 عرض شاشة التفعيل');
+        showActivationScreen();
         return false;
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 13: مراقبة الاتصال
+    // الجزء 14: مراقبة الاتصال
     // ═══════════════════════════════════════════════════════════
 
     window.addEventListener('online', function() {
@@ -692,12 +654,12 @@
 
     window.addEventListener('offline', function() {
         if (typeof window.showToast === 'function') {
-            window.showToast('🔴 انقطع الاتصال — التطبيق شغال محلياً', 'warning');
+            window.showToast('🔴 انقطع الاتصال', 'warning');
         }
     });
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 14: APIs عامة
+    // الجزء 15: APIs عامة
     // ═══════════════════════════════════════════════════════════
 
     window.Activation = {
@@ -721,17 +683,11 @@
         linkStore: linkToExistingStore,
         show: showActivationScreen,
         showExisting: showExistingStoreDialog,
-        getCachedCodes: function() {
-            try {
-                return JSON.parse(localStorage.getItem(CACHED_CODES_KEY) || '{}');
-            } catch (e) {
-                return {};
-            }
-        }
+        initFirebase: ensureFirebaseInitialized
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 15: التحميل
+    // الجزء 16: التحميل
     // ═══════════════════════════════════════════════════════════
 
     function init() {
@@ -747,6 +703,6 @@
     }
 
     window.__activationLoaded = true;
-    console.log('✅ activation.js v3.0 جاهز');
+    console.log('✅ activation.js v4.0 جاهز');
 
 })();
