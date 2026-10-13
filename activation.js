@@ -16,9 +16,20 @@
     const CACHED_CODES_KEY = 'mizan_cached_codes';
     const ACTIVATION_PATH = 'activations';
 
-    // ═══════════════════════════════════════════════════════════
+       // ═══════════════════════════════════════════════════════════
     // الجزء 2: تهيئة Firebase (مهم جداً — من الأول)
     // ═══════════════════════════════════════════════════════════
+
+    // ⚡ إعدادات Firebase — محفوظة في activation.js مباشرة
+    const ACTIVATION_FIREBASE_CONFIG = {
+        apiKey: "AIzaSyB3cnrETONbcrH1d_94w3TzeUEQIF0MSXw",
+        authDomain: "mizan-new-main.firebaseapp.com",
+        databaseURL: "https://mizan-new-main-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "mizan-new-main",
+        storageBucket: "mizan-new-main.firebasestorage.app",
+        messagingSenderId: "442192802804",
+        appId: "1:442192802804:web:8035c27ab7dcf38a547fa1"
+    };
 
     function ensureFirebaseInitialized() {
         if (typeof firebase === 'undefined') {
@@ -28,7 +39,9 @@
 
         try {
             if (!firebase.apps || firebase.apps.length === 0) {
-                firebase.initializeApp(window.FIREBASE_CONFIG);
+                // استخدم الإعدادات المحلية في activation.js
+                const config = window.FIREBASE_CONFIG || ACTIVATION_FIREBASE_CONFIG;
+                firebase.initializeApp(config);
                 console.log('✅ Firebase تم تهيئته');
             }
 
