@@ -607,21 +607,10 @@
             window.showToast('✅ تم تفعيل التطبيق بنجاح', 'success');
         }
 
-        setTimeout(function() {
-            const activationScreen = document.getElementById('activationScreen');
-            if (activationScreen) {
-                activationScreen.style.display = 'none';
-            }
-
-            const loginContainer = document.getElementById('loginContainer');
-            if (loginContainer) {
-                loginContainer.style.display = 'flex';
-                loginContainer.classList.remove('hidden');
-            }
-
-            if (typeof window.populateLoginUsers === 'function') {
-                window.populateLoginUsers();
-            }
+                setTimeout(function() {
+            // ⚡ نوجّه العميل لصفحة الشكر
+            const code = input.value.trim().toUpperCase();
+            window.location.href = 'thanks.html?code=' + encodeURIComponent(code);
         }, 1200);
     }
 
