@@ -1793,16 +1793,15 @@
 <script>
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-        navigator.serviceWorker.register('sw.js')
+        navigator.serviceWorker.register('sw.js', { scope: './' })
             .then(function(registration) {
-                console.log('✅ Service Worker مسجل:', registration.scope);
+                console.log('✅ SW مسجل:', registration.scope);
 
                 // مراقبة التحديثات
                 registration.addEventListener('updatefound', function() {
                     const newWorker = registration.installing;
                     newWorker.addEventListener('statechange', function() {
                         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            // نسخة جديدة متاحة
                             if (confirm('🔄 تم تحديث التطبيق. هل تريد إعادة التحميل؟')) {
                                 window.location.reload();
                             }
@@ -1811,10 +1810,10 @@ if ('serviceWorker' in navigator) {
                 });
             })
             .catch(function(err) {
-                console.warn('⚠️ فشل تسجيل Service Worker:', err);
+                console.warn('⚠️ فشل SW:', err);
             });
 
-        // التعامل مع رسائل من SW
+        // استقبال رسائل من SW
         navigator.serviceWorker.addEventListener('message', function(event) {
             const data = event.data;
 
@@ -1825,27 +1824,27 @@ if ('serviceWorker' in navigator) {
             }
         });
     });
-
-    // كشف حالة الاتصال
-    window.addEventListener('online', function() {
-        console.log('🟢 عاد الاتصال');
-        if (typeof window.showToast === 'function') {
-            window.showToast('🟢 عاد الاتصال — جاري المزامنة...', 'success');
-        }
-        if (typeof window.CloudSync !== 'undefined' && window.CloudSync.isReady()) {
-            setTimeout(function() {
-                window.CloudSync.pushAll(true);
-            }, 1000);
-        }
-    });
-
-    window.addEventListener('offline', function() {
-        console.log('🔴 انقطع الاتصال');
-        if (typeof window.showToast === 'function') {
-            window.showToast('🔴 انقطع الاتصال — التطبيق شغال محلياً', 'warning');
-        }
-    });
 }
+
+// كشف حالة الاتصال
+window.addEventListener('online', function() {
+    console.log('🟢 عاد الاتصال');
+    if (typeof window.showToast === 'function') {
+        window.showToast('🟢 عاد الاتصال — جاري المزامنة...', 'success');
+    }
+    if (typeof window.CloudSync !== 'undefined' && window.CloudSync.isReady()) {
+        setTimeout(function() {
+            window.CloudSync.pushAll(true);
+        }, 1000);
+    }
+});
+
+window.addEventListener('offline', function() {
+    console.log('🔴 انقطع الاتصال');
+    if (typeof window.showToast === 'function') {
+        window.showToast('🔴 انقطع الاتصال — التطبيق شغال محلياً', 'warning');
+    }
+});
 </script>
     
     <!-- ملفات التطبيق -->
