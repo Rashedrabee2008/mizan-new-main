@@ -2425,8 +2425,8 @@
     
     window.exportReportCSV = function() {
     const type = window.currentReport;
-    const SEP = ';';  // فاصلة منقوطة عشان تفتح في Excel عربي
-    let csv = '\uFEFF';  // BOM للـ UTF-8
+    const SEP = '\t';  // ← Tab (بيفتح صح في Excel و Google Sheets)
+    let csv = '\uFEFF';
     const filename = 'report-' + type + '-' + window.getTodayDate() + '.csv';
 
     if (type === 'daily' || type === 'monthly' || type === 'yearly') {
@@ -2439,7 +2439,7 @@
 
         window.currentReportData.dataList.forEach(function(d) {
             csv += [
-                '"' + d.label + '"',
+                d.label,
                 d.salesAmount.toFixed(2),
                 d.purchasesAmount.toFixed(2),
                 d.expensesAmount.toFixed(2),
@@ -2463,7 +2463,7 @@
 
         Object.keys(stats).forEach(function(name) {
             csv += [
-                '"' + name + '"',
+                name,
                 stats[name].total.toFixed(2),
                 stats[name].count,
                 stats[name].profit.toFixed(2)
@@ -2486,7 +2486,7 @@
 
         Object.keys(stats).forEach(function(name) {
             csv += [
-                '"' + name + '"',
+                name,
                 stats[name].qty,
                 stats[name].total.toFixed(2),
                 stats[name].profit.toFixed(2)
@@ -2507,7 +2507,7 @@
 
         Object.keys(stats).forEach(function(name) {
             csv += [
-                '"' + name + '"',
+                name,
                 stats[name].total.toFixed(2),
                 stats[name].count
             ].join(SEP) + '\n';
