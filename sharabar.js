@@ -1,15 +1,15 @@
 // ============================================================
-// الميزان Pro - sharabar.js v2.0
-// شريط إعلانات متحرك (نسخة مبسّطة ومضمونة)
+// الميزان Pro - sharabar.js v2.1
+// شريط إعلانات متحرك — اتجاه عربي (من اليسار لليمين)
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('📢 sharabar.js v2.0 - بدء التحميل');
+    console.log('📢 sharabar.js v2.1 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 1: الإعدادات الافتراضية
+    // الجزء 1: الإعدادات
     // ═══════════════════════════════════════════════════════════
 
     const STORAGE_KEY = 'mizan_sharabar_v2';
@@ -60,18 +60,15 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: إنشاء الشريط
+    // الجزء 4: إنشاء الشريط (باتجاه عربي)
     // ═══════════════════════════════════════════════════════════
 
     function createSharabar() {
-        // 1. احذف القديم
         removeSharabar();
 
-        // 2. اقرأ الإعدادات
         const s = getSettings();
-        console.log('📋 الإعدادات الحالية:', s);
+        console.log('📋 الإعدادات:', s);
 
-        // 3. فحص
         if (!s.enabled) {
             console.log('⏸️ الشريط غير مفعّل');
             return false;
@@ -82,13 +79,13 @@
             return false;
         }
 
-        // 4. أنشئ CSS للحركة
+        // ⚡ CSS الحركة — من اليسار لليمين (عربي)
         const style = document.createElement('style');
         style.id = 'mizanSharabarCSS';
         style.textContent = `
             @keyframes mizanSharabarScroll {
-                0% { transform: translateX(100%); }
-                100% { transform: translateX(-100%); }
+                0% { transform: translateX(-100%); }
+                100% { transform: translateX(100%); }
             }
             #mizanSharabar {
                 position: fixed !important;
@@ -106,25 +103,29 @@
                 font-size: 13px !important;
                 font-family: Tajawal, sans-serif !important;
                 pointer-events: none !important;
+                direction: rtl !important;
             }
             #mizanSharabar .bar-inner {
                 display: inline-block !important;
                 white-space: nowrap !important;
-                padding-right: 50% !important;
+                padding-left: 50% !important;
                 animation: mizanSharabarScroll ${s.speed}s linear infinite !important;
+                direction: rtl !important;
             }
             #mizanSharabar .bar-text {
                 display: inline-block !important;
                 padding: 0 40px !important;
+                direction: rtl !important;
+                unicode-bidi: bidi-override !important;
+                text-align: right !important;
             }
         `;
         document.head.appendChild(style);
 
-        // 5. أنشئ الشريط
+        // ⚡ إنشاء الشريط
         const bar = document.createElement('div');
         bar.id = 'mizanSharabar';
 
-        // المكان
         if (s.position === 'top') {
             bar.style.setProperty('top', '85px', 'important');
             bar.style.setProperty('border-radius', '0 0 10px 10px', 'important');
@@ -133,27 +134,27 @@
             bar.style.setProperty('border-radius', '10px 10px 0 0', 'important');
         }
 
-        // النص
+        // ⚡ النص
         const inner = document.createElement('div');
         inner.className = 'bar-inner';
 
-        // كرر النص 3 مرات للتمرير المستمر
         for (let i = 0; i < 3; i++) {
             const span = document.createElement('span');
             span.className = 'bar-text';
             span.textContent = '🎉 ' + s.text + '   ⭐   ';
+            span.setAttribute('dir', 'rtl');
             inner.appendChild(span);
         }
 
         bar.appendChild(inner);
         document.body.appendChild(bar);
 
-        console.log('✅ تم إنشاء الشريط بنجاح');
+        console.log('✅ تم إنشاء الشريط (اتجاه عربي)');
         return true;
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 5: قسم الإعدادات في الصفحة
+    // الجزء 5: قسم الإعدادات
     // ═══════════════════════════════════════════════════════════
 
     function addSettingsSection() {
@@ -163,7 +164,6 @@
             return false;
         }
 
-        // لو موجود، حدّث القيم
         if (document.getElementById('sharabarSection')) {
             updateInputs();
             return true;
@@ -177,7 +177,7 @@
 
         section.innerHTML = `
             <h3>📢 شريط الإعلانات</h3>
-            <p class="settings-desc">اعرض عروضك للعملاء في شريط متحرك</p>
+            <p class="settings-desc">اعرض عروضك للعملاء في شريط متحرك (اتجاه عربي)</p>
 
             <div style="display:flex;align-items:center;gap:10px;padding:12px;background:#0D0D0D;border-radius:10px;margin-bottom:12px;">
                 <input type="checkbox" id="sbEnabled" style="width:auto;transform:scale(1.4);cursor:pointer;" ${s.enabled ? 'checked' : ''} />
@@ -187,7 +187,7 @@
             <div class="form-group">
                 <label>📝 نص الإعلان</label>
                 <input type="text" id="sbText" value="${s.text.replace(/"/g, '&quot;')}" 
-                       placeholder="🎉 عرض خاص! خصم 20%" maxlength="200" />
+                       placeholder="🎉 عرض خاص! خصم 20%" maxlength="200" dir="rtl" />
             </div>
 
             <div class="form-group">
@@ -227,7 +227,6 @@
             </div>
         `;
 
-        // إدخال القسم
         const firstSection = page.querySelector('.settings-section');
         if (firstSection && firstSection.nextSibling) {
             firstSection.parentNode.insertBefore(section, firstSection.nextSibling);
@@ -237,16 +236,10 @@
             page.appendChild(section);
         }
 
-        // ربط الأحداث
         bindEvents();
-
         console.log('✅ تم إضافة قسم الإعدادات');
         return true;
     }
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 6: ربط الأحداث
-    // ═══════════════════════════════════════════════════════════
 
     function bindEvents() {
         const speedEl = document.getElementById('sbSpeed');
@@ -276,7 +269,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 7: APIs عامة
+    // الجزء 6: APIs عامة
     // ═══════════════════════════════════════════════════════════
 
     window.SharabarAPI = {
@@ -296,7 +289,6 @@
                 position: positionEl ? positionEl.value : 'top'
             };
 
-            // فحص
             if (settings.enabled && !settings.text) {
                 window.showToast('⚠️ أدخل نص الإعلان أولاً', 'error');
                 return;
@@ -341,7 +333,6 @@
             const el = document.getElementById('sbColor');
             if (el) el.value = color;
 
-            // تحديث الحدود
             document.querySelectorAll('#sbColors button').forEach(function(btn) {
                 btn.style.borderColor = btn.dataset.color === color ? color : '#3D3D3D';
             });
@@ -356,22 +347,16 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 8: التهيئة
+    // الجزء 7: التهيئة
     // ═══════════════════════════════════════════════════════════
 
     function init() {
-        // حاول إنشاء الشريط فوراً
         setTimeout(createSharabar, 500);
-
-        // حاول إضافة القسم
         setTimeout(addSettingsSection, 2000);
         setTimeout(addSettingsSection, 4000);
         setTimeout(addSettingsSection, 6000);
 
-        console.log('✅ sharabar.js v2.0 جاهز');
-        console.log('💡 للتجربة في Console:');
-        console.log('   SharabarAPI.get()      — شوف الإعدادات');
-        console.log('   SharabarAPI.render()   — اعرض الشريط');
+        console.log('✅ sharabar.js v2.1 جاهز — اتجاه عربي');
     }
 
     if (document.readyState === 'loading') {
@@ -380,7 +365,6 @@
         init();
     }
 
-    // ربط مع التنقل
     if (window.EventBus) {
         window.EventBus.on('page:navigated', function(page) {
             if (page === 'settings') {
