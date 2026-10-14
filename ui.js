@@ -95,10 +95,18 @@
     };
 
     window.navigateTo = function(page) {
-        // إخفاء كل الصفحات
-        document.querySelectorAll('.page-container').forEach(function(el) {
-            el.classList.remove('active');
-        });
+    // ⚡ فحص الصلاحية قبل التنقل
+    if (window.currentUser && typeof window.canAccessPage === 'function') {
+        if (!window.canAccessPage(page)) {
+            window.showToast('🚫 ليس لديك صلاحية الوصول لهذه الصفحة', 'error');
+            return;
+        }
+    }
+
+    // إخفاء كل الصفحات
+    document.querySelectorAll('.page-container').forEach(function(el) {
+        el.classList.remove('active');
+    });
 
         // إظهار الصفحة المطلوبة
         const target = document.getElementById('page-' + page);
