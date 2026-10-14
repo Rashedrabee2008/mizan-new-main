@@ -1,16 +1,12 @@
 // ============================================================
-// الميزان Pro - sharabar.js v2.3
-// شريط إعلانات متحرك — يتحرك مع الصفحة (مش ثابت على الشاشة)
+// الميزان Pro - sharabar.js v2.5
+// شريط إعلانات متحرك — من اليسار لليمين + متوافق مع كل الشاشات
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('📢 sharabar.js v2.3 - بدء التحميل');
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 1: الإعدادات
-    // ═══════════════════════════════════════════════════════════
+    console.log('📢 sharabar.js v2.5 - بدء التحميل');
 
     const STORAGE_KEY = 'mizan_sharabar_v2';
 
@@ -22,10 +18,7 @@
         position: 'top'
     };
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 2: قراءة وحفظ الإعدادات
-    // ═══════════════════════════════════════════════════════════
-
+    // ─── قراءة وحفظ الإعدادات ───
     function getSettings() {
         try {
             const data = localStorage.getItem(STORAGE_KEY);
@@ -48,10 +41,7 @@
         }
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 3: إزالة الشريط القديم
-    // ═══════════════════════════════════════════════════════════
-
+    // ─── إزالة الشريط القديم ───
     function removeSharabar() {
         const old = document.getElementById('mizanSharabar');
         if (old) old.remove();
@@ -60,9 +50,8 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: إنشاء الشريط (متحرك مع الصفحة)
+    // إنشاء الشريط
     // ═══════════════════════════════════════════════════════════
-
     function createSharabar() {
         removeSharabar();
 
@@ -73,33 +62,28 @@
             console.log('⏸️ الشريط غير مفعّل');
             return false;
         }
-
         if (!s.text || s.text.trim() === '') {
             console.log('⚠️ لا يوجد نص');
             return false;
         }
 
-        // إزالة CSS القديم لو موجود
-        const oldCSS = document.getElementById('mizanSharabarCSS');
-        if (oldCSS) oldCSS.remove();
-
-        // ─────────────────────────────────────────────────────
-        // CSS: position absolute عشان يتحرك مع الصفحة
-        // ─────────────────────────────────────────────────────
+        // ─── CSS متوافق مع كل الشاشات ───
         const style = document.createElement('style');
         style.id = 'mizanSharabarCSS';
         style.textContent = `
+            /* الحركة من اليسار لليمين — عشان العربي يبان صح */
             @keyframes mizanSharabarScroll {
-                0% { transform: translate3d(0, 0, 0); }
-                100% { transform: translate3d(-100%, 0, 0); }
+                0%   { transform: translate3d(-100%, 0, 0); }
+                100% { transform: translate3d(0, 0, 0); }
             }
-            
+
             #mizanSharabar {
-                position: absolute !important;
-                left: 50% !important;
-                margin-left: -240px !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
                 width: 100% !important;
-                max-width: 480px !important;
+                max-width: 100% !important;
                 background: linear-gradient(90deg, ${s.color}, ${s.color}CC) !important;
                 color: #0D0D0D !important;
                 padding: 10px 0 !important;
@@ -113,49 +97,69 @@
                 direction: rtl !important;
                 display: block !important;
                 box-sizing: border-box !important;
+                margin: 0 !important;
             }
-            
+
+            /* في الأسفل: نثبته تحت خالص */
+            #mizanSharabar.position-bottom {
+                top: auto !important;
+                bottom: 0 !important;
+            }
+
             #mizanSharabar .bar-inner {
                 display: flex !important;
                 white-space: nowrap !important;
                 animation: mizanSharabarScroll ${s.speed}s linear infinite !important;
                 direction: rtl !important;
                 will-change: transform !important;
+                width: max-content !important;
             }
-            
+
             #mizanSharabar .bar-text {
                 display: inline-block !important;
                 padding: 0 40px !important;
                 direction: rtl !important;
                 text-align: right !important;
                 flex-shrink: 0 !important;
+                white-space: nowrap !important;
             }
 
+            /* شاشات صغيرة (موبايل) */
             @media (max-width: 480px) {
                 #mizanSharabar {
-                    margin-left: -50% !important;
-                    left: 50% !important;
+                    font-size: 12px !important;
+                    padding: 8px 0 !important;
+                }
+                #mizanSharabar .bar-text {
+                    padding: 0 25px !important;
+                }
+            }
+
+            /* شاشات كبيرة (كمبيوتر/تابلت) */
+            @media (min-width: 768px) {
+                #mizanSharabar {
+                    font-size: 15px !important;
+                    padding: 12px 0 !important;
+                }
+                #mizanSharabar .bar-text {
+                    padding: 0 60px !important;
                 }
             }
         `;
         document.head.appendChild(style);
 
-        // ─────────────────────────────────────────────────────
-        // إنشاء عنصر الشريط
-        // ─────────────────────────────────────────────────────
+        // ─── عنصر الشريط ───
         const bar = document.createElement('div');
         bar.id = 'mizanSharabar';
 
-        // تحديد المكان: فوق خالص أو تحت خالص
+        // نحدد المكان (فوق أو تحت)
         if (s.position === 'top') {
             bar.style.setProperty('top', '0', 'important');
-            bar.style.setProperty('border-radius', '0 0 10px 10px', 'important');
         } else {
-            bar.style.setProperty('bottom', '0', 'important');
-            bar.style.setProperty('border-radius', '10px 10px 0 0', 'important');
+            bar.classList.add('position-bottom');
         }
 
-        // النص — نكرر 3 مرات لضمان استمرارية الحركة
+        // ─── النص (3 نسخ لضمان استمرارية الحركة) ───
         const inner = document.createElement('div');
         inner.className = 'bar-inner';
 
@@ -168,35 +172,10 @@
 
         bar.appendChild(inner);
 
-        // ─────────────────────────────────────────────────────
-        // إضافة الشريط للحاوية الرئيسية عشان يتحرك مع السكرول
-        // ─────────────────────────────────────────────────────
-        // نبحث عن الحاوية الرئيسية اللي بتلف كل المحتوى
-        const container = 
-            document.querySelector('.app-container') ||
-            document.querySelector('#app') ||
-            document.querySelector('.main-content') ||
-            document.querySelector('main') ||
-            document.body;
+        // ─── إضافة الشريط لـ body مباشرة (بيغطي كل الشاشات) ───
+        document.body.appendChild(bar);
 
-        // نحتاج نضمن إن الحاوية عندها position: relative
-        // عشان position:absolute يشتغل بالنسبة لها
-        const containerStyle = window.getComputedStyle(container);
-        if (containerStyle.position === 'static') {
-            container.style.position = 'relative';
-        }
-
-        // لو في الأعلى: نضيفه في بداية الحاوية
-        // لو في الأسفل: نضيفه في نهاية الحاوية
-        if (s.position === 'top') {
-            container.insertBefore(bar, container.firstChild);
-        } else {
-            container.appendChild(bar);
-        }
-
-        // ─────────────────────────────────────────────────────
-        // التأكد من أن الحركة تعمل
-        // ─────────────────────────────────────────────────────
+        // ─── التأكد من أن الحركة تعمل ───
         setTimeout(function() {
             const innerEl = bar.querySelector('.bar-inner');
             if (innerEl) {
@@ -215,20 +194,16 @@
             }
         }, 100);
 
-        console.log('✅ تم إنشاء الشريط — يتحرك مع الصفحة');
+        console.log('✅ تم إنشاء الشريط — من اليسار لليمين');
         return true;
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 5: قسم الإعدادات
+    // قسم الإعدادات
     // ═══════════════════════════════════════════════════════════
-
     function addSettingsSection() {
         const page = document.getElementById('page-settings');
-        if (!page) {
-            console.log('⚠️ صفحة الإعدادات مش موجودة');
-            return false;
-        }
+        if (!page) return false;
 
         if (document.getElementById('sharabarSection')) {
             updateInputs();
@@ -282,8 +257,8 @@
             <div class="form-group">
                 <label>📍 المكان</label>
                 <select id="sbPosition">
-                    <option value="top" ${s.position === 'top' ? 'selected' : ''}>⬆️ فوق خالص (فوق اللوجو)</option>
-                    <option value="bottom" ${s.position === 'bottom' ? 'selected' : ''}>⬇️ تحت خالص (تحت شريط التنقل)</option>
+                    <option value="top" ${s.position === 'top' ? 'selected' : ''}>⬆️ فوق خالص</option>
+                    <option value="bottom" ${s.position === 'bottom' ? 'selected' : ''}>⬇️ تحت خالص</option>
                 </select>
             </div>
 
@@ -335,9 +310,8 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 6: APIs عامة
+    // APIs عامة
     // ═══════════════════════════════════════════════════════════
-
     window.SharabarAPI = {
         get: getSettings,
         save: function() {
@@ -415,16 +389,14 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 7: التهيئة
+    // التهيئة
     // ═══════════════════════════════════════════════════════════
-
     function init() {
         setTimeout(createSharabar, 500);
         setTimeout(addSettingsSection, 2000);
         setTimeout(addSettingsSection, 4000);
         setTimeout(addSettingsSection, 6000);
-
-        console.log('✅ sharabar.js v2.3 جاهز — يتحرك مع الصفحة');
+        console.log('✅ sharabar.js v2.5 جاهز');
     }
 
     if (document.readyState === 'loading') {
@@ -443,4 +415,4 @@
 
     window.__sharabarLoaded = true;
 
-})();
+})(); في 
