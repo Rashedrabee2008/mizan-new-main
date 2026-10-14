@@ -1,18 +1,18 @@
 // ============================================================
-// الميزان Pro - sharabar.js v1.0
-// شريط إعلانات متحرك
+// الميزان Pro - sharabar.js v2.0
+// شريط إعلانات متحرك (نسخة مبسّطة ومضمونة)
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('📢 sharabar.js v1.0 - بدء التحميل');
+    console.log('📢 sharabar.js v2.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 1: الإعدادات
+    // الجزء 1: الإعدادات الافتراضية
     // ═══════════════════════════════════════════════════════════
 
-    const SHARABAR_KEY = 'mizan_sharabar_v1';
+    const STORAGE_KEY = 'mizan_sharabar_v2';
 
     const DEFAULT_SETTINGS = {
         enabled: false,
@@ -28,439 +28,367 @@
 
     function getSettings() {
         try {
-            const data = localStorage.getItem(SHARABAR_KEY);
+            const data = localStorage.getItem(STORAGE_KEY);
             if (!data) return Object.assign({}, DEFAULT_SETTINGS);
-
-            const parsed = JSON.parse(data);
-            return Object.assign({}, DEFAULT_SETTINGS, parsed);
+            return Object.assign({}, DEFAULT_SETTINGS, JSON.parse(data));
         } catch (e) {
+            console.error('❌ خطأ في قراءة الإعدادات:', e);
             return Object.assign({}, DEFAULT_SETTINGS);
         }
     }
 
     function saveSettings(settings) {
         try {
-            localStorage.setItem(SHARABAR_KEY, JSON.stringify(settings));
-
-            // مزامنة مع Firebase
-            if (window.DataStore && window.DataStore.set) {
-                const companyData = window.companyData || {};
-                companyData.sharabar = settings;
-                window.DataStore.set('companyData', companyData);
-            }
-
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+            console.log('💾 تم حفظ الإعدادات:', settings);
             return true;
         } catch (e) {
-            console.error('❌ فشل حفظ الإعدادات:', e);
+            console.error('❌ فشل الحفظ:', e);
             return false;
         }
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 3: عرض الشريط
+    // الجزء 3: إزالة الشريط القديم
     // ═══════════════════════════════════════════════════════════
 
-    function renderSharabar() {
-        // إزالة الشريط القديم لو موجود
-        const oldBar = document.getElementById('sharabar');
-        if (oldBar) oldBar.remove();
-
-        const settings = getSettings();
-
-        // لو مش مفعّل، مش نعرضه
-        if (!settings.enabled || !settings.text) {
-            return;
-        }
-
-        // إنشاء الشريط
-        const bar = document.createElement('div');
-        bar.id = 'sharabar';
-        bar.style.cssText = `
-            position: fixed;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 480px;
-            background: linear-gradient(90deg, ${settings.color}, ${settings.color}DD);
-            color: #0D0D0D;
-            padding: 10px 0;
-            overflow: hidden;
-            z-index: 9998;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            font-weight: 800;
-            font-size: 13px;
-        `;
-
-        // المكان
-        if (settings.position === 'top') {
-            bar.style.top = '85px';
-            bar.style.borderRadius = '0 0 10px 10px';
-        } else {
-            bar.style.bottom = '75px';
-            bar.style.borderRadius = '10px 10px 0 0';
-        }
-
-        // النص المتحرك
-        const inner = document.createElement('div');
-        inner.style.cssText = `
-            display: inline-block;
-            white-space: nowrap;
-            padding-right: 100%;
-            animation: sharabarScroll ${settings.speed}s linear infinite;
-        `;
-        inner.textContent = '🎉 ' + settings.text + '   ⭐   ' + settings.text + '   ⭐   ';
-
-        bar.appendChild(inner);
-        document.body.appendChild(bar);
+    function removeSharabar() {
+        const old = document.getElementById('mizanSharabar');
+        if (old) old.remove();
+        const oldCSS = document.getElementById('mizanSharabarCSS');
+        if (oldCSS) oldCSS.remove();
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: الـ CSS للحركة
+    // الجزء 4: إنشاء الشريط
     // ═══════════════════════════════════════════════════════════
 
-    function injectCSS() {
-        if (document.getElementById('sharabarCSS')) return;
+    function createSharabar() {
+        // 1. احذف القديم
+        removeSharabar();
 
+        // 2. اقرأ الإعدادات
+        const s = getSettings();
+        console.log('📋 الإعدادات الحالية:', s);
+
+        // 3. فحص
+        if (!s.enabled) {
+            console.log('⏸️ الشريط غير مفعّل');
+            return false;
+        }
+
+        if (!s.text || s.text.trim() === '') {
+            console.log('⚠️ لا يوجد نص');
+            return false;
+        }
+
+        // 4. أنشئ CSS للحركة
         const style = document.createElement('style');
-        style.id = 'sharabarCSS';
+        style.id = 'mizanSharabarCSS';
         style.textContent = `
-            @keyframes sharabarScroll {
-                0% { transform: translateX(0); }
+            @keyframes mizanSharabarScroll {
+                0% { transform: translateX(100%); }
                 100% { transform: translateX(-100%); }
+            }
+            #mizanSharabar {
+                position: fixed !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                width: 100% !important;
+                max-width: 480px !important;
+                background: linear-gradient(90deg, ${s.color}, ${s.color}CC) !important;
+                color: #0D0D0D !important;
+                padding: 10px 0 !important;
+                overflow: hidden !important;
+                z-index: 99999 !important;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.4) !important;
+                font-weight: 800 !important;
+                font-size: 13px !important;
+                font-family: Tajawal, sans-serif !important;
+                pointer-events: none !important;
+            }
+            #mizanSharabar .bar-inner {
+                display: inline-block !important;
+                white-space: nowrap !important;
+                padding-right: 50% !important;
+                animation: mizanSharabarScroll ${s.speed}s linear infinite !important;
+            }
+            #mizanSharabar .bar-text {
+                display: inline-block !important;
+                padding: 0 40px !important;
             }
         `;
         document.head.appendChild(style);
+
+        // 5. أنشئ الشريط
+        const bar = document.createElement('div');
+        bar.id = 'mizanSharabar';
+
+        // المكان
+        if (s.position === 'top') {
+            bar.style.setProperty('top', '85px', 'important');
+            bar.style.setProperty('border-radius', '0 0 10px 10px', 'important');
+        } else {
+            bar.style.setProperty('bottom', '75px', 'important');
+            bar.style.setProperty('border-radius', '10px 10px 0 0', 'important');
+        }
+
+        // النص
+        const inner = document.createElement('div');
+        inner.className = 'bar-inner';
+
+        // كرر النص 3 مرات للتمرير المستمر
+        for (let i = 0; i < 3; i++) {
+            const span = document.createElement('span');
+            span.className = 'bar-text';
+            span.textContent = '🎉 ' + s.text + '   ⭐   ';
+            inner.appendChild(span);
+        }
+
+        bar.appendChild(inner);
+        document.body.appendChild(bar);
+
+        console.log('✅ تم إنشاء الشريط بنجاح');
+        return true;
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 5: قسم الإعدادات
+    // الجزء 5: قسم الإعدادات في الصفحة
     // ═══════════════════════════════════════════════════════════
 
-    function addSharabarSection() {
-        const settingsPage = document.getElementById('page-settings');
-        if (!settingsPage) return;
-
-        // لو موجود، مش نضيفه تاني
-        if (document.getElementById('sharabarSection')) {
-            // بس نحدّث القيم
-            updateSharabarInputs();
-            return;
+    function addSettingsSection() {
+        const page = document.getElementById('page-settings');
+        if (!page) {
+            console.log('⚠️ صفحة الإعدادات مش موجودة');
+            return false;
         }
 
-        const settings = getSettings();
+        // لو موجود، حدّث القيم
+        if (document.getElementById('sharabarSection')) {
+            updateInputs();
+            return true;
+        }
 
-        // نضيف قسم جديد
+        const s = getSettings();
+
         const section = document.createElement('div');
         section.className = 'settings-section';
         section.id = 'sharabarSection';
 
         section.innerHTML = `
             <h3>📢 شريط الإعلانات</h3>
-            <p class="settings-desc">اعرض عروضك للعملاء في شريط متحرك يظهر في كل الصفحات</p>
+            <p class="settings-desc">اعرض عروضك للعملاء في شريط متحرك</p>
 
-            <!-- تفعيل -->
-            <div class="form-group" style="display:flex;align-items:center;gap:10px;padding:10px;background:#0D0D0D;border-radius:10px;margin-bottom:12px;">
-                <input type="checkbox" id="sharabarEnabled" style="width:auto;transform:scale(1.3);cursor:pointer;" />
-                <label for="sharabarEnabled" style="cursor:pointer;font-weight:800;color:#F5E6C8;">تفعيل الشريط</label>
+            <div style="display:flex;align-items:center;gap:10px;padding:12px;background:#0D0D0D;border-radius:10px;margin-bottom:12px;">
+                <input type="checkbox" id="sbEnabled" style="width:auto;transform:scale(1.4);cursor:pointer;" ${s.enabled ? 'checked' : ''} />
+                <label for="sbEnabled" style="cursor:pointer;font-weight:800;font-size:14px;">تفعيل الشريط</label>
             </div>
 
-            <!-- النص -->
             <div class="form-group">
                 <label>📝 نص الإعلان</label>
-                <input type="text" id="sharabarText" 
-                       placeholder="🎉 عرض خاص! خصم 20% على كل منتجاتك"
-                       maxlength="200" />
-                <div style="font-size:10px;color:#5D5D5D;margin-top:4px;">الحد الأقصى 200 حرف</div>
+                <input type="text" id="sbText" value="${s.text.replace(/"/g, '&quot;')}" 
+                       placeholder="🎉 عرض خاص! خصم 20%" maxlength="200" />
             </div>
 
-            <!-- السرعة -->
             <div class="form-group">
-                <label>⏱️ سرعة التمرير</label>
+                <label>⏱️ السرعة (ثانية)</label>
                 <div style="display:flex;align-items:center;gap:10px;">
-                    <span style="font-size:11px;color:#A89070;">بطيء</span>
-                    <input type="range" id="sharabarSpeed" 
-                           min="10" max="60" step="5" value="30"
-                           style="flex:1;" />
                     <span style="font-size:11px;color:#A89070;">سريع</span>
+                    <input type="range" id="sbSpeed" min="10" max="60" step="5" value="${s.speed}" style="flex:1;" />
+                    <span style="font-size:11px;color:#A89070;">بطيء</span>
                 </div>
+                <div style="text-align:center;font-size:11px;color:#A89070;margin-top:4px;">القيمة: <span id="sbSpeedValue">${s.speed}</span> ثانية</div>
             </div>
 
-            <!-- اللون -->
             <div class="form-group">
-                <label>🎨 لون الشريط</label>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <button onclick="setSharabarColor('#C9A94E')" 
-                            style="width:42px;height:42px;border-radius:50%;border:3px solid #C9A94E;background:#C9A94E;cursor:pointer;"
-                            title="ذهبي"></button>
-                    <button onclick="setSharabarColor('#3B82F6')" 
-                            style="width:42px;height:42px;border-radius:50%;border:3px solid #3D3D3D;background:#3B82F6;cursor:pointer;"
-                            title="أزرق"></button>
-                    <button onclick="setSharabarColor('#10B981')" 
-                            style="width:42px;height:42px;border-radius:50%;border:3px solid #3D3D3D;background:#10B981;cursor:pointer;"
-                            title="أخضر"></button>
-                    <button onclick="setSharabarColor('#8B5CF6')" 
-                            style="width:42px;height:42px;border-radius:50%;border:3px solid #3D3D3D;background:#8B5CF6;cursor:pointer;"
-                            title="بنفسجي"></button>
-                    <button onclick="setSharabarColor('#EF4444')" 
-                            style="width:42px;height:42px;border-radius:50%;border:3px solid #3D3D3D;background:#EF4444;cursor:pointer;"
-                            title="أحمر"></button>
-                    <button onclick="setSharabarColor('#F97316')" 
-                            style="width:42px;height:42px;border-radius:50%;border:3px solid #3D3D3D;background:#F97316;cursor:pointer;"
-                            title="برتقالي"></button>
+                <label>🎨 اللون</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;" id="sbColors">
+                    ${['#C9A94E', '#3B82F6', '#10B981', '#8B5CF6', '#EF4444', '#F97316'].map(function(c) {
+                        return '<button type="button" onclick="SharabarAPI.setColor(\'' + c + '\')" ' +
+                               'data-color="' + c + '" ' +
+                               'style="width:44px;height:44px;border-radius:50%;border:3px solid ' +
+                               (s.color === c ? c : '#3D3D3D') + ';background:' + c + ';cursor:pointer;"></button>';
+                    }).join('')}
                 </div>
-                <input type="hidden" id="sharabarColor" value="#C9A94E" />
+                <input type="hidden" id="sbColor" value="${s.color}" />
             </div>
 
-            <!-- المكان -->
             <div class="form-group">
-                <label>📍 مكان الشريط</label>
-                <select id="sharabarPosition">
-                    <option value="top">⬆️ فوق (تحت الهيدر)</option>
-                    <option value="bottom">⬇️ تحت (فوق الشريط السفلي)</option>
+                <label>📍 المكان</label>
+                <select id="sbPosition">
+                    <option value="top" ${s.position === 'top' ? 'selected' : ''}>⬆️ فوق (تحت الهيدر)</option>
+                    <option value="bottom" ${s.position === 'bottom' ? 'selected' : ''}>⬇️ تحت (فوق التنقل)</option>
                 </select>
             </div>
 
-            <!-- معاينة -->
-            <div style="background:#0D0D0D;border-radius:10px;padding:12px;margin-top:12px;">
-                <div style="font-size:11px;color:#A89070;margin-bottom:8px;">👁️ معاينة:</div>
-                <div id="sharabarPreview" 
-                     style="background:linear-gradient(90deg,#C9A94E,#C9A94EDD);color:#0D0D0D;padding:10px 14px;border-radius:8px;font-weight:800;font-size:12px;text-align:center;">
-                    🎉 عرض خاص
-                </div>
-            </div>
-
-            <!-- أزرار -->
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;">
-                <button class="btn btn-primary" onclick="saveSharabarSettings()">
-                    💾 حفظ
-                </button>
-                <button class="btn btn-secondary" onclick="previewSharabar()">
-                    👁️ معاينة
-                </button>
+                <button class="btn btn-primary" onclick="SharabarAPI.save()">💾 حفظ</button>
+                <button class="btn btn-info" onclick="SharabarAPI.preview()">👁️ معاينة</button>
             </div>
         `;
 
-        // إدخاله في الصفحة
-        const firstSection = settingsPage.querySelector('.settings-section');
-        if (firstSection) {
+        // إدخال القسم
+        const firstSection = page.querySelector('.settings-section');
+        if (firstSection && firstSection.nextSibling) {
             firstSection.parentNode.insertBefore(section, firstSection.nextSibling);
+        } else if (firstSection) {
+            firstSection.parentNode.appendChild(section);
         } else {
-            settingsPage.appendChild(section);
+            page.appendChild(section);
         }
-
-        // تحديث القيم
-        updateSharabarInputs();
 
         // ربط الأحداث
-        bindSharabarEvents();
+        bindEvents();
+
+        console.log('✅ تم إضافة قسم الإعدادات');
+        return true;
     }
 
-    function updateSharabarInputs() {
-        const settings = getSettings();
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 6: ربط الأحداث
+    // ═══════════════════════════════════════════════════════════
 
-        const enabledEl = document.getElementById('sharabarEnabled');
-        const textEl = document.getElementById('sharabarText');
-        const speedEl = document.getElementById('sharabarSpeed');
-        const colorEl = document.getElementById('sharabarColor');
-        const positionEl = document.getElementById('sharabarPosition');
-
-        if (enabledEl) enabledEl.checked = settings.enabled;
-        if (textEl) textEl.value = settings.text;
-        if (speedEl) speedEl.value = settings.speed;
-        if (colorEl) colorEl.value = settings.color;
-        if (positionEl) positionEl.value = settings.position;
-
-        updatePreview();
-    }
-
-    function bindSharabarEvents() {
-        const textEl = document.getElementById('sharabarText');
-        const speedEl = document.getElementById('sharabarSpeed');
-        const positionEl = document.getElementById('sharabarPosition');
-
-        if (textEl) {
-            textEl.addEventListener('input', updatePreview);
-        }
+    function bindEvents() {
+        const speedEl = document.getElementById('sbSpeed');
         if (speedEl) {
-            speedEl.addEventListener('input', updatePreview);
-        }
-        if (positionEl) {
-            positionEl.addEventListener('change', updatePreview);
-        }
-    }
-
-    function updatePreview() {
-        const preview = document.getElementById('sharabarPreview');
-        const textEl = document.getElementById('sharabarText');
-        const colorEl = document.getElementById('sharabarColor');
-
-        if (!preview) return;
-
-        const text = textEl ? textEl.value.trim() : '';
-        const color = colorEl ? colorEl.value : '#C9A94E';
-
-        preview.style.background = 'linear-gradient(90deg, ' + color + ', ' + color + 'DD)';
-        preview.textContent = text ? '🎉 ' + text : '🎉 عرض خاص';
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 6: APIs عامة
-    // ═══════════════════════════════════════════════════════════
-
-    window.setSharabarColor = function(color) {
-        const el = document.getElementById('sharabarColor');
-        if (el) el.value = color;
-
-        // تحديث الأزرار
-        document.querySelectorAll('#sharabarSection button[onclick^="setSharabarColor"]').forEach(function(btn) {
-            const btnColor = btn.style.background;
-            const isActive = btnColor === color || rgbToHex(btnColor) === color.toLowerCase();
-            btn.style.borderColor = isActive ? color : '#3D3D3D';
-        });
-
-        updatePreview();
-    };
-
-    function rgbToHex(rgb) {
-        if (!rgb || rgb.indexOf('rgb') === -1) return rgb;
-        const parts = rgb.match(/\d+/g);
-        if (!parts || parts.length < 3) return rgb;
-        return '#' + parts.slice(0, 3).map(function(x) {
-            const hex = parseInt(x).toString(16);
-            return hex.length === 1 ? '0' + hex : hex;
-        }).join('').toUpperCase();
-    }
-
-    window.saveSharabarSettings = function() {
-        const enabledEl = document.getElementById('sharabarEnabled');
-        const textEl = document.getElementById('sharabarText');
-        const speedEl = document.getElementById('sharabarSpeed');
-        const colorEl = document.getElementById('sharabarColor');
-        const positionEl = document.getElementById('sharabarPosition');
-
-        const settings = {
-            enabled: enabledEl ? enabledEl.checked : false,
-            text: textEl ? textEl.value.trim() : '',
-            speed: speedEl ? parseInt(speedEl.value) : 30,
-            color: colorEl ? colorEl.value : '#C9A94E',
-            position: positionEl ? positionEl.value : 'top'
-        };
-
-        if (settings.enabled && !settings.text) {
-            window.showToast('⚠️ أدخل نص الإعلان أولاً', 'error');
-            return;
-        }
-
-        saveSettings(settings);
-        renderSharabar();
-
-        window.showToast('✅ تم حفظ الإعدادات', 'success');
-    };
-
-    window.previewSharabar = function() {
-        const textEl = document.getElementById('sharabarText');
-        const text = textEl ? textEl.value.trim() : '';
-
-        if (!text) {
-            window.showToast('⚠️ أدخل نص الإعلان', 'warning');
-            return;
-        }
-
-        // عرض مؤقت
-        const tempSettings = {
-            enabled: true,
-            text: text,
-            speed: 30,
-            color: (document.getElementById('sharabarColor') || {}).value || '#C9A94E',
-            position: (document.getElementById('sharabarPosition') || {}).value || 'top'
-        };
-
-        const oldSettings = getSettings();
-        saveSettings(tempSettings);
-        renderSharabar();
-
-        window.showToast('👁️ معاينة لمدة 5 ثواني', 'info');
-
-        // رجوع بعد 5 ثواني
-        setTimeout(function() {
-            saveSettings(oldSettings);
-            renderSharabar();
-        }, 5000);
-    };
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 7: ربط مع Firebase
-    // ═══════════════════════════════════════════════════════════
-
-    function loadFromCompanyData() {
-        if (!window.companyData) return;
-
-        if (window.companyData.sharabar) {
-            const cloudSettings = window.companyData.sharabar;
-            const localSettings = getSettings();
-
-            // لو الإعدادات السحابية أحدث
-            if (cloudSettings.text && cloudSettings.text !== localSettings.text) {
-                localStorage.setItem(SHARABAR_KEY, JSON.stringify(cloudSettings));
-            }
+            speedEl.addEventListener('input', function() {
+                const val = document.getElementById('sbSpeedValue');
+                if (val) val.textContent = this.value;
+            });
         }
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 8: التهيئة
-    // ═══════════════════════════════════════════════════════════
+    function updateInputs() {
+        const s = getSettings();
+        const enabledEl = document.getElementById('sbEnabled');
+        const textEl = document.getElementById('sbText');
+        const speedEl = document.getElementById('sbSpeed');
+        const colorEl = document.getElementById('sbColor');
+        const positionEl = document.getElementById('sbPosition');
+        const speedValueEl = document.getElementById('sbSpeedValue');
 
-    function init() {
-        injectCSS();
-        loadFromCompanyData();
-        renderSharabar();
-
-        // إضافة قسم الإعدادات
-        setTimeout(function() {
-            addSharabarSection();
-        }, 2500);
-
-        console.log('✅ sharabar.js جاهز');
+        if (enabledEl) enabledEl.checked = s.enabled;
+        if (textEl) textEl.value = s.text;
+        if (speedEl) speedEl.value = s.speed;
+        if (colorEl) colorEl.value = s.color;
+        if (positionEl) positionEl.value = s.position;
+        if (speedValueEl) speedValueEl.textContent = s.speed;
     }
 
-    // نبدأ فوراً
-    init();
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 7: APIs عامة
+    // ═══════════════════════════════════════════════════════════
 
-    // نعيد المحاولة (لو الصفحة لسه ما اتحملتش)
-    setTimeout(addSharabarSection, 3500);
-    setTimeout(addSharabarSection, 5000);
-
-    // ربط الأحداث
-    if (window.EventBus) {
-        window.EventBus.on('data:companyData:changed', function() {
-            loadFromCompanyData();
-            renderSharabar();
-
-            // تحديث الحقول
-            const section = document.getElementById('sharabarSection');
-            if (section) updateSharabarInputs();
-        });
-
-        window.EventBus.on('page:navigated', function(page) {
-            if (page === 'settings') {
-                setTimeout(addSharabarSection, 200);
-            }
-        });
-    }
-
-    window.Sharabar = {
+    window.SharabarAPI = {
         get: getSettings,
-        save: saveSettings,
-        render: renderSharabar,
+        save: function() {
+            const enabledEl = document.getElementById('sbEnabled');
+            const textEl = document.getElementById('sbText');
+            const speedEl = document.getElementById('sbSpeed');
+            const colorEl = document.getElementById('sbColor');
+            const positionEl = document.getElementById('sbPosition');
+
+            const settings = {
+                enabled: enabledEl ? enabledEl.checked : false,
+                text: textEl ? textEl.value.trim() : '',
+                speed: speedEl ? parseInt(speedEl.value) : 30,
+                color: colorEl ? colorEl.value : '#C9A94E',
+                position: positionEl ? positionEl.value : 'top'
+            };
+
+            // فحص
+            if (settings.enabled && !settings.text) {
+                window.showToast('⚠️ أدخل نص الإعلان أولاً', 'error');
+                return;
+            }
+
+            saveSettings(settings);
+            createSharabar();
+
+            window.showToast(
+                settings.enabled ? '✅ تم تفعيل الشريط' : '⏸️ تم إيقاف الشريط',
+                'success'
+            );
+        },
+        preview: function() {
+            const textEl = document.getElementById('sbText');
+            const text = textEl ? textEl.value.trim() : '';
+
+            if (!text) {
+                window.showToast('⚠️ أدخل نص الإعلان', 'warning');
+                return;
+            }
+
+            const old = getSettings();
+            const temp = {
+                enabled: true,
+                text: text,
+                speed: 30,
+                color: (document.getElementById('sbColor') || {}).value || '#C9A94E',
+                position: (document.getElementById('sbPosition') || {}).value || 'top'
+            };
+
+            saveSettings(temp);
+            createSharabar();
+            window.showToast('👁️ معاينة لمدة 5 ثواني', 'info');
+
+            setTimeout(function() {
+                saveSettings(old);
+                createSharabar();
+            }, 5000);
+        },
+        setColor: function(color) {
+            const el = document.getElementById('sbColor');
+            if (el) el.value = color;
+
+            // تحديث الحدود
+            document.querySelectorAll('#sbColors button').forEach(function(btn) {
+                btn.style.borderColor = btn.dataset.color === color ? color : '#3D3D3D';
+            });
+        },
+        render: createSharabar,
         show: function() {
-            addSharabarSection();
+            addSettingsSection();
             if (typeof window.navigateTo === 'function') {
                 window.navigateTo('settings');
             }
         }
     };
 
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 8: التهيئة
+    // ═══════════════════════════════════════════════════════════
+
+    function init() {
+        // حاول إنشاء الشريط فوراً
+        setTimeout(createSharabar, 500);
+
+        // حاول إضافة القسم
+        setTimeout(addSettingsSection, 2000);
+        setTimeout(addSettingsSection, 4000);
+        setTimeout(addSettingsSection, 6000);
+
+        console.log('✅ sharabar.js v2.0 جاهز');
+        console.log('💡 للتجربة في Console:');
+        console.log('   SharabarAPI.get()      — شوف الإعدادات');
+        console.log('   SharabarAPI.render()   — اعرض الشريط');
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+    // ربط مع التنقل
+    if (window.EventBus) {
+        window.EventBus.on('page:navigated', function(page) {
+            if (page === 'settings') {
+                setTimeout(addSettingsSection, 200);
+            }
+        });
+    }
+
     window.__sharabarLoaded = true;
-    console.log('✅ sharabar.js v1.0 جاهز');
 
 })();
