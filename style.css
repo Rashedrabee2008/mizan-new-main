@@ -1048,3 +1048,30 @@ body.no-delete-permission .item-delete {
     margin-bottom: 8px;
     font-size: 14px;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   تصحيح المسافة بين الإعلان (sharabar) وكارت الميزان
+   ═══════════════════════════════════════════════════════════ */
+
+/* 1. تصفير المسافة الافتراضية للهيدر */
+.top-header {
+    margin-top: 0 !important;
+    margin-bottom: 5px !important; /* مسافة صغيرة جداً */
+}
+
+/* 2. لو الإعلان (sharabar) هو اللي بياخد مسافة تحت، نلغيها */
+#sharabar, .sharabar, .ad-banner, .top-banner {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* 3. التأكد من إن أول كارت بعد الإعلان ملزوق فيه */
+.top-header + .page-container,
+.top-header + div {
+    margin-top: 0 !important;
+}
+
+/* 4. حل احتياطي لو المسافة جاية من الـ body */
+body {
+    padding-top: 0 !important;
+}
