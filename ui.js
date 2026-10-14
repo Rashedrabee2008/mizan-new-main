@@ -401,4 +401,24 @@
     window.__uiLoaded = true;
     console.log('✅ ui.js v18.0 جاهز');
 
+    // ═══════════════════════════════════════════════════════════
+// ربط الصلاحيات بأحداث التطبيق
+// ═══════════════════════════════════════════════════════════
+
+if (window.EventBus) {
+    // عند اكتمال التطبيق، طبّق الصلاحيات
+    window.EventBus.on('app:ready', function() {
+        if (typeof window.applyPagePermissions === 'function') {
+            setTimeout(window.applyPagePermissions, 500);
+        }
+    });
+
+    // عند التنقل، أعد فحص الصلاحيات
+    window.EventBus.on('page:navigated', function() {
+        if (typeof window.applyPagePermissions === 'function') {
+            setTimeout(window.applyPagePermissions, 100);
+        }
+    });
+}
+
 })();
