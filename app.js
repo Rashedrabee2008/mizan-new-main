@@ -1,12 +1,12 @@
 // ============================================================
-// الميزان Pro - app.js v18.1
-// تسجيل الدخول + المستخدمين + الشركة + إدارة كاملة
+// الميزان Pro - app.js v22.0
+// تسجيل الدخول + المستخدمين + الشركة + اللوجو
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('📱 app.js v18.1 - بدء التحميل');
+    console.log('📱 app.js v22.0 - الجزء 1');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: متغيرات عامة
@@ -28,36 +28,60 @@
     window.currentWarehouseFilter = 'all';
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 2: تسجيل الدخول
+    // الجزء 2: تطبيق اللوجو والشركة
     // ═══════════════════════════════════════════════════════════
 
-        // ⚡ تخطي شاشة التفعيل لو التطبيق مفعّل
-    function skipActivationIfNeeded() {
-        // لو التفعيل موجود في localStorage
-        const activation = localStorage.getItem('mizan_activation_v1');
-        if (activation) {
-            // امسح شاشة التفعيل من DOM
-            const activationScreen = document.getElementById('activationScreen');
-            if (activationScreen) {
-                activationScreen.style.display = 'none';
-            }
+    window.applyLogoOnLoad = function() {
+        const company = window.companyData || {};
+        const logoData = company.logo || '';
 
-            // أظهر شاشة الدخول
-            const loginContainer = document.getElementById('loginContainer');
-            if (loginContainer) {
-                loginContainer.style.display = 'flex';
-                loginContainer.classList.remove('hidden');
-            }
+        // الهيدر
+        const headerLogo = document.getElementById('headerLogo');
+        const defaultIcon = document.getElementById('headerDefaultIcon');
 
-            const appContent = document.getElementById('appContent');
-            if (appContent) {
-                appContent.style.display = 'none';
+        if (headerLogo && defaultIcon) {
+            if (logoData) {
+                headerLogo.src = logoData;
+                headerLogo.style.display = 'block';
+                defaultIcon.style.display = 'none';
+            } else {
+                headerLogo.style.display = 'none';
+                defaultIcon.style.display = 'block';
             }
-
-            return true;
         }
-        return false;
-    }
+
+        // اسم الشركة في الهيدر
+        const headerCompany = document.getElementById('headerCompanyName');
+        if (headerCompany) {
+            headerCompany.textContent = company.name || 'الميزان Pro';
+        }
+
+        // في كل عنصر data-logo
+        document.querySelectorAll('[data-logo]').forEach(function(el) {
+            if (logoData) {
+                el.src = logoData;
+                el.style.display = 'block';
+            } else {
+                el.style.display = 'none';
+            }
+        });
+
+        // في صفحة الشركة
+        const preview = document.getElementById('companyLogoPreview');
+        const img = document.getElementById('companyLogoImg');
+        if (preview && img) {
+            if (logoData) {
+                img.src = logoData;
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 3: تسجيل الدخول
+    // ═══════════════════════════════════════════════════════════
 
     window.populateLoginUsers = function() {
         const sel = document.getElementById('loginUsername');
@@ -88,6 +112,7 @@
         const userId = userIdEl ? userIdEl.value : '';
         const password = passwordEl ? passwordEl.value : '';
 
+        // التحقق من قفل الحساب
         const lockStatus = window.isAccountLocked();
         if (lockStatus.locked) {
             if (errorEl) {
@@ -114,6 +139,7 @@
             return;
         }
 
+        // التحقق من كلمة المرور
         const isPasswordValid = await window.verifyPassword(password, user.password);
 
         if (!isPasswordValid) {
@@ -129,6 +155,7 @@
             return;
         }
 
+        // ✅ نجاح
         window.recordSuccessfulLogin();
 
         window.currentUser = user;
@@ -179,32 +206,33 @@
     };
 
     window.initAppAfterLogin = function() {
+        // Firebase
         if (typeof firebase !== 'undefined' && !window.firebaseReady) {
             window.CloudSync.init();
         }
 
+        // تطبيق اللوجو
+        window.applyLogoOnLoad();
+
+        // تحديث الواجهات
         window.refreshAllUI();
 
+        // الساعة
         if (!window.__clockInterval) {
             window.updateClock();
             window.__clockInterval = setInterval(window.updateClock, 1000);
         }
 
+        // قوائم
         window.populateLoginUsers();
-        window.populateSaleProducts();
-        window.populateSaleCustomers();
-        window.populatePurProducts();
-        window.populatePurSuppliers();
-        window.populateRetProducts();
         window.populateCashBoxDropdowns();
         window.populateWarehouseField();
-        window.populateCollectCustomers();
-        window.populatePaySuppliers();
-        window.populateWarehouseDropdowns();
 
+        // Store ID
         const storeEl = document.getElementById('storeIdDisplay');
         if (storeEl) storeEl.textContent = window.getStoreId();
 
+        // تواريخ
         const today = window.getTodayDate();
         ['expDate', 'collectDate', 'payDate'].forEach(function(id) {
             const el = document.getElementById(id);
@@ -215,7 +243,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 3: إدارة المستخدمين
+    // الجزء 4: إدارة المستخدمين
     // ═══════════════════════════════════════════════════════════
 
     window.renderUsers = function() {
@@ -227,7 +255,9 @@
             return;
         }
 
-        let html = '<div class="table-header" style="grid-template-columns: 1.5fr 1fr 0.8fr 1.2fr;"><span>الاسم</span><span>الدور</span><span>الحالة</span><span></span></div>';
+        let html = '<div class="table-header" style="grid-template-columns: 1.5fr 1fr 0.8fr 1.2fr;">' +
+            '<span>الاسم</span><span>الدور</span><span>الحالة</span><span></span>' +
+        '</div>';
 
         window.users.forEach(function(u) {
             const roleInfo = window.ROLES[u.role] || { name: u.role, icon: '❓' };
@@ -363,827 +393,369 @@
         window.showToast('🗑️ تم الحذف', 'info');
     };
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 4: بيانات الشركة
-    // ═══════════════════════════════════════════════════════════
+    console.log('✅ app.js v22.0 - الجزء 1 مكتمل');
 
-    window.renderCompany = function() {
-        const c = window.companyData || {};
+ // ═══════════════════════════════════════════════════════════
+// الجزء 5: بيانات الشركة + اللوجو
+// ═══════════════════════════════════════════════════════════
 
-        const setVal = function(id, val) {
-            const el = document.getElementById(id);
-            if (el) el.value = val || '';
-        };
+window.renderCompany = function() {
+    const c = window.companyData || {};
 
-        setVal('companyName', c.name);
-        setVal('companyTradeName', c.tradeName);
-        setVal('companyPhone', c.phone);
-        setVal('companyPhone2', c.phone2);
-        setVal('companyEmail', c.email);
-        setVal('companyWebsite', c.website);
-        setVal('companyAddress', c.address);
-        setVal('companyCity', c.city);
-        setVal('companyCountry', c.country || 'مصر');
-        setVal('companyTax', c.tax);
-        setVal('companyCommercial', c.commercial);
-        setVal('companyTaxCard', c.taxCard);
-        setVal('companyNationalId', c.nationalId);
-        setVal('companyFooter', c.footer);
-
-        const colorEl = document.getElementById('companyPrimaryColor');
-        if (colorEl) colorEl.value = c.primaryColor || '#C9A94E';
-
-        const curEl = document.getElementById('companyCurrency');
-        if (curEl) curEl.value = c.currency || 'ج.م';
-
-        const setTxt = function(id, val) {
-            const el = document.getElementById(id);
-            if (el) el.textContent = val;
-        };
-
-        setTxt('companyProductsCount', (window.products || []).length);
-        setTxt('companySalesCount', (window.sales || []).length);
-        setTxt('companyCustomersCount', (window.customers || []).length);
-        setTxt('companySuppliersCount', (window.suppliers || []).length);
-
-        const totalSales = (window.sales || []).reduce(function(s, x) {
-            return s + (parseFloat(x.total) || 0);
-        }, 0);
-        setTxt('companySalesTotal', window.formatMoney(totalSales) + ' ج.م');
+    const setVal = function(id, val) {
+        const el = document.getElementById(id);
+        if (el) el.value = val || '';
     };
 
-    window.saveCompanyData = function() {
-        if (!window.isAdmin()) {
-            window.showToast('⚠️ لا تملك صلاحية', 'error');
-            return;
+    setVal('companyName', c.name);
+    setVal('companyTradeName', c.tradeName);
+    setVal('companyPhone', c.phone);
+    setVal('companyPhone2', c.phone2);
+    setVal('companyEmail', c.email);
+    setVal('companyWebsite', c.website);
+    setVal('companyAddress', c.address);
+    setVal('companyCity', c.city);
+    setVal('companyCountry', c.country || 'مصر');
+    setVal('companyTax', c.tax);
+    setVal('companyCommercial', c.commercial);
+    setVal('companyTaxCard', c.taxCard);
+    setVal('companyNationalId', c.nationalId);
+    setVal('companyFooter', c.footer);
+
+    const colorEl = document.getElementById('companyPrimaryColor');
+    if (colorEl) colorEl.value = c.primaryColor || '#C9A94E';
+
+    const curEl = document.getElementById('companyCurrency');
+    if (curEl) curEl.value = c.currency || 'ج.م';
+
+    // اللوجو
+    const preview = document.getElementById('companyLogoPreview');
+    const img = document.getElementById('companyLogoImg');
+    if (preview && img) {
+        if (c.logo) {
+            img.src = c.logo;
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+        }
+    }
+
+    // الإحصائيات
+    const setTxt = function(id, val) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+
+    setTxt('companyProductsCount', (window.products || []).length);
+    setTxt('companySalesCount', (window.sales || []).length);
+    setTxt('companyCustomersCount', (window.customers || []).length);
+    setTxt('companySuppliersCount', (window.suppliers || []).length);
+
+    const totalSales = (window.sales || []).reduce(function(s, x) {
+        return s + (parseFloat(x.total) || 0);
+    }, 0);
+    setTxt('companySalesTotal', window.formatMoney(totalSales) + ' ج.م');
+};
+
+// ═══ اللوجو: رفع ═══
+window.uploadCompanyLogo = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // التحقق من الصيغة
+    if (!file.type.match('image.*')) {
+        window.showToast('⚠️ الرجاء اختيار صورة (JPG أو PNG)', 'error');
+        return;
+    }
+
+    // التحقق من الحجم
+    if (file.size > 500000) {
+        window.showToast('⚠️ الصورة كبيرة (الحد 500KB)', 'error');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const logoData = e.target.result;
+
+        // حفظ في companyData
+        if (!window.companyData) window.companyData = {};
+        window.companyData.logo = logoData;
+
+        // حفظ في localStorage
+        window.setData('companyData', window.companyData);
+
+        // تحديث المعاينة
+        const preview = document.getElementById('companyLogoPreview');
+        const img = document.getElementById('companyLogoImg');
+        if (preview && img) {
+            img.src = logoData;
+            preview.style.display = 'block';
         }
 
-        const getVal = function(id) {
-            const el = document.getElementById(id);
-            return el ? el.value.trim() : '';
-        };
+        // تطبيق اللوجو في كل مكان
+        window.applyLogoOnLoad();
 
-        window.companyData = {
-            name: getVal('companyName') || 'الميزان',
-            tradeName: getVal('companyTradeName'),
-            phone: getVal('companyPhone'),
-            phone2: getVal('companyPhone2'),
-            email: getVal('companyEmail'),
-            website: getVal('companyWebsite'),
-            address: getVal('companyAddress'),
-            city: getVal('companyCity'),
-            country: getVal('companyCountry') || 'مصر',
-            tax: getVal('companyTax'),
-            commercial: getVal('companyCommercial'),
-            taxCard: getVal('companyTaxCard'),
-            nationalId: getVal('companyNationalId'),
-            footer: getVal('companyFooter') || 'شكراً لتعاملكم معنا 🌟',
-            primaryColor: getVal('companyPrimaryColor') || '#C9A94E',
-            currency: getVal('companyCurrency') || 'ج.م',
-            logo: (window.companyData || {}).logo || '',
-            updatedAt: new Date().toISOString(),
-            updatedBy: window.currentUser ? window.currentUser.name : ''
-        };
+        // مزامنة مع Firebase
+        if (window.DataStore && window.DataStore.set) {
+            window.DataStore.set('companyData', window.companyData);
+        }
 
+        window.showToast('✅ تم رفع الشعار', 'success');
+    };
+    reader.readAsDataURL(file);
+};
+
+// ═══ اللوجو: حذف ═══
+window.removeCompanyLogo = async function() {
+    const confirmed = await window.confirmDialog('حذف الشعار؟');
+    if (!confirmed) return;
+
+    if (!window.companyData) window.companyData = {};
+    window.companyData.logo = '';
+
+    window.setData('companyData', window.companyData);
+
+    // إخفاء المعاينة
+    const preview = document.getElementById('companyLogoPreview');
+    if (preview) preview.style.display = 'none';
+
+    // تطبيق اللوجو (هيرجع للأيقونة الافتراضية)
+    window.applyLogoOnLoad();
+
+    // مزامنة
+    if (window.DataStore && window.DataStore.set) {
         window.DataStore.set('companyData', window.companyData);
+    }
 
-        const headerCompany = document.getElementById('headerCompanyName');
-        if (headerCompany) headerCompany.textContent = window.companyData.name;
+    window.showToast('🗑️ تم حذف الشعار', 'info');
+};
 
-        window.showToast('✅ تم حفظ بيانات الشركة', 'success');
+// ═══ حفظ بيانات الشركة ═══
+window.saveCompanyData = function() {
+    if (!window.isAdmin()) {
+        window.showToast('⚠️ لا تملك صلاحية', 'error');
+        return;
+    }
+
+    const getVal = function(id) {
+        const el = document.getElementById(id);
+        return el ? el.value.trim() : '';
     };
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 5: ⚡ العملاء + الموردين + الخزائن + المصروفات ⚡
-    // ═══════════════════════════════════════════════════════════
+    // احفظ اللوجو الحالي
+    const currentLogo = (window.companyData || {}).logo || '';
 
-    // ---------- العملاء ----------
-    window.saveCustomer = function() {
-        if (!window.canAdd()) {
-            window.showToast('⚠️ لا تملك صلاحية', 'error');
-            return;
-        }
-
-        const id = document.getElementById('customerId') ? document.getElementById('customerId').value : '';
-        const name = document.getElementById('customerName') ? document.getElementById('customerName').value.trim() : '';
-        const phone = document.getElementById('customerPhone') ? document.getElementById('customerPhone').value.trim() : '';
-        const whatsapp = document.getElementById('customerWhatsapp') ? document.getElementById('customerWhatsapp').value.trim() : '';
-        const address = document.getElementById('customerAddress') ? document.getElementById('customerAddress').value.trim() : '';
-
-        if (!name) {
-            window.showToast('⚠️ أدخل اسم العميل', 'error');
-            return;
-        }
-
-        if (id) {
-            const idx = (window.customers || []).findIndex(function(c) { return c.id == id; });
-            if (idx > -1) {
-                window.customers[idx] = Object.assign({}, window.customers[idx], {
-                    name: name, phone: phone, whatsapp: whatsapp, address: address
-                });
-                window.DataStore.set('customers', window.customers);
-                window.showToast('✅ تم التعديل', 'success');
-            }
-        } else {
-            if ((window.customers || []).find(function(c) { return c.name === name; })) {
-                window.showToast('⚠️ الاسم موجود', 'warning');
-                return;
-            }
-            window.DataStore.add('customers', {
-                id: window.generateId('cust_'),
-                name: name,
-                phone: phone,
-                whatsapp: whatsapp,
-                address: address
-            });
-            window.showToast('✅ تم إضافة العميل', 'success');
-        }
-
-        window.resetCustomerForm();
-        window.renderCustomers();
+    window.companyData = {
+        name: getVal('companyName') || 'الميزان',
+        tradeName: getVal('companyTradeName'),
+        phone: getVal('companyPhone'),
+        phone2: getVal('companyPhone2'),
+        email: getVal('companyEmail'),
+        website: getVal('companyWebsite'),
+        address: getVal('companyAddress'),
+        city: getVal('companyCity'),
+        country: getVal('companyCountry') || 'مصر',
+        tax: getVal('companyTax'),
+        commercial: getVal('companyCommercial'),
+        taxCard: getVal('companyTaxCard'),
+        nationalId: getVal('companyNationalId'),
+        footer: getVal('companyFooter') || 'شكراً لتعاملكم معنا 🌟',
+        primaryColor: getVal('companyPrimaryColor') || '#C9A94E',
+        currency: getVal('companyCurrency') || 'ج.م',
+        logo: currentLogo,
+        updatedAt: new Date().toISOString(),
+        updatedBy: window.currentUser ? window.currentUser.name : ''
     };
 
-    window.resetCustomerForm = function() {
-        ['customerId', 'customerName', 'customerPhone', 'customerWhatsapp', 'customerAddress'].forEach(function(id) {
-            const el = document.getElementById(id);
-            if (el) el.value = '';
-        });
-        const titleEl = document.getElementById('customerFormTitle');
-        if (titleEl) titleEl.textContent = '➕ إضافة عميل';
-        const btnEl = document.getElementById('customerSaveBtnText');
-        if (btnEl) btnEl.textContent = 'إضافة';
+    window.DataStore.set('companyData', window.companyData);
+
+    // تحديث الهيدر
+    const headerCompany = document.getElementById('headerCompanyName');
+    if (headerCompany) headerCompany.textContent = window.companyData.name;
+
+    // تطبيق اللوجو
+    window.applyLogoOnLoad();
+
+    window.showToast('✅ تم حفظ بيانات الشركة', 'success');
+};
+
+// ═══════════════════════════════════════════════════════════
+// الجزء 6: الإعدادات
+// ═══════════════════════════════════════════════════════════
+
+window.renderSettings = function() {
+    const setTxt = function(id, val) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
     };
-
-    window.editCustomer = function(id) {
-        const c = (window.customers || []).find(function(cu) { return cu.id == id; });
-        if (!c) return;
-
-        const setVal = function(elId, val) {
-            const el = document.getElementById(elId);
-            if (el) el.value = val;
-        };
-
-        setVal('customerId', c.id);
-        setVal('customerName', c.name);
-        setVal('customerPhone', c.phone || '');
-        setVal('customerWhatsapp', c.whatsapp || '');
-        setVal('customerAddress', c.address || '');
-
-        const titleEl = document.getElementById('customerFormTitle');
-        if (titleEl) titleEl.textContent = '✏️ تعديل';
-        const btnEl = document.getElementById('customerSaveBtnText');
-        if (btnEl) btnEl.textContent = 'حفظ';
-    };
-
-    window.deleteCustomer = async function(id) {
-        if (!window.canDelete()) {
-            window.showToast('⚠️ لا تملك صلاحية', 'error');
-            return;
-        }
-        const c = (window.customers || []).find(function(cu) { return cu.id == id; });
-        if (!c) return;
-
-        const confirmed = await window.confirmDialog('حذف "' + c.name + '"؟');
-        if (!confirmed) return;
-
-        window.DataStore.remove('customers', id);
-        window.showToast('🗑️ تم الحذف', 'info');
-    };
-
-    window.renderCustomers = function() {
-        const c = document.getElementById('customerList');
-        if (!c) return;
-
-        const searchInput = document.getElementById('customerSearch');
-        const search = searchInput ? searchInput.value.trim().toLowerCase() : '';
-        let filtered = window.customers || [];
-
-        if (search) {
-            filtered = filtered.filter(function(cu) {
-                return (cu.name || '').toLowerCase().indexOf(search) > -1;
-            });
-        }
-
-        if (filtered.length === 0) {
-            c.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><span>لا يوجد عملاء</span></div>';
-            return;
-        }
-
-        let html = '<div class="table-header" style="grid-template-columns: 1.5fr 1fr 1fr 1.2fr;"><span>الاسم</span><span>الهاتف</span><span>المديونية</span><span></span></div>';
-
-        filtered.forEach(function(cu) {
-            const balance = window.Balance.customer(cu.name);
-
-            html += '<div class="table-row" style="grid-template-columns: 1.5fr 1fr 1fr 1.2fr;">' +
-                '<span><strong>' + window.escapeHtml(cu.name) + '</strong>' +
-                    (cu.address ? '<br><small style="color:#A89070;font-size:9px;">📍 ' + window.escapeHtml(cu.address) + '</small>' : '') +
-                '</span>' +
-                '<span style="font-size:11px;color:#A89070;">' + (cu.phone || '-') + '</span>' +
-                '<span style="color:' + (balance > 0 ? '#E06060' : '#2D8F5E') + ';font-weight:900;">' + window.formatMoney(balance) + '</span>' +
-                '<div style="display:flex;gap:4px;justify-content:flex-end;">' +
-                    '<button class="btn btn-warning btn-sm" onclick="editCustomer(\'' + cu.id + '\')"><i class="fas fa-edit"></i></button>' +
-                    '<button class="btn btn-danger btn-sm" onclick="deleteCustomer(\'' + cu.id + '\')"><i class="fas fa-trash"></i></button>' +
-                '</div>' +
-            '</div>';
-        });
-
-        c.innerHTML = html;
-    };
-
-    // ---------- الموردين ----------
-    window.saveSupplier = function() {
-        if (!window.canAdd()) {
-            window.showToast('⚠️ لا تملك صلاحية', 'error');
-            return;
-        }
-
-        const id = document.getElementById('supplierId') ? document.getElementById('supplierId').value : '';
-        const name = document.getElementById('supplierName') ? document.getElementById('supplierName').value.trim() : '';
-        const phone = document.getElementById('supplierPhone') ? document.getElementById('supplierPhone').value.trim() : '';
-        const whatsapp = document.getElementById('supplierWhatsapp') ? document.getElementById('supplierWhatsapp').value.trim() : '';
-        const address = document.getElementById('supplierAddress') ? document.getElementById('supplierAddress').value.trim() : '';
-
-        if (!name) {
-            window.showToast('⚠️ أدخل اسم المورد', 'error');
-            return;
-        }
-
-        if (id) {
-            const idx = (window.suppliers || []).findIndex(function(s) { return s.id == id; });
-            if (idx > -1) {
-                window.suppliers[idx] = Object.assign({}, window.suppliers[idx], {
-                    name: name, phone: phone, whatsapp: whatsapp, address: address
-                });
-                window.DataStore.set('suppliers', window.suppliers);
-                window.showToast('✅ تم التعديل', 'success');
-            }
-        } else {
-            if ((window.suppliers || []).find(function(s) { return s.name === name; })) {
-                window.showToast('⚠️ الاسم موجود', 'warning');
-                return;
-            }
-            window.DataStore.add('suppliers', {
-                id: window.generateId('sup_'),
-                name: name,
-                phone: phone,
-                whatsapp: whatsapp,
-                address: address
-            });
-            window.showToast('✅ تم إضافة المورد', 'success');
-        }
-
-        window.resetSupplierForm();
-        window.renderSuppliers();
-    };
-
-    window.resetSupplierForm = function() {
-        ['supplierId', 'supplierName', 'supplierPhone', 'supplierWhatsapp', 'supplierAddress'].forEach(function(id) {
-            const el = document.getElementById(id);
-            if (el) el.value = '';
-        });
-        const titleEl = document.getElementById('supplierFormTitle');
-        if (titleEl) titleEl.textContent = '➕ إضافة مورد';
-        const btnEl = document.getElementById('supplierSaveBtnText');
-        if (btnEl) btnEl.textContent = 'إضافة';
-    };
-
-    window.editSupplier = function(id) {
-        const s = (window.suppliers || []).find(function(su) { return su.id == id; });
-        if (!s) return;
-
-        const setVal = function(elId, val) {
-            const el = document.getElementById(elId);
-            if (el) el.value = val;
-        };
-
-        setVal('supplierId', s.id);
-        setVal('supplierName', s.name);
-        setVal('supplierPhone', s.phone || '');
-        setVal('supplierWhatsapp', s.whatsapp || '');
-        setVal('supplierAddress', s.address || '');
-
-        const titleEl = document.getElementById('supplierFormTitle');
-        if (titleEl) titleEl.textContent = '✏️ تعديل';
-        const btnEl = document.getElementById('supplierSaveBtnText');
-        if (btnEl) btnEl.textContent = 'حفظ';
-    };
-
-    window.deleteSupplier = async function(id) {
-        if (!window.canDelete()) {
-            window.showToast('⚠️ لا تملك صلاحية', 'error');
-            return;
-        }
-        const s = (window.suppliers || []).find(function(su) { return su.id == id; });
-        if (!s) return;
-
-        const confirmed = await window.confirmDialog('حذف "' + s.name + '"؟');
-        if (!confirmed) return;
-
-        window.DataStore.remove('suppliers', id);
-        window.showToast('🗑️ تم الحذف', 'info');
-    };
-
-    window.renderSuppliers = function() {
-        const c = document.getElementById('supplierList');
-        if (!c) return;
-
-        const searchInput = document.getElementById('supplierSearch');
-        const search = searchInput ? searchInput.value.trim().toLowerCase() : '';
-        let filtered = window.suppliers || [];
-
-        if (search) {
-            filtered = filtered.filter(function(s) {
-                return (s.name || '').toLowerCase().indexOf(search) > -1;
-            });
-        }
-
-        if (filtered.length === 0) {
-            c.innerHTML = '<div class="empty-state"><i class="fas fa-truck"></i><span>لا يوجد موردين</span></div>';
-            return;
-        }
-
-        let html = '<div class="table-header" style="grid-template-columns: 1.5fr 1fr 1fr 1.2fr;"><span>الاسم</span><span>الهاتف</span><span>المديونية</span><span></span></div>';
-
-        filtered.forEach(function(s) {
-            const balance = window.Balance.supplier(s.name);
-
-            html += '<div class="table-row" style="grid-template-columns: 1.5fr 1fr 1fr 1.2fr;">' +
-                '<span><strong>' + window.escapeHtml(s.name) + '</strong>' +
-                    (s.address ? '<br><small style="color:#A89070;font-size:9px;">📍 ' + window.escapeHtml(s.address) + '</small>' : '') +
-                '</span>' +
-                '<span style="font-size:11px;color:#A89070;">' + (s.phone || '-') + '</span>' +
-                '<span style="color:' + (balance > 0 ? '#E6A830' : '#2D8F5E') + ';font-weight:900;">' + window.formatMoney(balance) + '</span>' +
-                '<div style="display:flex;gap:4px;justify-content:flex-end;">' +
-                    '<button class="btn btn-warning btn-sm" onclick="editSupplier(\'' + s.id + '\')"><i class="fas fa-edit"></i></button>' +
-                    '<button class="btn btn-danger btn-sm" onclick="deleteSupplier(\'' + s.id + '\')"><i class="fas fa-trash"></i></button>' +
-                '</div>' +
-            '</div>';
-        });
-
-        c.innerHTML = html;
-    };
-
-    // ---------- الخزائن ----------
-    window.getCashBoxById = function(id) {
-        return (window.cashBoxes || []).find(function(b) { return b.id == id; });
-    };
-
-    window.getDefaultCashBox = function() {
-        return (window.cashBoxes || []).find(function(b) { return b.isDefault; }) || (window.cashBoxes || [])[0];
-    };
-
-    window.getBoxTypeName = function(type) {
-        const types = {
-            'cash': '💵 نقدي',
-            'wallet': '📱 محفظة',
-            'bank': '🏦 بنكي',
-            'visa': '💳 فيزا',
-            'other': '📋 أخرى'
-        };
-        return types[type] || type;
-    };
-
-    window.saveCashBox = function() {
-        if (!window.canAdd()) {
-            window.showToast('⚠️ لا تملك صلاحية', 'error');
-            return;
-        }
-
-        const id = document.getElementById('cashBoxId') ? document.getElementById('cashBoxId').value : '';
-        const name = document.getElementById('cashBoxName') ? document.getElementById('cashBoxName').value.trim() : '';
-        const type = document.getElementById('cashBoxType') ? document.getElementById('cashBoxType').value : 'cash';
-        const icon = document.getElementById('cashBoxIcon') ? document.getElementById('cashBoxIcon').value : '💵';
-        const details = document.getElementById('cashBoxDetails') ? document.getElementById('cashBoxDetails').value.trim() : '';
-        const openingBalance = parseFloat(document.getElementById('cashBoxOpeningBalance') ? document.getElementById('cashBoxOpeningBalance').value : 0) || 0;
-        const isDefault = document.getElementById('cashBoxIsDefault') ? document.getElementById('cashBoxIsDefault').checked : false;
-
-        if (!name) {
-            window.showToast('⚠️ أدخل اسم الخزنة', 'error');
-            return;
-        }
-
-        if (id) {
-            const idx = (window.cashBoxes || []).findIndex(function(b) { return b.id == id; });
-            if (idx > -1) {
-                if (isDefault) {
-                    window.cashBoxes.forEach(function(b) { b.isDefault = false; });
-                }
-                window.cashBoxes[idx] = Object.assign({}, window.cashBoxes[idx], {
-                    name: name,
-                    type: type,
-                    icon: icon,
-                    details: details,
-                    openingBalance: openingBalance,
-                    isDefault: isDefault || window.cashBoxes[idx].isDefault
-                });
-                window.DataStore.set('cashBoxes', window.cashBoxes);
-                window.showToast('✅ تم التعديل', 'success');
-            }
-        } else {
-            if ((window.cashBoxes || []).find(function(b) { return b.name === name; })) {
-                window.showToast('⚠️ الاسم موجود', 'warning');
-                return;
-            }
-            if (isDefault) {
-                window.cashBoxes.forEach(function(b) { b.isDefault = false; });
-            }
-            window.DataStore.add('cashBoxes', {
-                id: window.generateId('cb_'),
-                name: name,
-                type: type,
-                icon: icon,
-                details: details,
-                openingBalance: openingBalance,
-                isDefault: isDefault || window.cashBoxes.length === 0,
-                active: true
-            });
-            window.showToast('✅ تم الإضافة', 'success');
-        }
-
-        window.resetCashBoxForm();
-        window.renderCashBoxes();
-        window.populateCashBoxDropdowns();
-    };
-
-    window.resetCashBoxForm = function() {
-        ['cashBoxId', 'cashBoxName', 'cashBoxDetails'].forEach(function(id) {
-            const el = document.getElementById(id);
-            if (el) el.value = '';
-        });
-        if (document.getElementById('cashBoxType')) document.getElementById('cashBoxType').value = 'cash';
-        if (document.getElementById('cashBoxIcon')) document.getElementById('cashBoxIcon').value = '💵';
-        if (document.getElementById('cashBoxOpeningBalance')) document.getElementById('cashBoxOpeningBalance').value = '0';
-        if (document.getElementById('cashBoxIsDefault')) document.getElementById('cashBoxIsDefault').checked = false;
-        const titleEl = document.getElementById('cashBoxFormTitle');
-        if (titleEl) titleEl.textContent = '➕ إضافة خزنة جديدة';
-        const btnEl = document.getElementById('cashBoxSaveBtnText');
-        if (btnEl) btnEl.textContent = 'إضافة';
-    };
-
-    window.editCashBox = function(id) {
-        const box = window.getCashBoxById(id);
-        if (!box) return;
-
-        if (document.getElementById('cashBoxId')) document.getElementById('cashBoxId').value = box.id;
-        if (document.getElementById('cashBoxName')) document.getElementById('cashBoxName').value = box.name;
-        if (document.getElementById('cashBoxType')) document.getElementById('cashBoxType').value = box.type;
-        if (document.getElementById('cashBoxIcon')) document.getElementById('cashBoxIcon').value = box.icon || '💵';
-        if (document.getElementById('cashBoxDetails')) document.getElementById('cashBoxDetails').value = box.details || '';
-        if (document.getElementById('cashBoxOpeningBalance')) document.getElementById('cashBoxOpeningBalance').value = box.openingBalance || 0;
-        if (document.getElementById('cashBoxIsDefault')) document.getElementById('cashBoxIsDefault').checked = box.isDefault || false;
-
-        const titleEl = document.getElementById('cashBoxFormTitle');
-        if (titleEl) titleEl.textContent = '✏️ تعديل';
-        const btnEl = document.getElementById('cashBoxSaveBtnText');
-        if (btnEl) btnEl.textContent = 'حفظ';
-    };
-
-    window.deleteCashBox = async function(id) {
-        if (!window.canDelete()) {
-            window.showToast('⚠️ لا تملك صلاحية', 'error');
-            return;
-        }
-        const box = window.getCashBoxById(id);
-        if (!box) return;
-
-        if (box.isDefault) {
-            window.showToast('⚠️ لا يمكن حذف الافتراضية', 'error');
-            return;
-        }
-
-        const balance = window.Balance.cashBox(id);
-        let msg = 'حذف "' + box.name + '"؟';
-        if (balance !== 0) {
-            msg = '⚠️ الخزنة فيها ' + window.formatMoney(balance) + ' ج.م.\n' + msg;
-        }
-
-        const confirmed = await window.confirmDialog(msg);
-        if (!confirmed) return;
-
-        window.DataStore.remove('cashBoxes', id);
-        window.populateCashBoxDropdowns();
-        window.showToast('🗑️ تم الحذف', 'info');
-    };
-
-    window.setDefaultCashBox = function(id) {
-        window.cashBoxes.forEach(function(b) { b.isDefault = false; });
-        const box = window.getCashBoxById(id);
-        if (box) box.isDefault = true;
-        window.DataStore.set('cashBoxes', window.cashBoxes);
-        window.populateCashBoxDropdowns();
-        window.showToast('⭐ تم التعيين', 'success');
-    };
-
-    window.renderCashBoxes = function() {
-        const c = document.getElementById('cashBoxList');
-        if (!c) return;
-
-        if ((window.cashBoxes || []).length === 0) {
-            c.innerHTML = '<div class="empty-state"><i class="fas fa-vault"></i><span>لا توجد خزائن</span></div>';
-            if (document.getElementById('cbCount')) document.getElementById('cbCount').textContent = '0';
-            if (document.getElementById('cbTotal')) document.getElementById('cbTotal').textContent = '0.00';
-            return;
-        }
-
-        const total = window.Balance.totalCash();
-        if (document.getElementById('cbCount')) document.getElementById('cbCount').textContent = window.cashBoxes.length;
-        if (document.getElementById('cbTotal')) document.getElementById('cbTotal').textContent = window.formatMoney(total);
-
-        let html = '';
-        window.cashBoxes.forEach(function(box) {
-            const balance = window.Balance.cashBox(box.id);
-            html += '<div class="cash-box-card ' + (box.isDefault ? 'default' : '') + '" style="margin-bottom:10px;">' +
-                '<div class="cash-box-header">' +
-                    '<div class="cash-box-icon">' + (box.icon || '💵') + '</div>' +
-                    '<div class="cash-box-info">' +
-                        '<div class="cash-box-name">' + window.escapeHtml(box.name) + (box.isDefault ? ' ⭐' : '') + '</div>' +
-                        '<div class="cash-box-type">' + window.getBoxTypeName(box.type) + '</div>' +
-                    '</div>' +
-                '</div>' +
-                '<div class="cash-box-balance">' +
-                    '<div class="balance-label">الرصيد الحالي</div>' +
-                    '<div class="balance-value ' + (balance < 0 ? 'negative' : '') + '">' + window.formatMoney(balance) + ' ج.م</div>' +
-                '</div>' +
-                '<div class="cash-box-actions">' +
-                    (!box.isDefault ? '<button class="btn-icon-sm" onclick="setDefaultCashBox(\'' + box.id + '\')">⭐</button>' : '') +
-                    '<button class="btn-icon-sm" onclick="editCashBox(\'' + box.id + '\')">✏️</button>' +
-                    '<button class="btn-icon-sm" onclick="deleteCashBox(\'' + box.id + '\')">🗑️</button>' +
-                '</div>' +
-            '</div>';
-        });
-        c.innerHTML = html;
-    };
-
-    // ---------- المصروفات ----------
-    window.saveExpense = function() {
-        if (!window.canAdd()) {
-            window.showToast('⚠️ لا تملك صلاحية', 'error');
-            return;
-        }
-
-        const note = document.getElementById('expNote') ? document.getElementById('expNote').value.trim() : '';
-        const amount = parseFloat(document.getElementById('expAmount') ? document.getElementById('expAmount').value : 0) || 0;
-        const category = document.getElementById('expCategory') ? document.getElementById('expCategory').value : 'عام';
-        const date = (document.getElementById('expDate') ? document.getElementById('expDate').value : '') || window.getTodayDate();
-        const cashBoxId = document.getElementById('expCashBox') ? document.getElementById('expCashBox').value : '';
-
-        if (!note) {
-            window.showToast('⚠️ أدخل البيان', 'error');
-            return;
-        }
-        if (amount <= 0) {
-            window.showToast('⚠️ أدخل مبلغ صحيح', 'error');
-            return;
-        }
-        if (!cashBoxId) {
-            window.showToast('⚠️ اختر الخزنة', 'error');
-            return;
-        }
-
-        const box = (window.cashBoxes || []).find(function(b) { return b.id == cashBoxId; });
-
-        const exp = {
-            id: window.generateId('exp_'),
-            note: note,
-            amount: amount,
-            category: category,
-            date: date,
-            cashBoxId: cashBoxId,
-            cashBoxName: box ? box.name : '',
-            time: window.getNowTime(),
-            createdBy: window.currentUser ? window.currentUser.name : ''
-        };
-
-        window.DataStore.add('expenses', exp);
-
-        window.DataStore.add('treasury', {
-            id: window.generateId('tr_'),
-            type: 'withdraw',
-            amount: amount,
-            note: 'مصروف (' + category + ') - ' + note,
-            cashBoxId: cashBoxId,
-            cashBoxName: box ? box.name : '',
-            refType: 'expense',
-            refId: exp.id,
-            date: date,
-            time: window.getNowTime()
-        });
-
-        // قيد محاسبي
-        window.Accounting.entryExpense(exp);
-
-        if (document.getElementById('expNote')) document.getElementById('expNote').value = '';
-        if (document.getElementById('expAmount')) document.getElementById('expAmount').value = '';
-
-        window.showToast('✅ تم إضافة ' + window.formatMoney(amount) + ' ج.م', 'success');
-    };
-
-    window.updateExpensesStats = function() {
-        const total = (window.expenses || []).reduce(function(s, e) {
-            return s + (parseFloat(e.amount) || 0);
-        }, 0);
-        const today = (window.expenses || []).filter(function(e) {
-            return e.date === window.getTodayDate();
-        }).reduce(function(s, e) {
-            return s + (parseFloat(e.amount) || 0);
-        }, 0);
-        const month = (window.expenses || []).filter(function(e) {
-            return (e.date || '').indexOf(window.getTodayDate().substring(0, 7)) === 0;
-        }).reduce(function(s, e) {
-            return s + (parseFloat(e.amount) || 0);
-        }, 0);
-
-        const set = function(id, val) {
-            const el = document.getElementById(id);
-            if (el) el.textContent = val;
-        };
-        set('expTotalCount', (window.expenses || []).length);
-        set('expTotalAmount', window.formatMoney(total));
-        set('expTodayAmount', window.formatMoney(today));
-        set('expMonthAmount', window.formatMoney(month));
-    };
-
-    window.renderExpenses = function() {
-        const c = document.getElementById('expensesList');
-        if (!c) return;
-
-        if ((window.expenses || []).length === 0) {
-            c.innerHTML = '<div class="empty-state"><i class="fas fa-money-bill-wave"></i><span>لا توجد مصروفات</span></div>';
-            return;
-        }
-
-        const sorted = window.expenses.slice().sort(function(a, b) {
-            return (b.createdAt || '').localeCompare(a.createdAt || '');
-        }).slice(0, 50);
-
-        let html = '<div class="table-header" style="grid-template-columns: 1.3fr 0.8fr 0.8fr 0.8fr 0.6fr;"><span>البيان</span><span>المبلغ</span><span>التصنيف</span><span>التاريخ</span><span></span></div>';
-
-        sorted.forEach(function(e) {
-            html += '<div class="table-row" style="grid-template-columns: 1.3fr 0.8fr 0.8fr 0.8fr 0.6fr;">' +
-                '<span><strong>' + window.escapeHtml(e.note) + '</strong></span>' +
-                '<span style="color:#E06060;font-weight:700;">' + window.formatMoney(e.amount) + '</span>' +
-                '<span style="font-size:11px;color:#A89070;">' + window.escapeHtml(e.category || 'عام') + '</span>' +
-                '<span style="font-size:10px;color:#A89070;">' + (e.date || '') + '</span>' +
-                '<button class="btn btn-danger btn-sm" onclick="deleteExpense(\'' + e.id + '\')"><i class="fas fa-trash"></i></button>' +
-            '</div>';
-        });
-
-        c.innerHTML = html;
-    };
-
-    window.deleteExpense = async function(id) {
-        if (!window.canDelete()) {
-            window.showToast('⚠️ لا تملك صلاحية', 'error');
-            return;
-        }
-        const e = (window.expenses || []).find(function(x) { return x.id == id; });
-        if (!e) return;
-
-        const confirmed = await window.confirmDialog('حذف "' + e.note + '"؟');
-        if (!confirmed) return;
-
-        window.treasury = window.treasury.filter(function(t) {
-            return !(t.refType === 'expense' && t.refId === id);
-        });
-        window.DataStore.set('treasury', window.treasury);
-        window.DataStore.remove('expenses', id);
-
-        window.Accounting.removeByReference('EXP-' + id);
-
-        window.showToast('🗑️ تم الحذف', 'info');
-    };
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 6: الإعدادات
-    // ═══════════════════════════════════════════════════════════
-
-    window.renderSettings = function() {
-        const setTxt = function(id, val) {
-            const el = document.getElementById(id);
-            if (el) el.textContent = val;
-        };
-        setTxt('setProductsCount', (window.products || []).length);
-        setTxt('setSalesCount', (window.sales || []).length);
-        setTxt('setCustomersCount', (window.customers || []).length);
-        setTxt('setSuppliersCount', (window.suppliers || []).length);
-
-        const storeEl = document.getElementById('storeIdDisplay');
-        if (storeEl) storeEl.textContent = window.getStoreId();
-
-        const cloudEl = document.getElementById('cloudStatusText');
-        if (cloudEl) {
-            cloudEl.textContent = window.firebaseReady ? '✅ متصل' : '⏳ جاري الاتصال...';
-            cloudEl.style.color = window.firebaseReady ? '#2D8F5E' : '#E6A830';
-        }
-    };
-
-    window.exportData = function() {
-        const data = window.DataStore.export();
-        const json = JSON.stringify(data, null, 2);
-        const blob = new Blob([json], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'mizan_backup_' + window.getTodayDate() + '.json';
-        a.click();
-        URL.revokeObjectURL(a.href);
-        window.showToast('✅ تم التصدير', 'success');
-    };
-
-    window.importData = function(event) {
-        if (!window.isAdmin()) {
-            window.showToast('⚠️ لا تملك صلاحية', 'error');
-            return;
-        }
-
-        const file = event.target.files[0];
-        if (!file) return;
-
-        window.confirmDialog('⚠️ سيتم استبدال البيانات. متابعة؟').then(function(confirmed) {
-            if (!confirmed) {
-                event.target.value = '';
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const json = JSON.parse(e.target.result);
-                    if (window.DataStore.import(json)) {
-                        window.showToast('✅ تم الاستيراد', 'success');
-                        setTimeout(function() { location.reload(); }, 1000);
-                    } else {
-                        window.showToast('❌ ملف غير صالح', 'error');
-                    }
-                } catch (err) {
-                    window.showToast('❌ خطأ في الملف', 'error');
-                }
-            };
-            reader.readAsText(file);
+    setTxt('setProductsCount', (window.products || []).length);
+    setTxt('setSalesCount', (window.sales || []).length);
+    setTxt('setCustomersCount', (window.customers || []).length);
+    setTxt('setSuppliersCount', (window.suppliers || []).length);
+
+    const storeEl = document.getElementById('storeIdDisplay');
+    if (storeEl) storeEl.textContent = window.getStoreId();
+
+    const cloudEl = document.getElementById('cloudStatusText');
+    if (cloudEl) {
+        cloudEl.textContent = window.firebaseReady ? '✅ متصل' : '⏳ جاري الاتصال...';
+        cloudEl.style.color = window.firebaseReady ? '#2D8F5E' : '#E6A830';
+    }
+};
+
+// ═══════════════════════════════════════════════════════════
+// الجزء 7: التصدير / الاستيراد
+// ═══════════════════════════════════════════════════════════
+
+window.exportData = function() {
+    const data = window.DataStore.export();
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'mizan_backup_' + window.getTodayDate() + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    window.showToast('✅ تم التصدير', 'success');
+};
+
+window.importData = function(event) {
+    if (!window.isAdmin()) {
+        window.showToast('⚠️ لا تملك صلاحية', 'error');
+        return;
+    }
+
+    const file = event.target.files[0];
+    if (!file) return;
+
+    window.confirmDialog('⚠️ سيتم استبدال البيانات. متابعة؟').then(function(confirmed) {
+        if (!confirmed) {
             event.target.value = '';
-        });
-    };
-
-    window.manualSync = async function() {
-        if (!window.CloudSync.isReady()) {
-            window.showToast('⚠️ Firebase غير متصل', 'error');
             return;
         }
 
-        window.showToast('🔄 جاري المزامنة...', 'info');
-
-        try {
-            await window.CloudSync.pushAll(true);
-            await window.CloudSync.pullAll(true);
-            window.showToast('✅ تمت المزامنة', 'success');
-        } catch (e) {
-            window.showToast('❌ فشلت المزامنة', 'error');
-        }
-    };
-
-    window.confirmFullReset = async function() {
-        const confirmed = await window.confirmDialog(
-            'سيتم مسح كل شيء من:\n• localStorage\n• Firebase\n• Cache\n\nهل أنت متأكد؟'
-        );
-
-        if (!confirmed) return;
-
-        try {
-            if (window.firebaseReady && typeof firebase !== 'undefined') {
-                const path = window.getStorePath();
-                try {
-                    await firebase.database().ref(path).remove();
-                } catch (e) {}
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const json = JSON.parse(e.target.result);
+                if (window.DataStore.import(json)) {
+                    window.showToast('✅ تم الاستيراد', 'success');
+                    setTimeout(function() { location.reload(); }, 1000);
+                } else {
+                    window.showToast('❌ ملف غير صالح', 'error');
+                }
+            } catch (err) {
+                window.showToast('❌ خطأ في الملف', 'error');
             }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    });
+};
 
-            window.DataStore.clearAll();
-            window.clearSession();
+// ═══════════════════════════════════════════════════════════
+// الجزء 8: المزامنة اليدوية
+// ═══════════════════════════════════════════════════════════
 
-            if ('caches' in window) {
-                const names = await caches.keys();
-                await Promise.all(names.map(function(n) { return caches.delete(n); }));
-            }
+window.manualSync = async function() {
+    if (!window.CloudSync.isReady()) {
+        window.showToast('⚠️ Firebase غير متصل', 'error');
+        return;
+    }
 
-            window.showToast('🗑️ تم المسح، جاري إعادة التحميل...', 'info');
-            setTimeout(function() { location.reload(); }, 1500);
-        } catch (e) {
-            window.showToast('❌ فشل المسح', 'error');
+    window.showToast('🔄 جاري المزامنة...', 'info');
+
+    try {
+        await window.CloudSync.pushAll(true);
+        await window.CloudSync.pullAll(true);
+        window.showToast('✅ تمت المزامنة', 'success');
+    } catch (e) {
+        window.showToast('❌ فشلت المزامنة', 'error');
+    }
+};
+
+// ═══════════════════════════════════════════════════════════
+// الجزء 9: إعادة التصفير
+// ═══════════════════════════════════════════════════════════
+
+window.confirmFullReset = async function() {
+    const confirmed = await window.confirmDialog(
+        'سيتم مسح كل شيء من:\n• localStorage\n• Firebase\n• Cache\n\nهل أنت متأكد؟'
+    );
+
+    if (!confirmed) return;
+
+    try {
+        if (window.firebaseReady && typeof firebase !== 'undefined') {
+            const path = window.getStorePath();
+            try {
+                await firebase.database().ref(path).remove();
+            } catch (e) {}
         }
-    };
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 7: التهيئة الأولية
+        window.DataStore.clearAll();
+        window.clearSession();
+
+        if ('caches' in window) {
+            const names = await caches.keys();
+            await Promise.all(names.map(function(n) { return caches.delete(n); }));
+        }
+
+        window.showToast('🗑️ تم المسح، جاري إعادة التحميل...', 'info');
+        setTimeout(function() { location.reload(); }, 1500);
+    } catch (e) {
+        window.showToast('❌ فشل المسح', 'error');
+    }
+};
+
+// ═══════════════════════════════════════════════════════════
+// الجزء 10: عرض المستخدم
+// ═══════════════════════════════════════════════════════════
+
+window.updateUserUI = function() {
+    if (!window.currentUser) return;
+
+    const el = document.getElementById('currentUserName');
+    if (el) {
+        const roleInfo = window.ROLES[window.currentUser.role] || { icon: '❓' };
+        el.textContent = roleInfo.icon + ' ' + window.currentUser.name;
+    }
+
+    // اسم الشركة
+    const headerCompany = document.getElementById('headerCompanyName');
+    if (headerCompany && window.companyData && window.companyData.name) {
+        headerCompany.textContent = window.companyData.name;
+    }
+};
+
+// ═══════════════════════════════════════════════════════════
+// الجزء 11: ربط الأحداث
+// ═══════════════════════════════════════════════════════════
+
+if (window.EventBus) {
+    window.EventBus.on('data:companyData:changed', function() {
+        window.applyLogoOnLoad();
+    });
+
+    window.EventBus.on('data:users:changed', function() {
+        window.populateLoginUsers();
+    });
+}
+
+console.log('✅ app.js v22.0 - الجزء 2 مكتمل');
+
+     // ═══════════════════════════════════════════════════════════
+    // الجزء 12: التهيئة النهائية
     // ═══════════════════════════════════════════════════════════
 
-        window.init = function() {
+    window.init = function() {
         console.log('🚀 بدء تهيئة التطبيق...');
-
-        // ⚡ لو مفعّل، تخطى شاشة التفعيل
-        skipActivationIfNeeded();
 
         // بيانات أولية
         window.seedInitialData();
 
-        // تحميل البيانات
+        // تحميل البيانات من localStorage
         window.DataStore.loadAll();
 
         // استرجاع الجلسة
@@ -1211,36 +783,31 @@
             if (el) el.value = today;
         });
 
+        // تطبيق اللوجو
+        window.applyLogoOnLoad();
+
         // الساعة
         window.updateClock();
         setInterval(window.updateClock, 1000);
 
-        // ملء المستخدمين تاني
+        // ملء المستخدمين بعد شوية
         setTimeout(function() {
             window.populateLoginUsers();
         }, 500);
+
+        // مزامنة سحابية
+        setTimeout(function() {
+            if (typeof window.initCloudSync === 'function') {
+                window.initCloudSync();
+            }
+        }, 2000);
 
         window.EventBus.emit('app:initialized');
         console.log('✅ التطبيق جاهز');
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 8: ربط الأحداث
-    // ═══════════════════════════════════════════════════════════
-
-    window.EventBus.on('data:companyData:changed', function(data) {
-        const headerCompany = document.getElementById('headerCompanyName');
-        if (headerCompany && data.name) {
-            headerCompany.textContent = data.name;
-        }
-    });
-
-    window.EventBus.on('data:users:changed', function() {
-        window.populateLoginUsers();
-    });
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 9: التحميل التلقائي
+    // التحميل التلقائي
     // ═══════════════════════════════════════════════════════════
 
     if (document.readyState === 'loading') {
@@ -1252,6 +819,6 @@
     }
 
     window.__appLoaded = true;
-    console.log('✅ app.js v18.1 جاهز');
+    console.log('✅ app.js v22.0 كامل جاهز');
 
 })();
