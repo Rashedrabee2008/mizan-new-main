@@ -80,47 +80,71 @@
         }
 
         // ⚡ CSS الحركة — من اليسار لليمين (عربي)
-        const style = document.createElement('style');
-        style.id = 'mizanSharabarCSS';
-        style.textContent = `
-            @keyframes mizanSharabarScroll {
-                0% { transform: translateX(-100%); }
-                100% { transform: translateX(100%); }
-            }
-            #mizanSharabar {
-                position: fixed !important;
-                left: 50% !important;
-                transform: translateX(-50%) !important;
-                width: 100% !important;
-                max-width: 480px !important;
-                background: linear-gradient(90deg, ${s.color}, ${s.color}CC) !important;
-                color: #0D0D0D !important;
-                padding: 10px 0 !important;
-                overflow: hidden !important;
-                z-index: 99999 !important;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.4) !important;
-                font-weight: 800 !important;
-                font-size: 13px !important;
-                font-family: Tajawal, sans-serif !important;
-                pointer-events: none !important;
-                direction: rtl !important;
-            }
-            #mizanSharabar .bar-inner {
-                display: inline-block !important;
-                white-space: nowrap !important;
-                padding-left: 50% !important;
-                animation: mizanSharabarScroll ${s.speed}s linear infinite !important;
-                direction: rtl !important;
-            }
-            #mizanSharabar .bar-text {
-                display: inline-block !important;
-                padding: 0 40px !important;
-                direction: rtl !important;
-                unicode-bidi: bidi-override !important;
-                text-align: right !important;
-            }
-        `;
-        document.head.appendChild(style);
+        // ⚡ احذف CSS القديم لو موجود
+const oldCSS = document.getElementById('mizanSharabarCSS');
+if (oldCSS) oldCSS.remove();
+
+// ⚡ CSS محسّن مع دعم الحركة
+const style = document.createElement('style');
+style.id = 'mizanSharabarCSS';
+style.textContent = `
+    @keyframes mizanSharabarScroll {
+        0% { transform: translate3d(-100%, 0, 0); }
+        100% { transform: translate3d(100%, 0, 0); }
+    }
+    
+    #mizanSharabar {
+        position: fixed !important;
+        left: 50% !important;
+        margin-left: -240px !important;
+        width: 100% !important;
+        max-width: 480px !important;
+        background: linear-gradient(90deg, ${s.color}, ${s.color}CC) !important;
+        color: #0D0D0D !important;
+        padding: 10px 0 !important;
+        overflow: hidden !important;
+        z-index: 99999 !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.4) !important;
+        font-weight: 800 !important;
+        font-size: 13px !important;
+        font-family: Tajawal, sans-serif !important;
+        pointer-events: none !important;
+        direction: rtl !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    #mizanSharabar .bar-inner {
+        display: inline-block !important;
+        white-space: nowrap !important;
+        padding-left: 100% !important;
+        animation: mizanSharabarScroll ${s.speed}s linear infinite !important;
+        animation-duration: ${s.speed}s !important;
+        animation-iteration-count: infinite !important;
+        animation-timing-function: linear !important;
+        animation-play-state: running !important;
+        direction: rtl !important;
+        will-change: transform !important;
+    }
+    
+    #mizanSharabar .bar-text {
+        display: inline-block !important;
+        padding: 0 40px !important;
+        direction: rtl !important;
+        unicode-bidi: bidi-override !important;
+        text-align: right !important;
+    }
+
+    @media (max-width: 480px) {
+        #mizanSharabar {
+            margin-left: -50% !important;
+            left: 50% !important;
+            transform: none !important;
+        }
+    }
+`;
+document.head.appendChild(style);
 
         // ⚡ إنشاء الشريط
         const bar = document.createElement('div');
