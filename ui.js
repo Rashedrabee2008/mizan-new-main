@@ -421,4 +421,27 @@ if (window.EventBus) {
     });
 }
 
+    // ═══════════════ تحديث قائمة الإعلانات تلقائياً ═══════════════
+// لما المستخدم يضغط على أي زرار في التطبيق، نتأكد إن قائمة الإعلانات محدثة
+document.addEventListener('click', function(e) {
+    // لو المستخدم فتح صفحة الإعدادات
+    if (e.target.closest('.nav-item[data-page="settings"]') || 
+        e.target.closest('button[onclick*="settings"]') ||
+        e.target.closest('.more-item[onclick*="settings"]')) {
+        
+        // نستنى شوية عشان الصفحة تفتح
+        setTimeout(() => {
+            if (typeof window.renderAdsList === 'function') {
+                window.renderAdsList();
+            }
+        }, 200);
+    }
+});
+
+// كمان نحدث القائمة أول ما الصفحة تحمل
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof window.renderAdsList === 'function') {
+        window.renderAdsList();
+    }
+});
 })();
