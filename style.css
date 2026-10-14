@@ -909,3 +909,142 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 input[type="number"] { -moz-appearance: textfield; }
 *:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* ═══════════════════════════════════════════════════════════
+   نظام الصلاحيات
+   ═══════════════════════════════════════════════════════════ */
+
+/* إخفاء كل أزرار الحذف لما المستخدم ما عندوش صلاحية */
+body.no-delete-permission .btn-danger[onclick*="delete"],
+body.no-delete-permission .btn-danger[onclick*="Delete"],
+body.no-delete-permission .item-delete {
+    display: none !important;
+}
+
+/* مخفي عناصر التنقل حسب الصلاحية */
+.nav-item[style*="display: none"],
+.more-item[style*="display: none"] {
+    display: none !important;
+}
+
+/* شارة الدور في الهيدر */
+.user-role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(201, 169, 78, 0.15);
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 800;
+    margin-right: 6px;
+}
+
+/* شاشة "ليس لديك صلاحية" */
+.no-permission-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.no-permission-screen i {
+    font-size: 64px;
+    color: var(--danger);
+    margin-bottom: 20px;
+}
+
+.no-permission-screen h3 {
+    color: var(--danger);
+    font-size: 20px;
+    font-weight: 900;
+    margin-bottom: 10px;
+}
+
+.no-permission-screen p {
+    font-size: 14px;
+    line-height: 1.7;
+    max-width: 400px;
+    margin-bottom: 24px;
+}
+
+/* بطاقة صلاحيات المستخدم */
+.role-card {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    color: var(--bg);
+    margin-bottom: 16px;
+}
+
+.role-card .role-icon {
+    font-size: 48px;
+    margin-bottom: 8px;
+}
+
+.role-card .role-name {
+    font-size: 20px;
+    font-weight: 900;
+}
+
+.role-card .role-title {
+    font-size: 14px;
+    margin-top: 4px;
+    font-weight: 700;
+    opacity: 0.85;
+}
+
+/* قائمة الأذونات */
+.permission-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--bg-3);
+    font-size: 13px;
+}
+
+.permission-item:last-child {
+    border-bottom: none;
+}
+
+.permission-item .perm-name {
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+.permission-item .perm-value {
+    font-weight: 900;
+    font-size: 14px;
+}
+
+.permission-item .perm-value.yes {
+    color: var(--success);
+}
+
+.permission-item .perm-value.no {
+    color: var(--danger);
+}
+
+/* قائمة الصفحات المسموحة */
+.allowed-pages-list {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 14px;
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 2;
+}
+
+.allowed-pages-list strong {
+    color: var(--primary);
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
