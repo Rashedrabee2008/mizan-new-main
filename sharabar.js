@@ -79,7 +79,6 @@
             return false;
         }
 
-        // ⚡ CSS الحركة — من اليسار لليمين (عربي)
         // ⚡ احذف CSS القديم لو موجود
 const oldCSS = document.getElementById('mizanSharabarCSS');
 if (oldCSS) oldCSS.remove();
@@ -158,24 +157,49 @@ document.head.appendChild(style);
             bar.style.setProperty('border-radius', '10px 10px 0 0', 'important');
         }
 
-        // ⚡ النص
-        const inner = document.createElement('div');
-        inner.className = 'bar-inner';
+        // ⚡ النص — كرر 5 مرات عشان الحركة المستمرة
+const inner = document.createElement('div');
+inner.className = 'bar-inner';
+inner.style.animation = 'mizanSharabarScroll ' + s.speed + 's linear infinite';
+inner.style.display = 'inline-block';
+inner.style.whiteSpace = 'nowrap';
 
-        for (let i = 0; i < 3; i++) {
-            const span = document.createElement('span');
-            span.className = 'bar-text';
-            span.textContent = '🎉 ' + s.text + '   ⭐   ';
-            span.setAttribute('dir', 'rtl');
-            inner.appendChild(span);
+// 5 نسخ من النص عشان ما يبانش فراغ
+for (let i = 0; i < 5; i++) {
+    const span = document.createElement('span');
+    span.className = 'bar-text';
+    span.style.display = 'inline-block';
+    span.style.padding = '0 40px';
+    span.style.direction = 'rtl';
+    span.textContent = '🎉 ' + s.text + '   ⭐   ';
+    inner.appendChild(span);
+}
+
+bar.appendChild(inner);
+document.body.appendChild(bar);
+
+// ⚡ تأكد إن الحركة شغالة
+setTimeout(function() {
+    const innerEl = bar.querySelector('.bar-inner');
+    if (innerEl) {
+        const computed = window.getComputedStyle(innerEl);
+        console.log('🎬 animation:', computed.animationName);
+        console.log('🎬 duration:', computed.animationDuration);
+        console.log('🎬 play-state:', computed.animationPlayState);
+
+        // لو الحركة واقفة، فرضها
+        if (computed.animationName === 'none' || computed.animationPlayState === 'paused') {
+            console.log('⚠️ الحركة مش شغالة — نحاول إصلاحها');
+            innerEl.style.animation = 'none';
+            setTimeout(function() {
+                innerEl.style.animation = 'mizanSharabarScroll ' + s.speed + 's linear infinite';
+            }, 50);
         }
-
-        bar.appendChild(inner);
-        document.body.appendChild(bar);
-
-        console.log('✅ تم إنشاء الشريط (اتجاه عربي)');
-        return true;
     }
+}, 100);
+
+console.log('✅ تم إنشاء الشريط — الاتجاه عربي');
+return true;
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 5: قسم الإعدادات
