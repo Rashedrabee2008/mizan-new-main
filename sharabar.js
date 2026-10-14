@@ -1,12 +1,12 @@
 // ============================================================
-// الميزان Pro - sharabar.js v2.5
-// شريط إعلانات متحرك — من اليسار لليمين + متوافق مع كل الشاشات
+// الميزان Pro - sharabar.js v2.6
+// شريط إعلانات متحرك — من اليسار لليمين + كل الشاشات
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('📢 sharabar.js v2.5 - بدء التحميل');
+    console.log('📢 sharabar.js v2.6 - بدء التحميل');
 
     const STORAGE_KEY = 'mizan_sharabar_v2';
 
@@ -18,7 +18,6 @@
         position: 'top'
     };
 
-    // ─── قراءة وحفظ الإعدادات ───
     function getSettings() {
         try {
             const data = localStorage.getItem(STORAGE_KEY);
@@ -41,7 +40,6 @@
         }
     }
 
-    // ─── إزالة الشريط القديم ───
     function removeSharabar() {
         const old = document.getElementById('mizanSharabar');
         if (old) old.remove();
@@ -67,11 +65,13 @@
             return false;
         }
 
-        // ─── CSS متوافق مع كل الشاشات ───
+        // ─────────────────────────────────────────────────────
+        // CSS — متوافق مع كل الشاشات + رفع فوق
+        // ─────────────────────────────────────────────────────
         const style = document.createElement('style');
         style.id = 'mizanSharabarCSS';
         style.textContent = `
-            /* الحركة من اليسار لليمين — عشان العربي يبان صح */
+            /* الحركة من اليسار لليمين */
             @keyframes mizanSharabarScroll {
                 0%   { transform: translate3d(-100%, 0, 0); }
                 100% { transform: translate3d(0, 0, 0); }
@@ -79,16 +79,16 @@
 
             #mizanSharabar {
                 position: fixed !important;
-                top: 0 !important;
                 left: 0 !important;
                 right: 0 !important;
-                width: 100% !important;
-                max-width: 100% !important;
+                width: 100vw !important;
+                max-width: 100vw !important;
+                min-width: 100% !important;
                 background: linear-gradient(90deg, ${s.color}, ${s.color}CC) !important;
                 color: #0D0D0D !important;
                 padding: 10px 0 !important;
                 overflow: hidden !important;
-                z-index: 99999 !important;
+                z-index: 999999 !important;
                 box-shadow: 0 2px 10px rgba(0,0,0,0.4) !important;
                 font-weight: 800 !important;
                 font-size: 13px !important;
@@ -98,9 +98,18 @@
                 display: block !important;
                 box-sizing: border-box !important;
                 margin: 0 !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                transform: translateZ(0) !important;
             }
 
-            /* في الأسفل: نثبته تحت خالص */
+            /* فوق خالص — مرفوع شوية صغيرة */
+            #mizanSharabar.position-top {
+                top: 0 !important;
+                bottom: auto !important;
+            }
+
+            /* تحت خالص */
             #mizanSharabar.position-bottom {
                 top: auto !important;
                 bottom: 0 !important;
@@ -113,6 +122,7 @@
                 direction: rtl !important;
                 will-change: transform !important;
                 width: max-content !important;
+                min-width: 100% !important;
             }
 
             #mizanSharabar .bar-text {
@@ -122,21 +132,31 @@
                 text-align: right !important;
                 flex-shrink: 0 !important;
                 white-space: nowrap !important;
+                visibility: visible !important;
+                opacity: 1 !important;
             }
 
-            /* شاشات صغيرة (موبايل) */
+            /* موبايل */
             @media (max-width: 480px) {
                 #mizanSharabar {
                     font-size: 12px !important;
-                    padding: 8px 0 !important;
+                    padding: 9px 0 !important;
                 }
                 #mizanSharabar .bar-text {
                     padding: 0 25px !important;
                 }
             }
 
-            /* شاشات كبيرة (كمبيوتر/تابلت) */
-            @media (min-width: 768px) {
+            /* تابلت */
+            @media (min-width: 481px) and (max-width: 1024px) {
+                #mizanSharabar {
+                    font-size: 14px !important;
+                    padding: 11px 0 !important;
+                }
+            }
+
+            /* كمبيوتر */
+            @media (min-width: 1025px) {
                 #mizanSharabar {
                     font-size: 15px !important;
                     padding: 12px 0 !important;
@@ -148,18 +168,20 @@
         `;
         document.head.appendChild(style);
 
-        // ─── عنصر الشريط ───
+        // ─────────────────────────────────────────────────────
+        // عنصر الشريط
+        // ─────────────────────────────────────────────────────
         const bar = document.createElement('div');
         bar.id = 'mizanSharabar';
 
-        // نحدد المكان (فوق أو تحت)
+        // المكان
         if (s.position === 'top') {
-            bar.style.setProperty('top', '0', 'important');
+            bar.classList.add('position-top');
         } else {
             bar.classList.add('position-bottom');
         }
 
-        // ─── النص (3 نسخ لضمان استمرارية الحركة) ───
+        // النص — 3 نسخ لضمان استمرارية الحركة
         const inner = document.createElement('div');
         inner.className = 'bar-inner';
 
@@ -172,10 +194,38 @@
 
         bar.appendChild(inner);
 
-        // ─── إضافة الشريط لـ body مباشرة (بيغطي كل الشاشات) ───
+        // إضافة الشريط لـ body مباشرة
         document.body.appendChild(bar);
 
-        // ─── التأكد من أن الحركة تعمل ───
+        // ─────────────────────────────────────────────────────
+        // ضبط إضافي بعد الإضافة (مهم للموبايل)
+        // ─────────────────────────────────────────────────────
+        // بعض المتصفحات على الموبايل بتتجاهل 100vw لو في scrollbar
+        // فنجبر الشريط ياخد عرض الشاشة كامل
+        function fixMobileWidth() {
+            const bar = document.getElementById('mizanSharabar');
+            if (!bar) return;
+            
+            const screenW = Math.max(
+                document.documentElement.clientWidth,
+                window.innerWidth || 0
+            );
+            bar.style.setProperty('width', screenW + 'px', 'important');
+            bar.style.setProperty('min-width', screenW + 'px', 'important');
+            bar.style.setProperty('max-width', screenW + 'px', 'important');
+            bar.style.setProperty('left', '0', 'important');
+            bar.style.setProperty('right', 'auto', 'important');
+        }
+
+        fixMobileWidth();
+        window.addEventListener('resize', fixMobileWidth);
+        window.addEventListener('orientationchange', function() {
+            setTimeout(fixMobileWidth, 200);
+        });
+
+        // ─────────────────────────────────────────────────────
+        // التأكد من أن الحركة تعمل
+        // ─────────────────────────────────────────────────────
         setTimeout(function() {
             const innerEl = bar.querySelector('.bar-inner');
             if (innerEl) {
@@ -183,6 +233,7 @@
                 console.log('🎬 animation:', computed.animationName);
                 console.log('🎬 duration:', computed.animationDuration);
                 console.log('🎬 play-state:', computed.animationPlayState);
+                console.log('🎬 bar width:', bar.offsetWidth);
 
                 if (computed.animationName === 'none' || computed.animationPlayState === 'paused') {
                     console.log('⚠️ الحركة مش شغالة — نحاول إصلاحها');
@@ -310,7 +361,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // APIs عامة
+    // APIs
     // ═══════════════════════════════════════════════════════════
     window.SharabarAPI = {
         get: getSettings,
@@ -396,7 +447,7 @@
         setTimeout(addSettingsSection, 2000);
         setTimeout(addSettingsSection, 4000);
         setTimeout(addSettingsSection, 6000);
-        console.log('✅ sharabar.js v2.5 جاهز');
+        console.log('✅ sharabar.js v2.6 جاهز');
     }
 
     if (document.readyState === 'loading') {
@@ -415,4 +466,4 @@
 
     window.__sharabarLoaded = true;
 
-})(); في 
+})();
