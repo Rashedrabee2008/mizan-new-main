@@ -1,12 +1,12 @@
 // ============================================================
-// الميزان Pro - sharabar.js v2.1
+// الميزان Pro - sharabar.js v2.2
 // شريط إعلانات متحرك — اتجاه عربي (من اليسار لليمين)
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('📢 sharabar.js v2.1 - بدء التحميل');
+    console.log('📢 sharabar.js v2.2 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: الإعدادات
@@ -79,73 +79,68 @@
             return false;
         }
 
-        // ⚡ احذف CSS القديم لو موجود
-const oldCSS = document.getElementById('mizanSharabarCSS');
-if (oldCSS) oldCSS.remove();
+        // إزالة CSS القديم لو موجود
+        const oldCSS = document.getElementById('mizanSharabarCSS');
+        if (oldCSS) oldCSS.remove();
 
-// ⚡ CSS محسّن مع دعم الحركة
-const style = document.createElement('style');
-style.id = 'mizanSharabarCSS';
-style.textContent = `
-    @keyframes mizanSharabarScroll {
-        0% { transform: translate3d(-100%, 0, 0); }
-        100% { transform: translate3d(100%, 0, 0); }
-    }
-    
-    #mizanSharabar {
-        position: fixed !important;
-        left: 50% !important;
-        margin-left: -240px !important;
-        width: 100% !important;
-        max-width: 480px !important;
-        background: linear-gradient(90deg, ${s.color}, ${s.color}CC) !important;
-        color: #0D0D0D !important;
-        padding: 10px 0 !important;
-        overflow: hidden !important;
-        z-index: 99999 !important;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.4) !important;
-        font-weight: 800 !important;
-        font-size: 13px !important;
-        font-family: Tajawal, sans-serif !important;
-        pointer-events: none !important;
-        direction: rtl !important;
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-    
-    #mizanSharabar .bar-inner {
-        display: inline-block !important;
-        white-space: nowrap !important;
-        padding-left: 100% !important;
-        animation: mizanSharabarScroll ${s.speed}s linear infinite !important;
-        animation-duration: ${s.speed}s !important;
-        animation-iteration-count: infinite !important;
-        animation-timing-function: linear !important;
-        animation-play-state: running !important;
-        direction: rtl !important;
-        will-change: transform !important;
-    }
-    
-    #mizanSharabar .bar-text {
-        display: inline-block !important;
-        padding: 0 40px !important;
-        direction: rtl !important;
-        unicode-bidi: bidi-override !important;
-        text-align: right !important;
-    }
+        // إنشاء الـ CSS
+        const style = document.createElement('style');
+        style.id = 'mizanSharabarCSS';
+        style.textContent = `
+            @keyframes mizanSharabarScroll {
+                0% { transform: translate3d(0, 0, 0); }
+                100% { transform: translate3d(-100%, 0, 0); }
+            }
+            
+            #mizanSharabar {
+                position: fixed !important;
+                left: 50% !important;
+                margin-left: -240px !important;
+                width: 100% !important;
+                max-width: 480px !important;
+                background: linear-gradient(90deg, ${s.color}, ${s.color}CC) !important;
+                color: #0D0D0D !important;
+                padding: 10px 0 !important;
+                overflow: hidden !important;
+                z-index: 99999 !important;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.4) !important;
+                font-weight: 800 !important;
+                font-size: 13px !important;
+                font-family: Tajawal, sans-serif !important;
+                pointer-events: none !important;
+                direction: rtl !important;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+            
+            #mizanSharabar .bar-inner {
+                display: flex !important;
+                white-space: nowrap !important;
+                animation: mizanSharabarScroll ${s.speed}s linear infinite !important;
+                direction: rtl !important;
+                will-change: transform !important;
+            }
+            
+            #mizanSharabar .bar-text {
+                display: inline-block !important;
+                padding: 0 40px !important;
+                direction: rtl !important;
+                text-align: right !important;
+                flex-shrink: 0 !important;
+            }
 
-    @media (max-width: 480px) {
-        #mizanSharabar {
-            margin-left: -50% !important;
-            left: 50% !important;
-            transform: none !important;
-        }
-    }
-`;
-document.head.appendChild(style);
+            @media (max-width: 480px) {
+                #mizanSharabar {
+                    margin-left: -50% !important;
+                    left: 50% !important;
+                    transform: none !important;
+                }
+            }
+        `;
+        document.head.appendChild(style);
 
-        // ⚡ إنشاء الشريط
+        // إنشاء الشريط
         const bar = document.createElement('div');
         bar.id = 'mizanSharabar';
 
@@ -157,52 +152,45 @@ document.head.appendChild(style);
             bar.style.setProperty('border-radius', '10px 10px 0 0', 'important');
         }
 
-        // ⚡ النص — كرر 5 مرات عشان الحركة المستمرة
-const inner = document.createElement('div');
-inner.className = 'bar-inner';
-inner.style.animation = 'mizanSharabarScroll ' + s.speed + 's linear infinite';
-inner.style.display = 'inline-block';
-inner.style.whiteSpace = 'nowrap';
+        // النص — نكرر 3 مرات فقط لأننا استخدمنا flex
+        const inner = document.createElement('div');
+        inner.className = 'bar-inner';
 
-// 5 نسخ من النص عشان ما يبانش فراغ
-for (let i = 0; i < 5; i++) {
-    const span = document.createElement('span');
-    span.className = 'bar-text';
-    span.style.display = 'inline-block';
-    span.style.padding = '0 40px';
-    span.style.direction = 'rtl';
-    span.textContent = '🎉 ' + s.text + '   ⭐   ';
-    inner.appendChild(span);
-}
-
-bar.appendChild(inner);
-document.body.appendChild(bar);
-
-// ⚡ تأكد إن الحركة شغالة
-setTimeout(function() {
-    const innerEl = bar.querySelector('.bar-inner');
-    if (innerEl) {
-        const computed = window.getComputedStyle(innerEl);
-        console.log('🎬 animation:', computed.animationName);
-        console.log('🎬 duration:', computed.animationDuration);
-        console.log('🎬 play-state:', computed.animationPlayState);
-
-        // لو الحركة واقفة، فرضها
-        if (computed.animationName === 'none' || computed.animationPlayState === 'paused') {
-            console.log('⚠️ الحركة مش شغالة — نحاول إصلاحها');
-            innerEl.style.animation = 'none';
-            setTimeout(function() {
-                innerEl.style.animation = 'mizanSharabarScroll ' + s.speed + 's linear infinite';
-            }, 50);
+        for (let i = 0; i < 3; i++) {
+            const span = document.createElement('span');
+            span.className = 'bar-text';
+            span.textContent = '🎉 ' + s.text + '   ⭐   ';
+            inner.appendChild(span);
         }
-    }
-}, 100);
 
-console.log('✅ تم إنشاء الشريط — الاتجاه عربي');
-return true;
+        bar.appendChild(inner);
+        document.body.appendChild(bar);
+
+        // التأكد من أن الحركة تعمل
+        setTimeout(function() {
+            const innerEl = bar.querySelector('.bar-inner');
+            if (innerEl) {
+                const computed = window.getComputedStyle(innerEl);
+                console.log('🎬 animation:', computed.animationName);
+                console.log('🎬 duration:', computed.animationDuration);
+                console.log('🎬 play-state:', computed.animationPlayState);
+
+                if (computed.animationName === 'none' || computed.animationPlayState === 'paused') {
+                    console.log('⚠️ الحركة مش شغالة — نحاول إصلاحها');
+                    innerEl.style.animation = 'none';
+                    setTimeout(function() {
+                        innerEl.style.animation = 'mizanSharabarScroll ' + s.speed + 's linear infinite';
+                    }, 50);
+                }
+            }
+        }, 100);
+
+        console.log('✅ تم إنشاء الشريط — الاتجاه عربي');
+        return true;
+    }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 5: قسم الإعدادات
+    // الجزء 5: قسم الإعدادات (خارج createSharabar)
     // ═══════════════════════════════════════════════════════════
 
     function addSettingsSection() {
@@ -338,24 +326,26 @@ return true;
             };
 
             if (settings.enabled && !settings.text) {
-                window.showToast('⚠️ أدخل نص الإعلان أولاً', 'error');
+                if (window.showToast) window.showToast('⚠️ أدخل نص الإعلان أولاً', 'error');
                 return;
             }
 
             saveSettings(settings);
             createSharabar();
 
-            window.showToast(
-                settings.enabled ? '✅ تم تفعيل الشريط' : '⏸️ تم إيقاف الشريط',
-                'success'
-            );
+            if (window.showToast) {
+                window.showToast(
+                    settings.enabled ? '✅ تم تفعيل الشريط' : '⏸️ تم إيقاف الشريط',
+                    'success'
+                );
+            }
         },
         preview: function() {
             const textEl = document.getElementById('sbText');
             const text = textEl ? textEl.value.trim() : '';
 
             if (!text) {
-                window.showToast('⚠️ أدخل نص الإعلان', 'warning');
+                if (window.showToast) window.showToast('⚠️ أدخل نص الإعلان', 'warning');
                 return;
             }
 
@@ -370,7 +360,7 @@ return true;
 
             saveSettings(temp);
             createSharabar();
-            window.showToast('👁️ معاينة لمدة 5 ثواني', 'info');
+            if (window.showToast) window.showToast('👁️ معاينة لمدة 5 ثواني', 'info');
 
             setTimeout(function() {
                 saveSettings(old);
@@ -404,7 +394,7 @@ return true;
         setTimeout(addSettingsSection, 4000);
         setTimeout(addSettingsSection, 6000);
 
-        console.log('✅ sharabar.js v2.1 جاهز — اتجاه عربي');
+        console.log('✅ sharabar.js v2.2 جاهز — اتجاه عربي');
     }
 
     if (document.readyState === 'loading') {
