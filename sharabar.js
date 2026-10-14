@@ -1,14 +1,15 @@
 // ============================================================
-// الميزان Pro - sharabar.js v2.6
-// شريط إعلانات متحرك — من اليسار لليمين + كل الشاشات
+// الميزان Pro - sharabar.js v2.7
+// شريط إعلانات متحرك — من اليسار لليمين + آخر الشريط + رفع
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('📢 sharabar.js v2.6 - بدء التحميل');
+    console.log('📢 sharabar.js v2.7 - بدء التحميل');
 
     const STORAGE_KEY = 'mizan_sharabar_v2';
+    const BAR_HEIGHT = 40; // ارتفاع الشريط التقريبي بالبكسل
 
     const DEFAULT_SETTINGS = {
         enabled: false,
@@ -40,11 +41,41 @@
         }
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // ضبط المسافة العلوية للـ body عشان اللوجو ميتغطاش
+    // ═══════════════════════════════════════════════════════════
+    function adjustBodySpacing(enable, position) {
+        // نستخدم style مباشر بدل class عشان نتحكم بسهولة
+        const body = document.body;
+        const html = document.documentElement;
+        
+        if (enable && position === 'top') {
+            // لو الشريط فوق: نضيف padding-top للـ body
+            body.style.setProperty('padding-top', BAR_HEIGHT + 'px', 'important');
+            html.style.setProperty('padding-top', BAR_HEIGHT + 'px', 'important');
+            console.log('📏 تم إضافة ' + BAR_HEIGHT + 'px فوق للـ body');
+        } else if (enable && position === 'bottom') {
+            // لو الشريط تحت: نضيف padding-bottom للـ body
+            body.style.setProperty('padding-bottom', BAR_HEIGHT + 'px', 'important');
+            html.style.setProperty('padding-bottom', BAR_HEIGHT + 'px', 'important');
+            console.log('📏 تم إضافة ' + BAR_HEIGHT + 'px تحت للـ body');
+        } else {
+            // إزالة الـ padding
+            body.style.removeProperty('padding-top');
+            body.style.removeProperty('padding-bottom');
+            html.style.removeProperty('padding-top');
+            html.style.removeProperty('padding-bottom');
+            console.log('📏 تم إزالة المسافات الإضافية');
+        }
+    }
+
     function removeSharabar() {
         const old = document.getElementById('mizanSharabar');
         if (old) old.remove();
         const oldCSS = document.getElementById('mizanSharabarCSS');
         if (oldCSS) oldCSS.remove();
+        // إزالة المسافات القديمة
+        adjustBodySpacing(false, 'top');
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -66,15 +97,15 @@
         }
 
         // ─────────────────────────────────────────────────────
-        // CSS — متوافق مع كل الشاشات + رفع فوق
+        // CSS
         // ─────────────────────────────────────────────────────
         const style = document.createElement('style');
         style.id = 'mizanSharabarCSS';
         style.textContent = `
-            /* الحركة من اليسار لليمين */
+            /* الحركة من اليسار لليمين — بنسبة عرض النص الفعلي */
             @keyframes mizanSharabarScroll {
-                0%   { transform: translate3d(-100%, 0, 0); }
-                100% { transform: translate3d(0, 0, 0); }
+                0%   { transform: translate3d(0, 0, 0); }
+                100% { transform: translate3d(50%, 0, 0); }
             }
 
             #mizanSharabar {
@@ -86,7 +117,7 @@
                 min-width: 100% !important;
                 background: linear-gradient(90deg, ${s.color}, ${s.color}CC) !important;
                 color: #0D0D0D !important;
-                padding: 10px 0 !important;
+                padding: 9px 0 !important;
                 overflow: hidden !important;
                 z-index: 999999 !important;
                 box-shadow: 0 2px 10px rgba(0,0,0,0.4) !important;
@@ -103,26 +134,22 @@
                 transform: translateZ(0) !important;
             }
 
-            /* فوق خالص — مرفوع شوية صغيرة */
             #mizanSharabar.position-top {
                 top: 0 !important;
                 bottom: auto !important;
             }
 
-            /* تحت خالص */
             #mizanSharabar.position-bottom {
                 top: auto !important;
                 bottom: 0 !important;
             }
 
             #mizanSharabar .bar-inner {
-                display: flex !important;
+                display: inline-flex !important;
                 white-space: nowrap !important;
                 animation: mizanSharabarScroll ${s.speed}s linear infinite !important;
                 direction: rtl !important;
                 will-change: transform !important;
-                width: max-content !important;
-                min-width: 100% !important;
             }
 
             #mizanSharabar .bar-text {
@@ -174,18 +201,17 @@
         const bar = document.createElement('div');
         bar.id = 'mizanSharabar';
 
-        // المكان
         if (s.position === 'top') {
             bar.classList.add('position-top');
         } else {
             bar.classList.add('position-bottom');
         }
 
-        // النص — 3 نسخ لضمان استمرارية الحركة
+        // النص — نكرر 4 نسخ عشان الحركة تستمر بدون فراغ
         const inner = document.createElement('div');
         inner.className = 'bar-inner';
 
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 4; i++) {
             const span = document.createElement('span');
             span.className = 'bar-text';
             span.textContent = '🎉 ' + s.text + '   ⭐   ';
@@ -193,28 +219,28 @@
         }
 
         bar.appendChild(inner);
-
-        // إضافة الشريط لـ body مباشرة
         document.body.appendChild(bar);
 
         // ─────────────────────────────────────────────────────
-        // ضبط إضافي بعد الإضافة (مهم للموبايل)
+        // ضبط المسافة العلوية للـ body عشان اللوجو ميتغطاش
         // ─────────────────────────────────────────────────────
-        // بعض المتصفحات على الموبايل بتتجاهل 100vw لو في scrollbar
-        // فنجبر الشريط ياخد عرض الشاشة كامل
+        adjustBodySpacing(true, s.position);
+
+        // ─────────────────────────────────────────────────────
+        // ضبط عرض الشريط على الموبايل
+        // ─────────────────────────────────────────────────────
         function fixMobileWidth() {
-            const bar = document.getElementById('mizanSharabar');
-            if (!bar) return;
-            
+            const barEl = document.getElementById('mizanSharabar');
+            if (!barEl) return;
             const screenW = Math.max(
                 document.documentElement.clientWidth,
                 window.innerWidth || 0
             );
-            bar.style.setProperty('width', screenW + 'px', 'important');
-            bar.style.setProperty('min-width', screenW + 'px', 'important');
-            bar.style.setProperty('max-width', screenW + 'px', 'important');
-            bar.style.setProperty('left', '0', 'important');
-            bar.style.setProperty('right', 'auto', 'important');
+            barEl.style.setProperty('width', screenW + 'px', 'important');
+            barEl.style.setProperty('min-width', screenW + 'px', 'important');
+            barEl.style.setProperty('max-width', screenW + 'px', 'important');
+            barEl.style.setProperty('left', '0', 'important');
+            barEl.style.setProperty('right', 'auto', 'important');
         }
 
         fixMobileWidth();
@@ -234,6 +260,7 @@
                 console.log('🎬 duration:', computed.animationDuration);
                 console.log('🎬 play-state:', computed.animationPlayState);
                 console.log('🎬 bar width:', bar.offsetWidth);
+                console.log('🎬 inner width:', innerEl.offsetWidth);
 
                 if (computed.animationName === 'none' || computed.animationPlayState === 'paused') {
                     console.log('⚠️ الحركة مش شغالة — نحاول إصلاحها');
@@ -447,7 +474,7 @@
         setTimeout(addSettingsSection, 2000);
         setTimeout(addSettingsSection, 4000);
         setTimeout(addSettingsSection, 6000);
-        console.log('✅ sharabar.js v2.6 جاهز');
+        console.log('✅ sharabar.js v2.7 جاهز');
     }
 
     if (document.readyState === 'loading') {
