@@ -1,16 +1,14 @@
 // ============================================================
-// الميزان Pro - sharabar.js v3.0
-// شريط إعلانات متحرك — حركة أفقية فقط + مسافة مضبوطة + مميزات
+// الميزان Pro - sharabar.js v3.1
+// شريط إعلانات متحرك — sticky (يتحرك مع المحتوى) + مسافة مضبوطة
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('📢 sharabar.js v3.0 - بدء التحميل');
+    console.log('📢 sharabar.js v3.1 - بدء التحميل');
 
     const STORAGE_KEY = 'mizan_sharabar_v2';
-    const BAR_HEIGHT = 38;   // ارتفاع الشريط بالبكسل
-    const GAP_TOP = 12;      // مسافة صغيرة بين الشريط والمحتوى
 
     const DEFAULT_SETTINGS = {
         enabled: false,
@@ -43,35 +41,13 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // ضبط المسافة حول الشريط
+    // إزالة الشريط القديم
     // ═══════════════════════════════════════════════════════════
-    function adjustBodySpacing(enable, position) {
-        const body = document.body;
-        const html = document.documentElement;
-
-        if (enable && position === 'top') {
-            // فوق: نضيف مسافة صغيرة (ارتفاع الشريط + المسافة)
-            const totalTop = BAR_HEIGHT + GAP_TOP;
-            body.style.setProperty('padding-top', totalTop + 'px', 'important');
-            html.style.setProperty('padding-top', totalTop + 'px', 'important');
-        } else if (enable && position === 'bottom') {
-            const totalBottom = BAR_HEIGHT + GAP_TOP;
-            body.style.setProperty('padding-bottom', totalBottom + 'px', 'important');
-            html.style.setProperty('padding-bottom', totalBottom + 'px', 'important');
-        } else {
-            body.style.removeProperty('padding-top');
-            body.style.removeProperty('padding-bottom');
-            html.style.removeProperty('padding-top');
-            html.style.removeProperty('padding-bottom');
-        }
-    }
-
     function removeSharabar() {
         const old = document.getElementById('mizanSharabar');
         if (old) old.remove();
         const oldCSS = document.getElementById('mizanSharabarCSS');
         if (oldCSS) oldCSS.remove();
-        adjustBodySpacing(false, 'top');
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -93,29 +69,27 @@
         }
 
         // ─────────────────────────────────────────────────────
-        // CSS — حركة أفقية فقط (translateX بالبكسل)
+        // CSS: sticky — الشريط يتحرك مع المحتوى
         // ─────────────────────────────────────────────────────
         const style = document.createElement('style');
         style.id = 'mizanSharabarCSS';
         style.textContent = `
-            /* حركة أفقية فقط — translateX بالبكسل ثابت */
+            /* حركة أفقية فقط */
             @keyframes mizanSharabarScroll {
                 from { transform: translateX(0); }
                 to   { transform: translateX(-50%); }
             }
 
             #mizanSharabar {
-                position: fixed !important;
-                left: 0 !important;
-                right: 0 !important;
-                width: 100vw !important;
-                max-width: 100vw !important;
-                min-width: 100% !important;
+                position: sticky !important;
+                top: 0 !important;
+                z-index: 9999 !important;
+                width: 100% !important;
+                max-width: 100% !important;
                 background: linear-gradient(90deg, ${s.color}, ${s.color}CC) !important;
                 color: #0D0D0D !important;
-                padding: 9px 0 !important;
+                padding: 8px 0 !important;
                 overflow: hidden !important;
-                z-index: 999999 !important;
                 box-shadow: 0 2px 6px rgba(0,0,0,0.35) !important;
                 font-weight: 800 !important;
                 font-size: 13px !important;
@@ -127,17 +101,10 @@
                 margin: 0 !important;
                 visibility: visible !important;
                 opacity: 1 !important;
-                transform: translateZ(0) !important;
-                /* خط سفلي أنيق للفصل */
                 border-bottom: 1.5px solid rgba(0,0,0,0.25) !important;
             }
 
-            #mizanSharabar.position-top {
-                top: 0 !important;
-                bottom: auto !important;
-                border-top: none !important;
-            }
-
+            /* لو الشريط في الأسفل: sticky في الأسفل */
             #mizanSharabar.position-bottom {
                 top: auto !important;
                 bottom: 0 !important;
@@ -151,7 +118,6 @@
                 animation: mizanSharabarScroll ${s.speed}s linear infinite !important;
                 direction: rtl !important;
                 will-change: transform !important;
-                /* مهم: منع أي إزاحة رأسية */
                 vertical-align: top !important;
                 line-height: 1 !important;
             }
@@ -173,7 +139,7 @@
             @media (max-width: 480px) {
                 #mizanSharabar {
                     font-size: 12px !important;
-                    padding: 9px 0 !important;
+                    padding: 8px 0 !important;
                 }
                 #mizanSharabar .bar-text {
                     padding: 0 25px !important;
@@ -184,7 +150,7 @@
             @media (min-width: 481px) and (max-width: 1024px) {
                 #mizanSharabar {
                     font-size: 14px !important;
-                    padding: 11px 0 !important;
+                    padding: 10px 0 !important;
                 }
             }
 
@@ -192,7 +158,7 @@
             @media (min-width: 1025px) {
                 #mizanSharabar {
                     font-size: 15px !important;
-                    padding: 12px 0 !important;
+                    padding: 11px 0 !important;
                 }
                 #mizanSharabar .bar-text {
                     padding: 0 60px !important;
@@ -207,9 +173,7 @@
         const bar = document.createElement('div');
         bar.id = 'mizanSharabar';
 
-        if (s.position === 'top') {
-            bar.classList.add('position-top');
-        } else {
+        if (s.position === 'bottom') {
             bar.classList.add('position-bottom');
         }
 
@@ -225,35 +189,16 @@
         }
 
         bar.appendChild(inner);
-        document.body.appendChild(bar);
 
         // ─────────────────────────────────────────────────────
-        // ضبط المسافة العلوية/السفلية للـ body
+        // إضافة الشريط في المكان الصح
         // ─────────────────────────────────────────────────────
-        adjustBodySpacing(true, s.position);
-
-        // ─────────────────────────────────────────────────────
-        // ضبط عرض الشريط على الموبايل
-        // ─────────────────────────────────────────────────────
-        function fixMobileWidth() {
-            const barEl = document.getElementById('mizanSharabar');
-            if (!barEl) return;
-            const screenW = Math.max(
-                document.documentElement.clientWidth,
-                window.innerWidth || 0
-            );
-            barEl.style.setProperty('width', screenW + 'px', 'important');
-            barEl.style.setProperty('min-width', screenW + 'px', 'important');
-            barEl.style.setProperty('max-width', screenW + 'px', 'important');
-            barEl.style.setProperty('left', '0', 'important');
-            barEl.style.setProperty('right', 'auto', 'important');
+        // نضيفه في أول body مباشرة عشان يبقى sticky في أول الصفحة
+        if (s.position === 'top') {
+            document.body.insertBefore(bar, document.body.firstChild);
+        } else {
+            document.body.appendChild(bar);
         }
-
-        fixMobileWidth();
-        window.addEventListener('resize', fixMobileWidth);
-        window.addEventListener('orientationchange', function() {
-            setTimeout(fixMobileWidth, 200);
-        });
 
         // ─────────────────────────────────────────────────────
         // التحقق من الحركة
@@ -275,7 +220,7 @@
             }
         }, 100);
 
-        console.log('✅ تم إنشاء الشريط — حركة أفقية فقط');
+        console.log('✅ تم إنشاء الشريط — sticky (يتحرك مع المحتوى)');
         return true;
     }
 
@@ -477,7 +422,7 @@
         setTimeout(addSettingsSection, 2000);
         setTimeout(addSettingsSection, 4000);
         setTimeout(addSettingsSection, 6000);
-        console.log('✅ sharabar.js v3.0 جاهز');
+        console.log('✅ sharabar.js v3.1 جاهز');
     }
 
     if (document.readyState === 'loading') {
