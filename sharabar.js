@@ -37,7 +37,7 @@
 
     function getSpeed() {
         // السرعة بالثواني (الوقت اللي بياخده النص عشان يعدي الشاشة)
-        return parseInt(localStorage.getItem(SPEED_KEY)) || 20;
+        return parseInt(localStorage.getItem(SPEED_KEY)) || 10;
     }
 
     function saveAds(ads) {
