@@ -1,11 +1,11 @@
 /* ============================================================
-   الميزان Pro - app.js v26.0 (النسخة النهائية المصححة)
+   الميزان Pro - app.js v25.0 (حل مشكلة تسجيل الدخول)
    ============================================================ */
 
 (function() {
     'use strict';
 
-    console.log('📱 app.js v26.0 - بدء التشغيل');
+    console.log('📱 app.js v25.0 - بدء التشغيل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: متغيرات عامة
@@ -167,8 +167,12 @@
     // الجزء 5: حذف اللوجو
     // ═══════════════════════════════════════════════════════════
 
-    window.removeCompanyLogo = function() {
-        if (!confirm('حذف الشعار؟')) return;
+    window.removeCompanyLogo = async function() {
+        let confirmed = true;
+        if (typeof window.confirmDialog === 'function') {
+            confirmed = await window.confirmDialog('حذف الشعار؟');
+        }
+        if (!confirmed) return;
 
         if (!window.companyData) window.companyData = {};
         window.companyData.logo = '';
@@ -247,9 +251,10 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 8: تسجيل الدخول
+    // الجزء 8: تسجيل الدخول (الإصدار المبسط)
     // ═══════════════════════════════════════════════════════════
 
+    // ★★★ تحميل المستخدمين أو إنشاء المدير الافتراضي ★★★
     window.loadOrCreateUsers = function() {
         try {
             const saved = localStorage.getItem('users');
@@ -275,6 +280,7 @@
         localStorage.setItem('users', JSON.stringify(window.users));
     };
 
+    // ★★★ تعبئة قائمة المستخدمين ★★★
     window.populateLoginUsers = function() {
         const sel = document.getElementById('loginUsername');
         if (!sel) return;
@@ -291,6 +297,7 @@
         sel.innerHTML = html;
     };
 
+    // ★★★ التحقق من تسجيل الدخول ★★★
     window.checkLogin = function() {
         const userIdEl = document.getElementById('loginUsername');
         const passwordEl = document.getElementById('loginPassword');
@@ -316,6 +323,7 @@
             return;
         }
 
+        // مقارنة كلمة المرور (مباشرة)
         if (password !== user.password) {
             if (errorEl) {
                 errorEl.textContent = '⚠️ كلمة المرور خاطئة';
@@ -330,7 +338,10 @@
 
         // ✅ نجاح
         window.currentUser = user;
-        localStorage.setItem('currentUser', JSON.stringify(user));
+
+        try {
+            localStorage.setItem('currentUser', JSON.stringify(user));
+        } catch (e) {}
 
         if (errorEl) errorEl.classList.remove('show');
         if (passwordEl) passwordEl.value = '';
@@ -343,11 +354,6 @@
         // ★★★ تحميل بيانات الشركة واللوجو ★★★
         window.loadCompanyData();
 
-        // ★★★ تشغيل شريط الإعلانات ★★★
-        if (typeof window.initAdBar === 'function') {
-            setTimeout(window.initAdBar, 100);
-        }
-
         if (typeof window.showToast === 'function') {
             window.showToast('🔓 مرحباً ' + user.name + '!', 'success');
         }
@@ -357,6 +363,7 @@
         }
     };
 
+    // ★★★ قفل التطبيق ★★★
     window.lockApp = function() {
         if (!confirm('هل تريد تسجيل الخروج؟')) return;
 
@@ -449,6 +456,12 @@
         if (loginCont) loginCont.classList.remove('hidden');
         if (appCont) appCont.style.display = 'none';
 
+        // الساعة
+        if (typeof window.updateClock === 'function') {
+            window.updateClock();
+            setInterval(window.updateClock, 1000);
+        }
+
         console.log('✅ التطبيق جاهز');
     };
 
@@ -462,6 +475,6 @@
     }
 
     window.__appLoaded = true;
-    console.log('✅ app.js v26.0 كامل جاهز');
+    console.log('✅ app.js v25.0 كامل جاهز');
 
 })();
