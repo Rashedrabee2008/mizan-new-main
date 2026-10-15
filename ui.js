@@ -6,7 +6,7 @@
 (function() {
     'use strict';
 
-    console.log('🎨 ui.js v18.0 - بدء التحميل');
+    console.log('🎨 ui.js v19.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: Toast
@@ -29,9 +29,7 @@
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 2: Modal
-    // ═══════════════════════════════════════════════════════════
-
-    window.openModal = function(html) {
+    // ═══════════════════════════════════════════════════════════    window.openModal = function(html) {
         const overlay = document.getElementById('modalOverlay');
         if (!overlay) return;
 
@@ -56,7 +54,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 3: التنقل
+    // الجزء 3: التنقل (مع حماية من الصفحة الفاضية)
     // ═══════════════════════════════════════════════════════════
 
     const PAGE_REFRESHERS = {
@@ -95,22 +93,31 @@
     };
 
     window.navigateTo = function(page) {
-    // ⚡ فحص الصلاحية قبل التنقل
-    if (window.currentUser && typeof window.canAccessPage === 'function') {
-        if (!window.canAccessPage(page)) {
-            window.showToast('🚫 ليس لديك صلاحية الوصول لهذه الصفحة', 'error');
-            return;
-        }
-    }
+        // ★★★ لو page مش محدد، استخدم dashboard ★★★
+        if (!page) page = 'dashboard';
 
-    // إخفاء كل الصفحات
-    document.querySelectorAll('.page-container').forEach(function(el) {
-        el.classList.remove('active');
-    });
+        // ⚡ فحص الصلاحية قبل التنقل
+        if (window.currentUser && typeof window.canAccessPage === 'function') {
+            if (!window.canAccessPage(page)) {
+                window.showToast('🚫 ليس لديك صلاحية الوصول لهذه الصفحة', 'error');
+                return;
+            }
+        }
+
+        // إخفاء كل الصفحات
+        document.querySelectorAll('.page-container').forEach(function(el) {
+            el.classList.remove('active');
+        });
 
         // إظهار الصفحة المطلوبة
         const target = document.getElementById('page-' + page);
-        if (target) target.classList.add('active');
+        if (target) {
+            target.classList.add('active');
+        } else {
+            // ★★★ لو الصفحة مش موجودة، فعّل dashboard ★★★
+            const dash = document.getElementById('page-dashboard');
+            if (dash) dash.classList.add('active');
+        }
 
         // تفعيل زر التنقل
         document.querySelectorAll('.nav-item').forEach(function(el) {
@@ -136,7 +143,7 @@
         }
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        window.EventBus.emit('page:navigated', page);
+        if (window.EventBus) window.EventBus.emit('page:navigated', page);
     };
 
     // ═══════════════════════════════════════════════════════════
@@ -184,7 +191,6 @@
 
         el.textContent = day + '/' + month + '/' + year + ' ' + hoursStr + ':' + minutes + ' ' + ampm;
 
-        // تحديث حقول الفاتورة لو موجودة
         const invDateEl = document.getElementById('invDateDisplay');
         const invTimeEl = document.getElementById('invTimeDisplay');
         if (invDateEl) invDateEl.value = day + '/' + month + '/' + year;
@@ -192,14 +198,13 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 6: تحديث كل الواجهات (بعد مزامنة مثلاً)
+    // الجزء 6: تحديث كل الواجهات
     // ═══════════════════════════════════════════════════════════
 
     window.refreshAllUI = function() {
         const currentPage = document.querySelector('.page-container.active');
         const pageId = currentPage ? currentPage.id.replace('page-', '') : 'dashboard';
 
-        // تحديث الصفحة الحالية
         const refreshers = PAGE_REFRESHERS[pageId] || [];
         refreshers.forEach(function(fn) {
             if (typeof window[fn] === 'function') {
@@ -207,7 +212,6 @@
             }
         });
 
-        // تحديث الإحصائيات العامة
         if (typeof window.updateDashboard === 'function') {
             try { window.updateDashboard(); } catch (e) {}
         }
@@ -248,14 +252,12 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 8: ربط الأحداث (EventBus → UI)
+    // الجزء 8: ربط الأحداث
     // ═══════════════════════════════════════════════════════════
 
-    // كل ما تتغير مجموعة بيانات، نحدث الواجهة
     window.EventBus.on('data:changed', function(evt) {
         const key = evt.key;
 
-        // خريطة تحديثات حسب المفتاح
         const UI_MAP = {
             'sales':              ['renderInvoices', 'updateInvoiceStats', 'updateDashboard'],
             'purchases':          ['renderPurchases', 'updatePurStats', 'updateDashboard'],
@@ -283,7 +285,6 @@
 
         const toRefresh = UI_MAP[key] || [];
 
-        // لا نحدث إلا الصفحات الظاهرة (لتجنب البطء)
         toRefresh.forEach(function(fn) {
             if (typeof window[fn] === 'function') {
                 try { window[fn](); } catch (e) {}
@@ -295,7 +296,6 @@
     // الجزء 9: أدوات واجهة إضافية
     // ═══════════════════════════════════════════════════════════
 
-    // تعطيل/تفعيل زر
     window.setButtonLoading = function(btn, isLoading, loadingText) {
         if (!btn) return;
 
@@ -312,7 +312,6 @@
         }
     };
 
-    // تأكيد
     window.confirmDialog = function(message) {
         return new Promise(function(resolve) {
             const overlay = document.getElementById('modalOverlay');
@@ -350,7 +349,6 @@
         });
     };
 
-    // إدخال سريع
     window.promptDialog = function(message, defaultValue) {
         return new Promise(function(resolve) {
             const overlay = document.getElementById('modalOverlay');
@@ -399,49 +397,43 @@
     // ═══════════════════════════════════════════════════════════
 
     window.__uiLoaded = true;
-    console.log('✅ ui.js v18.0 جاهز');
+    console.log('✅ ui.js v19.0 جاهز');
 
     // ═══════════════════════════════════════════════════════════
-// ربط الصلاحيات بأحداث التطبيق
-// ═══════════════════════════════════════════════════════════
+    // ربط الصلاحيات بأحداث التطبيق
+    // ═══════════════════════════════════════════════════════════
 
-if (window.EventBus) {
-    // عند اكتمال التطبيق، طبّق الصلاحيات
-    window.EventBus.on('app:ready', function() {
-        if (typeof window.applyPagePermissions === 'function') {
-            setTimeout(window.applyPagePermissions, 500);
-        }
-    });
+    if (window.EventBus) {
+        window.EventBus.on('app:ready', function() {
+            if (typeof window.applyPagePermissions === 'function') {
+                setTimeout(window.applyPagePermissions, 500);
+            }
+        });
 
-    // عند التنقل، أعد فحص الصلاحيات
-    window.EventBus.on('page:navigated', function() {
-        if (typeof window.applyPagePermissions === 'function') {
-            setTimeout(window.applyPagePermissions, 100);
-        }
-    });
-}
+        window.EventBus.on('page:navigated', function() {
+            if (typeof window.applyPagePermissions === 'function') {
+                setTimeout(window.applyPagePermissions, 100);
+            }
+        });
+    }
 
     // ═══════════════ تحديث قائمة الإعلانات تلقائياً ═══════════════
-// لما المستخدم يضغط على أي زرار في التطبيق، نتأكد إن قائمة الإعلانات محدثة
-document.addEventListener('click', function(e) {
-    // لو المستخدم فتح صفحة الإعدادات
-    if (e.target.closest('.nav-item[data-page="settings"]') || 
-        e.target.closest('button[onclick*="settings"]') ||
-        e.target.closest('.more-item[onclick*="settings"]')) {
-        
-        // نستنى شوية عشان الصفحة تفتح
-        setTimeout(() => {
-            if (typeof window.renderAdsList === 'function') {
-                window.renderAdsList();
-            }
-        }, 200);
-    }
-});
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.nav-item[data-page="settings"]') ||
+            e.target.closest('button[onclick*="settings"]') ||
+            e.target.closest('.more-item[onclick*="settings"]')) {
 
-// كمان نحدث القائمة أول ما الصفحة تحمل
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof window.renderAdsList === 'function') {
-        window.renderAdsList();
-    }
-});
+            setTimeout(function() {
+                if (typeof window.renderAdsList === 'function') {
+                    window.renderAdsList();
+                }
+            }, 200);
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof window.renderAdsList === 'function') {
+            window.renderAdsList();
+        }
+    });
 })();
