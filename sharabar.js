@@ -1,8 +1,8 @@
 /* ============================================================
-   sharabar.js - إدارة الإعلانات (الإصدار 10.0)
+   sharabar.js - إدارة الإعلانات (الإصدار 11.0)
    - حركة من الشمال لليمين (يسار ← يمين)
-   - ناعمة جداً بدون ناتشة
-   - سرعة قابلة للتحكم (بطيء / متوسط / سريع)
+   - ناعمة جداً بدون ناتشة (باستخدام CSS Animation)
+   - النص لا يختفي أبداً حتى لو كانت الحركة بطيئة
    ============================================================ */
 
 (function() {
@@ -18,7 +18,6 @@
     const SPEED_KEY = 'sharabar_speed';
     
     let rotationTimer = null;
-    let rafId = null;
 
     function getAds() {
         try {
@@ -130,11 +129,10 @@
 
     // ═══════════════ وضع التحريك (من الشمال لليمين) ═══════════════
     function startMarquee(container, ads) {
-        if (rafId) cancelAnimationFrame(rafId);
         if (rotationTimer) clearInterval(rotationTimer);
 
         let adIndex = 0;
-        const speedSeconds = getSpeed(); // الوقت اللي ياخده النص عشان يعدي الشاشة
+        const speedSeconds = getSpeed();
 
         function showNextAd() {
             const ad = ads[adIndex];
@@ -167,46 +165,16 @@
                 bar.onclick = null;
             }
 
-            // حساب عرض النص الواحد (تقريباً)
-            const totalWidth = container.scrollWidth;
-            const singleAdWidth = totalWidth / 4;
-
-            // ★★★ حساب السرعة الصح ★★★
-            // السرعة = المسافة ÷ الزمن
-            // المسافة = عرض النص الواحد
-            // الزمن = السرعة بالثواني
-            const speedPxPerSec = singleAdWidth / speedSeconds;
-
-            // نبدأ من مكان يكون فيه النص بره الشاشة من الشمال
-            let currentX = -singleAdWidth * 3;
-            container.style.transform = `translateX(${currentX}px)`;
-
-            let lastTimestamp = performance.now();
-
-            function animate(timestamp) {
-                const deltaTime = (timestamp - lastTimestamp) / 1000;
-                lastTimestamp = timestamp;
-
-                // الحركة من الشمال لليمين (زيادة في X)
-                currentX += speedPxPerSec * deltaTime;
-
-                // لو النص وصل للنهاية (خرج من اليمين)، نرجع نقطة البداية بهدوء
-                if (currentX >= 0) {
-                    currentX -= singleAdWidth;
-                }
-
-                container.style.transform = `translateX(${currentX}px)`;
-                rafId = requestAnimationFrame(animate);
-            }
-
-            rafId = requestAnimationFrame(animate);
+            // ★★★ استخدام CSS Animation بدل JavaScript ★★★
+            container.style.animation = 'none';
+            void container.offsetWidth; // إعادة تشغيل الأنيميشن
+            container.style.animation = `marqueeScrollLTR ${speedSeconds}s linear infinite`;
 
             adIndex = (adIndex + 1) % ads.length;
         }
 
         showNextAd();
 
-        // لو فيه أكتر من إعلان، نبدل بينهم
         if (ads.length > 1) {
             rotationTimer = setInterval(showNextAd, speedSeconds * 1000);
         }
@@ -214,7 +182,6 @@
 
     // ═══════════════ الوضع الثابت ═══════════════
     function startStatic(container, ads) {
-        if (rafId) cancelAnimationFrame(rafId);
         if (rotationTimer) clearInterval(rotationTimer);
 
         let adIndex = 0;
@@ -222,12 +189,12 @@
             const ad = ads[adIndex];
             if (!ad) return;
 
+            container.style.animation = 'none';
             container.innerHTML = `
                 <span style="font-size:18px;">${ad.icon || '⭐'}</span>
                 <span>${ad.text}</span>
                 <span style="font-size:18px;">${ad.icon || '⭐'}</span>
             `;
-            container.style.transform = 'translateX(0)';
 
             const bar = document.getElementById('sharabar');
             if (ad.link) {
@@ -257,12 +224,10 @@
         bar.style.display = 'none';
         localStorage.setItem(CLOSED_KEY, 'true');
 
-        if (rafId) cancelAnimationFrame(rafId);
         if (rotationTimer) clearInterval(rotationTimer);
     }
 
     function restartAdBar() {
-        if (rafId) cancelAnimationFrame(rafId);
         if (rotationTimer) clearInterval(rotationTimer);
         const container = document.getElementById('sharabarContainer');
         if (container) container.innerHTML = '';
@@ -333,8 +298,24 @@
         restartAdBar();
     };
 
+    // ═══════════════ إضافة CSS للأنيميشن (من الشمال لليمين) ═══════════════
+    function addAnimationStyles() {
+        if (document.getElementById('sharabarStyles')) return;
+        const style = document.createElement('style');
+        style.id = 'sharabarStyles';
+        style.textContent = `
+            @keyframes marqueeScrollLTR {
+                0% { transform: translateX(-50%); }
+                100% { transform: translateX(0%); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
     function init() {
         if (localStorage.getItem(CLOSED_KEY) === 'true') return;
+        
+        addAnimationStyles();
         
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
