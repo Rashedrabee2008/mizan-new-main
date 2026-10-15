@@ -1,8 +1,5 @@
 /* ============================================================
-   sharabar.js - إدارة الإعلانات (الإصدار 5.1)
-   - الإعلان ملزوق في اللوجو (مسافة 5px)
-   - إمكانية التحريك / الإيقاف
-   - اتجاه الحركة: من اليسار إلى اليمين
+   sharabar.js - إدارة الإعلانات (الإصدار 6.0 - حركة ناعمة)
    ============================================================ */
 
 (function() {
@@ -57,7 +54,7 @@
         const bar = document.createElement('div');
         bar.id = 'sharabar';
         bar.style.cssText = `
-            position: relative;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
@@ -67,7 +64,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 99999;
+            z-index: 999999;
             overflow: hidden;
             font-family: 'Tajawal', sans-serif;
             font-weight: 800;
@@ -75,7 +72,6 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
             padding: 0 40px;
             box-sizing: border-box;
-            margin-bottom: 5px;
         `;
 
         const content = document.createElement('div');
@@ -87,6 +83,7 @@
             white-space: nowrap;
             direction: rtl;
             transition: opacity 0.3s ease;
+            width: 100%;
         `;
 
         const closeBtn = document.createElement('button');
@@ -126,6 +123,7 @@
         }
     }
 
+    // ═══════════════ وضع التحريك (Marquee) الناعم ═══════════════
     function startMarquee(container, ads) {
         if (rotationTimer) clearInterval(rotationTimer);
 
@@ -136,12 +134,24 @@
             const ad = ads[adIndex];
             if (!ad) return;
 
-            container.innerHTML = `
-                <span style="font-size:18px;">${ad.icon || '⭐'}</span>
-                <span class="ad-marquee-text">${ad.text}</span>
-                <span style="font-size:18px;">${ad.icon || '⭐'}</span>
+            // تكرار النص مرتين ورا بعض عشان الحركة تبقى ناعمة ومستمرة
+            const icon = ad.icon || '⭐';
+            const text = ad.text;
+            
+            // بنكرر النص مرتين عشان ميبقاش فيه فراغ في الآخر
+            const repeatedText = `
+                <span style="font-size:18px;">${icon}</span>
+                <span class="ad-marquee-text">${text}</span>
+                <span style="font-size:18px;">${icon}</span>
+                <span style="display:inline-block; width: 50px;"></span>
+                <span style="font-size:18px;">${icon}</span>
+                <span class="ad-marquee-text">${text}</span>
+                <span style="font-size:18px;">${icon}</span>
             `;
 
+            container.innerHTML = repeatedText;
+
+            // إعداد الرابط
             const bar = document.getElementById('sharabar');
             if (ad.link) {
                 bar.style.cursor = 'pointer';
@@ -153,14 +163,15 @@
                 bar.onclick = null;
             }
 
-            const textEl = container.querySelector('.ad-marquee-text');
-            if (textEl) {
-                textEl.style.display = 'inline-block';
-                textEl.style.whiteSpace = 'nowrap';
-                textEl.style.animation = 'none';
-                void textEl.offsetWidth;
-                textEl.style.animation = `marquee ${speed}s linear infinite`;
-            }
+            // تحريك النص
+            const textEls = container.querySelectorAll('.ad-marquee-text');
+            textEls.forEach(el => {
+                el.style.display = 'inline-block';
+                el.style.whiteSpace = 'nowrap';
+                el.style.animation = 'none';
+                void el.offsetWidth;
+                el.style.animation = `marquee ${speed}s linear infinite`;
+            });
 
             adIndex = (adIndex + 1) % ads.length;
         }
@@ -172,6 +183,7 @@
         }
     }
 
+    // ═══════════════ الوضع الثابت ═══════════════
     function startStatic(container, ads) {
         if (rotationTimer) clearInterval(rotationTimer);
 
@@ -288,6 +300,7 @@
         restartAdBar();
     };
 
+    // ═══════════════ إضافة CSS للأنيميشن الناعم ═══════════════
     function addAnimationStyles() {
         if (document.getElementById('sharabarStyles')) return;
         const style = document.createElement('style');
@@ -295,7 +308,7 @@
         style.textContent = `
             @keyframes marquee {
                 0% { transform: translateX(-100%); }
-                100% { transform: translateX(100%); }
+                100% { transform: translateX(0%); }
             }
             .ad-marquee-text {
                 display: inline-block;
