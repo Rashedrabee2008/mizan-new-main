@@ -1,5 +1,8 @@
 /* ============================================================
-   sharabar.js - إدارة الإعلانات (الإصدار 4.0)
+   sharabar.js - إدارة الإعلانات (الإصدار 5.0 النهائي)
+   - الإعلان ملزوق في اللوجو (مسافة 5px)
+   - إمكانية التحريك / الإيقاف
+   - إدارة الإعلانات (إضافة/حذف)
    ============================================================ */
 
 (function() {
@@ -17,7 +20,6 @@
     
     let currentAdIndex = 0;
     let rotationTimer = null;
-    let marqueeInterval = null;
 
     // ═══════════════ دوال مساعدة ═══════════════
     function getAds() {
@@ -32,11 +34,11 @@
     }
 
     function getMotionMode() {
-        return localStorage.getItem(MOTION_KEY) || 'marquee'; // الافتراضي متحرك
+        return localStorage.getItem(MOTION_KEY) || 'marquee';
     }
 
     function getSpeed() {
-        return parseInt(localStorage.getItem(SPEED_KEY)) || 15; // الافتراضي 15 ثانية
+        return parseInt(localStorage.getItem(SPEED_KEY)) || 15;
     }
 
     function saveAds(ads) {
@@ -49,7 +51,7 @@
         const container = document.getElementById('sharabarContainer');
         if (!container) return;
 
-        // لو الشريط موجود، نمسحه عشان نبنيه من جديد
+        // مسح أي شريط قديم
         container.innerHTML = '';
 
         const ads = getAds();
@@ -60,8 +62,9 @@
         // إنشاء الشريط الأساسي
         const bar = document.createElement('div');
         bar.id = 'sharabar';
+        // ملاحظة: الـ CSS الأساسي موجود في style.css، لكن هنضيف الأنيميشن هنا
         bar.style.cssText = `
-            position: fixed;
+            position: relative;
             top: 0;
             left: 0;
             width: 100%;
@@ -71,7 +74,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 9999999;
+            z-index: 99999;
             overflow: hidden;
             font-family: 'Tajawal', sans-serif;
             font-weight: 800;
@@ -79,6 +82,7 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
             padding: 0 40px;
             box-sizing: border-box;
+            margin-bottom: 5px;
         `;
 
         // حاوية النص
@@ -124,9 +128,6 @@
         bar.appendChild(closeBtn);
         container.appendChild(bar);
 
-        // ضبط المسافة العلوية للصفحة
-        document.body.style.paddingTop = '50px';
-
         // بدء العرض
         if (mode === 'marquee') {
             startMarquee(content, ads);
@@ -138,7 +139,6 @@
     // ═══════════════ وضع التحريك (Marquee) ═══════════════
     function startMarquee(container, ads) {
         if (rotationTimer) clearInterval(rotationTimer);
-        if (marqueeInterval) clearInterval(marqueeInterval);
 
         let adIndex = 0;
         const speed = getSpeed();
@@ -149,7 +149,7 @@
 
             container.innerHTML = `
                 <span style="font-size:18px;">${ad.icon || '⭐'}</span>
-                <span>${ad.text}</span>
+                <span class="ad-marquee-text">${ad.text}</span>
                 <span style="font-size:18px;">${ad.icon || '⭐'}</span>
             `;
 
@@ -166,7 +166,7 @@
             }
 
             // تحريك النص
-            const textEl = container.querySelector('span:nth-child(2)');
+            const textEl = container.querySelector('.ad-marquee-text');
             if (textEl) {
                 textEl.style.display = 'inline-block';
                 textEl.style.whiteSpace = 'nowrap';
@@ -178,14 +178,10 @@
             adIndex = (adIndex + 1) % ads.length;
         }
 
-        // عرض أول إعلان
         showNextAd();
 
-        // تبديل الإعلانات
         if (ads.length > 1) {
-            rotationTimer = setInterval(() => {
-                showNextAd();
-            }, speed * 1000);
+            rotationTimer = setInterval(showNextAd, speed * 1000);
         }
     }
 
@@ -221,7 +217,7 @@
         showNextAd();
 
         if (ads.length > 1) {
-            rotationTimer = setInterval(showNextAd, 8000); // 8 ثواني للتبديل
+            rotationTimer = setInterval(showNextAd, 8000);
         }
     }
 
@@ -230,25 +226,17 @@
         const bar = document.getElementById('sharabar');
         if (!bar) return;
 
-        bar.style.top = '-50px';
-        bar.style.opacity = '0';
+        bar.style.display = 'none';
         localStorage.setItem(CLOSED_KEY, 'true');
-        
-        setTimeout(() => {
-            bar.style.display = 'none';
-            document.body.style.paddingTop = '0';
-        }, 300);
 
         if (rotationTimer) clearInterval(rotationTimer);
-        if (marqueeInterval) clearInterval(marqueeInterval);
     }
 
     // ═══════════════ إعادة تشغيل الشريط ═══════════════
     function restartAdBar() {
-        const oldBar = document.getElementById('sharabar');
-        if (oldBar) oldBar.remove();
+        const container = document.getElementById('sharabarContainer');
+        if (container) container.innerHTML = '';
         if (rotationTimer) clearInterval(rotationTimer);
-        if (marqueeInterval) clearInterval(marqueeInterval);
         localStorage.removeItem(CLOSED_KEY);
         createAdBar();
     }
@@ -327,6 +315,10 @@
             @keyframes marquee {
                 0% { transform: translateX(100%); }
                 100% { transform: translateX(-100%); }
+            }
+            .ad-marquee-text {
+                display: inline-block;
+                white-space: nowrap;
             }
         `;
         document.head.appendChild(style);
