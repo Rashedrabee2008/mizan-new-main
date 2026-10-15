@@ -1,6 +1,5 @@
 /* ============================================================
-   sharabar.js - إدارة الإعلانات الديناميكية
-   الإصدار: 3.0
+   sharabar.js - إدارة الإعلانات (الإصدار 4.0)
    ============================================================ */
 
 (function() {
@@ -13,12 +12,14 @@
     
     const STORAGE_KEY = 'sharabar_ads';
     const CLOSED_KEY = 'sharabar_closed';
-    const ROTATE_INTERVAL = 8; // ثواني
-
+    const MOTION_KEY = 'sharabar_motion'; // 'marquee' أو 'static'
+    const SPEED_KEY = 'sharabar_speed'; // بالثواني
+    
     let currentAdIndex = 0;
     let rotationTimer = null;
+    let marqueeInterval = null;
 
-    // ═══════════════ جلب الإعلانات ═══════════════
+    // ═══════════════ دوال مساعدة ═══════════════
     function getAds() {
         try {
             const saved = localStorage.getItem(STORAGE_KEY);
@@ -26,28 +27,37 @@
                 const parsed = JSON.parse(saved);
                 if (Array.isArray(parsed) && parsed.length > 0) return parsed;
             }
-        } catch (e) {
-            console.warn('⚠️ خطأ في قراءة الإعلانات:', e);
-        }
+        } catch (e) {}
         return DEFAULT_ADS;
     }
 
-    // ═══════════════ حفظ الإعلانات ═══════════════
+    function getMotionMode() {
+        return localStorage.getItem(MOTION_KEY) || 'marquee'; // الافتراضي متحرك
+    }
+
+    function getSpeed() {
+        return parseInt(localStorage.getItem(SPEED_KEY)) || 15; // الافتراضي 15 ثانية
+    }
+
     function saveAds(ads) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(ads));
-        // إعادة تشغيل الشريط عشان يعرض الإعلانات الجديدة
         restartAdBar();
     }
 
     // ═══════════════ إنشاء الشريط ═══════════════
     function createAdBar() {
-        // لو الشريط موجود، منعملش حاجة
-        if (document.getElementById('sharabar')) return;
+        const container = document.getElementById('sharabarContainer');
+        if (!container) return;
+
+        // لو الشريط موجود، نمسحه عشان نبنيه من جديد
+        container.innerHTML = '';
 
         const ads = getAds();
-        if (ads.length === 0) return; // مفيش إعلانات
+        if (ads.length === 0) return;
 
-        // إنشاء العنصر
+        const mode = getMotionMode();
+
+        // إنشاء الشريط الأساسي
         const bar = document.createElement('div');
         bar.id = 'sharabar';
         bar.style.cssText = `
@@ -61,7 +71,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 999999;
+            z-index: 9999999;
             overflow: hidden;
             font-family: 'Tajawal', sans-serif;
             font-weight: 800;
@@ -69,10 +79,9 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
             padding: 0 40px;
             box-sizing: border-box;
-            transition: top 0.3s ease, opacity 0.3s ease;
         `;
 
-        // محتوى الشريط
+        // حاوية النص
         const content = document.createElement('div');
         content.id = 'sharabarContent';
         content.style.cssText = `
@@ -81,7 +90,7 @@
             gap: 10px;
             white-space: nowrap;
             direction: rtl;
-            transition: opacity 0.3s ease, transform 0.3s ease;
+            transition: opacity 0.3s ease;
         `;
 
         // زرار الإغلاق
@@ -113,50 +122,38 @@
 
         bar.appendChild(content);
         bar.appendChild(closeBtn);
-        document.body.prepend(bar);
+        container.appendChild(bar);
 
-        // ضبط المسافة
+        // ضبط المسافة العلوية للصفحة
         document.body.style.paddingTop = '50px';
 
-        // بدء تبديل الإعلانات
-        startAdRotation(content, ads);
-    }
-
-    // ═══════════════ تبديل الإعلانات ═══════════════
-    function startAdRotation(container, ads) {
-        // عرض أول إعلان
-        displayAd(container, 0, ads);
-
-        // إيقاف أي مؤقت قديم
-        if (rotationTimer) clearInterval(rotationTimer);
-
-        // لو فيه أكتر من إعلان، نبدل بينهم
-        if (ads.length > 1) {
-            rotationTimer = setInterval(() => {
-                currentAdIndex = (currentAdIndex + 1) % ads.length;
-                displayAd(container, currentAdIndex, ads);
-            }, ROTATE_INTERVAL * 1000);
+        // بدء العرض
+        if (mode === 'marquee') {
+            startMarquee(content, ads);
+        } else {
+            startStatic(content, ads);
         }
     }
 
-    function displayAd(container, index, ads) {
-        const ad = ads[index];
-        if (!ad) return;
+    // ═══════════════ وضع التحريك (Marquee) ═══════════════
+    function startMarquee(container, ads) {
+        if (rotationTimer) clearInterval(rotationTimer);
+        if (marqueeInterval) clearInterval(marqueeInterval);
 
-        // تأثير الاختفاء والظهور
-        container.style.opacity = '0';
-        container.style.transform = 'translateY(-5px)';
-        
-        setTimeout(() => {
+        let adIndex = 0;
+        const speed = getSpeed();
+
+        function showNextAd() {
+            const ad = ads[adIndex];
+            if (!ad) return;
+
             container.innerHTML = `
                 <span style="font-size:18px;">${ad.icon || '⭐'}</span>
                 <span>${ad.text}</span>
                 <span style="font-size:18px;">${ad.icon || '⭐'}</span>
             `;
-            container.style.opacity = '1';
-            container.style.transform = 'translateY(0)';
-            
-            // لو فيه رابط
+
+            // إعداد الرابط
             const bar = document.getElementById('sharabar');
             if (ad.link) {
                 bar.style.cursor = 'pointer';
@@ -167,7 +164,65 @@
                 bar.style.cursor = 'default';
                 bar.onclick = null;
             }
-        }, 300);
+
+            // تحريك النص
+            const textEl = container.querySelector('span:nth-child(2)');
+            if (textEl) {
+                textEl.style.display = 'inline-block';
+                textEl.style.whiteSpace = 'nowrap';
+                textEl.style.animation = 'none';
+                void textEl.offsetWidth; // إعادة تشغيل الأنيميشن
+                textEl.style.animation = `marquee ${speed}s linear infinite`;
+            }
+
+            adIndex = (adIndex + 1) % ads.length;
+        }
+
+        // عرض أول إعلان
+        showNextAd();
+
+        // تبديل الإعلانات
+        if (ads.length > 1) {
+            rotationTimer = setInterval(() => {
+                showNextAd();
+            }, speed * 1000);
+        }
+    }
+
+    // ═══════════════ الوضع الثابت ═══════════════
+    function startStatic(container, ads) {
+        if (rotationTimer) clearInterval(rotationTimer);
+
+        let adIndex = 0;
+        function showNextAd() {
+            const ad = ads[adIndex];
+            if (!ad) return;
+
+            container.innerHTML = `
+                <span style="font-size:18px;">${ad.icon || '⭐'}</span>
+                <span>${ad.text}</span>
+                <span style="font-size:18px;">${ad.icon || '⭐'}</span>
+            `;
+
+            const bar = document.getElementById('sharabar');
+            if (ad.link) {
+                bar.style.cursor = 'pointer';
+                bar.onclick = (e) => {
+                    if (e.target.tagName !== 'BUTTON') window.open(ad.link, '_blank');
+                };
+            } else {
+                bar.style.cursor = 'default';
+                bar.onclick = null;
+            }
+
+            adIndex = (adIndex + 1) % ads.length;
+        }
+
+        showNextAd();
+
+        if (ads.length > 1) {
+            rotationTimer = setInterval(showNextAd, 8000); // 8 ثواني للتبديل
+        }
     }
 
     // ═══════════════ إغلاق الشريط ═══════════════
@@ -184,10 +239,8 @@
             document.body.style.paddingTop = '0';
         }, 300);
 
-        if (rotationTimer) {
-            clearInterval(rotationTimer);
-            rotationTimer = null;
-        }
+        if (rotationTimer) clearInterval(rotationTimer);
+        if (marqueeInterval) clearInterval(marqueeInterval);
     }
 
     // ═══════════════ إعادة تشغيل الشريط ═══════════════
@@ -195,14 +248,12 @@
         const oldBar = document.getElementById('sharabar');
         if (oldBar) oldBar.remove();
         if (rotationTimer) clearInterval(rotationTimer);
-        
-        // مسح حالة الإغلاق عشان يظهر بالإعلانات الجديدة
+        if (marqueeInterval) clearInterval(marqueeInterval);
         localStorage.removeItem(CLOSED_KEY);
-        
         createAdBar();
     }
 
-    // ═══════════════ دوال مساعدة للـ UI ═══════════════
+    // ═══════════════ دوال إدارة الإعلانات (UI) ═══════════════
     window.addNewAd = function() {
         const text = document.getElementById('newAdText')?.value.trim();
         const icon = document.getElementById('newAdIcon')?.value.trim() || '⭐';
@@ -217,11 +268,9 @@
         ads.push({ text, icon, link });
         saveAds(ads);
 
-        // تفريغ الحقول
         document.getElementById('newAdText').value = '';
         document.getElementById('newAdLink').value = '';
         
-        // تحديث القائمة
         if (typeof renderAdsList === 'function') renderAdsList();
         alert('✅ تم إضافة الإعلان بنجاح!');
     };
@@ -255,15 +304,48 @@
         `).join('');
     };
 
+    // ═══════════════ إعدادات التحريك ═══════════════
+    window.toggleAdMotion = function() {
+        const mode = getMotionMode();
+        const newMode = mode === 'marquee' ? 'static' : 'marquee';
+        localStorage.setItem(MOTION_KEY, newMode);
+        restartAdBar();
+        alert(newMode === 'marquee' ? '✅ تم تفعيل التحريك' : '✅ تم إيقاف التحريك (ثابت)');
+    };
+
+    window.setAdSpeed = function(seconds) {
+        localStorage.setItem(SPEED_KEY, seconds);
+        restartAdBar();
+    };
+
+    // ═══════════════ إضافة CSS للأنيميشن ═══════════════
+    function addAnimationStyles() {
+        if (document.getElementById('sharabarStyles')) return;
+        const style = document.createElement('style');
+        style.id = 'sharabarStyles';
+        style.textContent = `
+            @keyframes marquee {
+                0% { transform: translateX(100%); }
+                100% { transform: translateX(-100%); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
     // ═══════════════ التهيئة ═══════════════
     function init() {
-        // لو المستخدم قفل الإعلان
         if (localStorage.getItem(CLOSED_KEY) === 'true') return;
-
+        
+        addAnimationStyles();
+        
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', createAdBar);
+            document.addEventListener('DOMContentLoaded', () => {
+                createAdBar();
+                if (typeof window.renderAdsList === 'function') window.renderAdsList();
+            });
         } else {
             createAdBar();
+            if (typeof window.renderAdsList === 'function') window.renderAdsList();
         }
     }
 
