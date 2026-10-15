@@ -209,7 +209,20 @@
         <!-- قائمة الإعلانات هتظهر هنا -->
     </div>
 </div>
-        
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+    <button class="btn btn-info btn-block" onclick="toggleAdMotion()">
+        <i class="fas fa-play"></i> تحريك / إيقاف
+    </button>
+    <div class="form-group" style="margin:0;">
+        <select id="adSpeedSelect" class="pos-select" onchange="setAdSpeed(this.value)">
+            <option value="5">سريع جداً (5 ثواني)</option>
+            <option value="10">سريع (10 ثواني)</option>
+            <option value="15" selected>متوسط (15 ثانية)</option>
+            <option value="25">بطيء (25 ثانية)</option>
+        </select>
+    </div>
+</div>
         <!-- ═══════════ بيانات الشركة ═══════════ -->
         <div id="page-company" class="page-container">
             <div class="page-content">
@@ -1620,21 +1633,6 @@
                         <i class="fas fa-building"></i> فتح صفحة بيانات الشركة
                     </button>
                 </div>
-
-                <!-- أزرار التحكم في التحريك -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
-    <button class="btn btn-info btn-block" onclick="toggleAdMotion()">
-        <i class="fas fa-play"></i> تحريك / إيقاف
-    </button>
-    <div class="form-group" style="margin:0;">
-        <select id="adSpeedSelect" class="pos-select" onchange="setAdSpeed(this.value)">
-            <option value="5">سريع جداً (5 ثواني)</option>
-            <option value="10">سريع (10 ثواني)</option>
-            <option value="15" selected>متوسط (15 ثانية)</option>
-            <option value="25">بطيء (25 ثانية)</option>
-        </select>
-    </div>
-</div>
 
                 <div class="settings-section">
                     <h3>☁️ السحابة (Firebase)</h3>
