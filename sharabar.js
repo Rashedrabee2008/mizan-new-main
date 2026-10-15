@@ -1,8 +1,8 @@
 /* ============================================================
-   sharabar.js - إدارة الإعلانات (الإصدار 9.0 النهائي)
+   sharabar.js - إدارة الإعلانات (الإصدار 10.0)
    - حركة من الشمال لليمين (يسار ← يمين)
-   - ناعمة جداً بدون أي ناتشة (باستخدام requestAnimationFrame)
-   - إدارة الإعلانات (إضافة/حذف/تشغيل/إيقاف)
+   - ناعمة جداً بدون ناتشة
+   - سرعة قابلة للتحكم (بطيء / متوسط / سريع)
    ============================================================ */
 
 (function() {
@@ -19,8 +19,6 @@
     
     let rotationTimer = null;
     let rafId = null;
-    let currentX = 0;
-    let lastTime = 0;
 
     function getAds() {
         try {
@@ -38,7 +36,8 @@
     }
 
     function getSpeed() {
-        return parseInt(localStorage.getItem(SPEED_KEY)) || 15;
+        // السرعة بالثواني (الوقت اللي بياخده النص عشان يعدي الشاشة)
+        return parseInt(localStorage.getItem(SPEED_KEY)) || 30;
     }
 
     function saveAds(ads) {
@@ -129,14 +128,13 @@
         }
     }
 
-    // ═══════════════ وضع التحريك (من الشمال لليمين - ناعم جداً) ═══════════════
+    // ═══════════════ وضع التحريك (من الشمال لليمين) ═══════════════
     function startMarquee(container, ads) {
-        // إيقاف أي حركة قديمة
         if (rafId) cancelAnimationFrame(rafId);
         if (rotationTimer) clearInterval(rotationTimer);
 
         let adIndex = 0;
-        const speed = getSpeed(); // بالثواني
+        const speedSeconds = getSpeed(); // الوقت اللي ياخده النص عشان يعدي الشاشة
 
         function showNextAd() {
             const ad = ads[adIndex];
@@ -169,19 +167,21 @@
                 bar.onclick = null;
             }
 
-            // حساب عرض النص الكلي
+            // حساب عرض النص الواحد (تقريباً)
             const totalWidth = container.scrollWidth;
-            // النص بيمشي من -النص كله لـ 0 (من الشمال لليمين)
-            // عشان يبقى ناعم، بنحرك مسافة نص واحد بس
             const singleAdWidth = totalWidth / 4;
-            
-            // إعادة تعيين الموقع
-            currentX = -singleAdWidth * 3; // نبدأ من 3/4 العرض عشان النص يبقى في النص
+
+            // ★★★ حساب السرعة الصح ★★★
+            // السرعة = المسافة ÷ الزمن
+            // المسافة = عرض النص الواحد
+            // الزمن = السرعة بالثواني
+            const speedPxPerSec = singleAdWidth / speedSeconds;
+
+            // نبدأ من مكان يكون فيه النص بره الشاشة من الشمال
+            let currentX = -singleAdWidth * 3;
             container.style.transform = `translateX(${currentX}px)`;
 
-            // حركة ناعمة باستخدام requestAnimationFrame
             let lastTimestamp = performance.now();
-            const speedPxPerSec = (totalWidth * 4) / speed; // سرعة البكسل في الثانية
 
             function animate(timestamp) {
                 const deltaTime = (timestamp - lastTimestamp) / 1000;
@@ -190,7 +190,7 @@
                 // الحركة من الشمال لليمين (زيادة في X)
                 currentX += speedPxPerSec * deltaTime;
 
-                // لو وصلنا للنهاية (النص الأول خرج من اليمين)، نرجع نقطة البداية بهدوء
+                // لو النص وصل للنهاية (خرج من اليمين)، نرجع نقطة البداية بهدوء
                 if (currentX >= 0) {
                     currentX -= singleAdWidth;
                 }
@@ -206,8 +206,9 @@
 
         showNextAd();
 
+        // لو فيه أكتر من إعلان، نبدل بينهم
         if (ads.length > 1) {
-            rotationTimer = setInterval(showNextAd, speed * 1000);
+            rotationTimer = setInterval(showNextAd, speedSeconds * 1000);
         }
     }
 
