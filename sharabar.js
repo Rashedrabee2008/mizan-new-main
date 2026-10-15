@@ -1,15 +1,24 @@
 /* ============================================================
-   sharabar.js - إدارة الإعلانات (الإصدار 13.0)
-   - لون مخصص لكل إعلان
-   - بدون ناتشة
-   - حركة من الشمال لليمين
+   sharabar.js - إدارة الإعلانات (الإصدار 12.0)
+   - إعلانات بألوان مخصصة
+   - إعلانات مجدولة (وقت البدء والانتهاء)
+   - إعلانات حسب الدور
+   - حركة من الشمال لليمين بدون ناتشة
    ============================================================ */
 
 (function() {
     'use strict';
 
     const DEFAULT_ADS = [
-        { text: "🎉 السلام عليكم ورحمة الله وبركاته 🎉", icon: "⭐", link: "", color: "#1E3A8A" }
+        { 
+            text: "🎉 السلام عليكم ورحمة الله وبركاته 🎉", 
+            icon: "⭐", 
+            link: "",
+            color: "#1E3A8A",
+            startDate: "",
+            endDate: "",
+            role: ""
+        }
     ];
     
     const STORAGE_KEY = 'sharabar_ads';
@@ -19,6 +28,7 @@
     
     let rotationTimer = null;
 
+    // ═══════════════ دوال مساعدة ═══════════════
     function getAds() {
         try {
             const saved = localStorage.getItem(STORAGE_KEY);
@@ -43,17 +53,56 @@
         restartAdBar();
     }
 
+    // ═══════════════ فلترة الإعلانات ═══════════════
+    function filterActiveAds(ads) {
+        const now = new Date();
+        const currentUser = window.currentUser || {};
+        const userRole = currentUser.role || '';
+
+        return ads.filter(function(ad) {
+            // فلتر الوقت
+            if (ad.startDate) {
+                const start = new Date(ad.startDate);
+                if (now < start) return false;
+            }
+            if (ad.endDate) {
+                const end = new Date(ad.endDate);
+                if (now > end) return false;
+            }
+
+            // فلتر الدور
+            if (ad.role) {
+                if (ad.role === 'staff') {
+                    // كل الموظفين ما عدا المدير
+                    if (userRole === 'admin') return false;
+                } else if (ad.role !== userRole) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+    }
+
+    // ═══════════════ إنشاء الشريط ═══════════════
     function createAdBar() {
         const container = document.getElementById('sharabarContainer');
         if (!container) return;
 
         container.innerHTML = '';
 
-        const ads = getAds();
-        if (ads.length === 0) return;
+        // جلب الإعلانات وتصفيتها
+        const allAds = getAds();
+        const activeAds = filterActiveAds(allAds);
+
+        // لو مفيش إعلانات نشطة، نخفي الشريط
+        if (activeAds.length === 0) {
+            document.body.style.paddingTop = '0';
+            return;
+        }
 
         const mode = getMotionMode();
-        const firstAd = ads[0];
+        const firstAd = activeAds[0];
         const bgColor = firstAd.color || '#1E3A8A';
 
         const bar = document.createElement('div');
@@ -77,7 +126,6 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
             padding: 0 40px;
             box-sizing: border-box;
-            transition: background 0.5s ease;
         `;
 
         const content = document.createElement('div');
@@ -122,15 +170,17 @@
         bar.appendChild(closeBtn);
         container.appendChild(bar);
 
+        // ضبط المسافة العلوية للصفحة
         document.body.style.paddingTop = '50px';
 
         if (mode === 'marquee') {
-            startMarquee(content, ads, bar);
+            startMarquee(content, activeAds, bar);
         } else {
-            startStatic(content, ads, bar);
+            startStatic(content, activeAds, bar);
         }
     }
 
+    // ═══════════════ وضع التحريك (من الشمال لليمين) ═══════════════
     function startMarquee(container, ads, bar) {
         if (rotationTimer) clearInterval(rotationTimer);
 
@@ -141,7 +191,7 @@
             const ad = ads[adIndex];
             if (!ad) return;
 
-            // ★★★ تحديث لون الشريط مع كل إعلان ★★★
+            // تحديث لون الشريط
             const bgColor = ad.color || '#1E3A8A';
             bar.style.background = `linear-gradient(90deg, ${bgColor}, ${bgColor}dd, ${bgColor})`;
 
@@ -183,6 +233,7 @@
         }
     }
 
+    // ═══════════════ الوضع الثابت ═══════════════
     function startStatic(container, ads, bar) {
         if (rotationTimer) clearInterval(rotationTimer);
 
@@ -191,7 +242,7 @@
             const ad = ads[adIndex];
             if (!ad) return;
 
-            // ★★★ تحديث لون الشريط ★★★
+            // تحديث لون الشريط
             const bgColor = ad.color || '#1E3A8A';
             bar.style.background = `linear-gradient(90deg, ${bgColor}, ${bgColor}dd, ${bgColor})`;
 
@@ -246,6 +297,9 @@
         const icon = document.getElementById('newAdIcon')?.value.trim() || '⭐';
         const link = document.getElementById('newAdLink')?.value.trim() || '';
         const color = document.getElementById('newAdColor')?.value || '#1E3A8A';
+        const startDate = document.getElementById('newAdStart')?.value || '';
+        const endDate = document.getElementById('newAdEnd')?.value || '';
+        const role = document.getElementById('newAdRole')?.value || '';
 
         if (!text) {
             alert('⚠️ اكتب نص الإعلان الأول!');
@@ -253,11 +307,23 @@
         }
 
         const ads = getAds();
-        ads.push({ text: text, icon: icon, link: link, color: color });
+        ads.push({ 
+            text: text, 
+            icon: icon, 
+            link: link,
+            color: color,
+            startDate: startDate,
+            endDate: endDate,
+            role: role
+        });
         saveAds(ads);
 
+        // تفريغ الحقول
         document.getElementById('newAdText').value = '';
         document.getElementById('newAdLink').value = '';
+        document.getElementById('newAdStart').value = '';
+        document.getElementById('newAdEnd').value = '';
+        document.getElementById('newAdRole').value = '';
         document.getElementById('newAdColor').value = '#1E3A8A';
         
         if (typeof renderAdsList === 'function') renderAdsList();
@@ -284,11 +350,28 @@
 
         container.innerHTML = ads.map((ad, i) => {
             const bgColor = ad.color || '#1E3A8A';
+            const roleLabels = {
+                'admin': '👑 مدير',
+                'manager': '📊 مشرف',
+                'cashier': '💰 كاشير',
+                'seller': '🛒 بائع',
+                'viewer': '👁️ مشاهد',
+                'staff': '👥 موظفين'
+            };
+            const roleLabel = ad.role ? roleLabels[ad.role] || ad.role : '🌐 الكل';
+            const timeLabel = (ad.startDate || ad.endDate) ? '⏰ مجدول' : '';
+
             return `
             <div style="display:flex;justify-content:space-between;align-items:center;background:#1C1C1C;padding:10px 12px;border-radius:8px;margin-bottom:6px;border:1px solid #3D3D3D;border-right:4px solid ${bgColor};">
-                <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#F5E6C8;flex:1;min-width:0;">
-                    <span>${ad.icon || '⭐'}</span>
-                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ad.text}</span>
+                <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#F5E6C8;flex:1;min-width:0;flex-direction:column;align-items:flex-start;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span>${ad.icon || '⭐'}</span>
+                        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">${ad.text}</span>
+                    </div>
+                    <div style="font-size:10px;color:#A89070;display:flex;gap:8px;">
+                        <span>${roleLabel}</span>
+                        ${timeLabel ? `<span>${timeLabel}</span>` : ''}
+                    </div>
                 </div>
                 <button onclick="deleteAd(${i})" style="background:#E06060;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:800;">✕</button>
             </div>
@@ -309,6 +392,7 @@
         restartAdBar();
     };
 
+    // ═══════════════ CSS الأنيميشن ═══════════════
     function addAnimationStyles() {
         if (document.getElementById('sharabarStyles')) return;
         const style = document.createElement('style');
@@ -322,6 +406,7 @@
         document.head.appendChild(style);
     }
 
+    // ═══════════════ التهيئة ═══════════════
     function init() {
         if (localStorage.getItem(CLOSED_KEY) === 'true') return;
         
