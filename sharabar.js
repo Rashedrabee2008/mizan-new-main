@@ -1,5 +1,8 @@
 /* ============================================================
-   sharabar.js - إدارة الإعلانات (الإصدار 7.0 - حركة سلسة بدون ناتشة)
+   sharabar.js - إدارة الإعلانات (الإصدار 9.0 النهائي)
+   - حركة من الشمال لليمين (يسار ← يمين)
+   - ناعمة جداً بدون أي ناتشة (باستخدام requestAnimationFrame)
+   - إدارة الإعلانات (إضافة/حذف/تشغيل/إيقاف)
    ============================================================ */
 
 (function() {
@@ -15,6 +18,9 @@
     const SPEED_KEY = 'sharabar_speed';
     
     let rotationTimer = null;
+    let rafId = null;
+    let currentX = 0;
+    let lastTime = 0;
 
     function getAds() {
         try {
@@ -74,7 +80,6 @@
             box-sizing: border-box;
         `;
 
-        // حاوية الأنيميشن
         const content = document.createElement('div');
         content.id = 'sharabarContent';
         content.style.cssText = `
@@ -84,7 +89,7 @@
             white-space: nowrap;
             direction: rtl;
             width: max-content;
-            animation: none;
+            will-change: transform;
         `;
 
         const closeBtn = document.createElement('button');
@@ -124,12 +129,14 @@
         }
     }
 
-    // ═══════════════ وضع التحريك السلس ═══════════════
+    // ═══════════════ وضع التحريك (من الشمال لليمين - ناعم جداً) ═══════════════
     function startMarquee(container, ads) {
+        // إيقاف أي حركة قديمة
+        if (rafId) cancelAnimationFrame(rafId);
         if (rotationTimer) clearInterval(rotationTimer);
 
         let adIndex = 0;
-        const speed = getSpeed();
+        const speed = getSpeed(); // بالثواني
 
         function showNextAd() {
             const ad = ads[adIndex];
@@ -138,19 +145,16 @@
             const icon = ad.icon || '⭐';
             const text = ad.text;
             
-            // بنكرر النص مرتين عشان الحركة تبقى مستمرة ومفيش ناتشة
-            // الحاوية هتتحرك من 0 لـ -50% وبس، عشان لما توصل للنص التاني تكون لسه فيه نص تاني ورا
-            const repeatedContent = `
-                <span style="font-size:18px;">${icon}</span>
-                <span style="padding: 0 10px;">${text}</span>
-                <span style="font-size:18px;">${icon}</span>
-                <span style="display:inline-block; width: 100px;"></span>
-                <span style="font-size:18px;">${icon}</span>
-                <span style="padding: 0 10px;">${text}</span>
-                <span style="font-size:18px;">${icon}</span>
-                <span style="display:inline-block; width: 100px;"></span>
-            `;
-
+            // تكرار النص 4 مرات لضمان استمرارية الحركة بدون قطع
+            let repeatedContent = '';
+            for (let i = 0; i < 4; i++) {
+                repeatedContent += `
+                    <span style="font-size:18px;">${icon}</span>
+                    <span style="padding: 0 15px;">${text}</span>
+                    <span style="font-size:18px;">${icon}</span>
+                    <span style="display:inline-block; width: 100px;"></span>
+                `;
+            }
             container.innerHTML = repeatedContent;
 
             // إعداد الرابط
@@ -165,10 +169,37 @@
                 bar.onclick = null;
             }
 
-            // تحريك الحاوية نفسها مش النص
-            container.style.animation = 'none';
-            void container.offsetWidth; // إعادة تشغيل الأنيميشن
-            container.style.animation = `marqueeScroll ${speed}s linear infinite`;
+            // حساب عرض النص الكلي
+            const totalWidth = container.scrollWidth;
+            // النص بيمشي من -النص كله لـ 0 (من الشمال لليمين)
+            // عشان يبقى ناعم، بنحرك مسافة نص واحد بس
+            const singleAdWidth = totalWidth / 4;
+            
+            // إعادة تعيين الموقع
+            currentX = -singleAdWidth * 3; // نبدأ من 3/4 العرض عشان النص يبقى في النص
+            container.style.transform = `translateX(${currentX}px)`;
+
+            // حركة ناعمة باستخدام requestAnimationFrame
+            let lastTimestamp = performance.now();
+            const speedPxPerSec = (totalWidth * 4) / speed; // سرعة البكسل في الثانية
+
+            function animate(timestamp) {
+                const deltaTime = (timestamp - lastTimestamp) / 1000;
+                lastTimestamp = timestamp;
+
+                // الحركة من الشمال لليمين (زيادة في X)
+                currentX += speedPxPerSec * deltaTime;
+
+                // لو وصلنا للنهاية (النص الأول خرج من اليمين)، نرجع نقطة البداية بهدوء
+                if (currentX >= 0) {
+                    currentX -= singleAdWidth;
+                }
+
+                container.style.transform = `translateX(${currentX}px)`;
+                rafId = requestAnimationFrame(animate);
+            }
+
+            rafId = requestAnimationFrame(animate);
 
             adIndex = (adIndex + 1) % ads.length;
         }
@@ -182,6 +213,7 @@
 
     // ═══════════════ الوضع الثابت ═══════════════
     function startStatic(container, ads) {
+        if (rafId) cancelAnimationFrame(rafId);
         if (rotationTimer) clearInterval(rotationTimer);
 
         let adIndex = 0;
@@ -194,6 +226,7 @@
                 <span>${ad.text}</span>
                 <span style="font-size:18px;">${ad.icon || '⭐'}</span>
             `;
+            container.style.transform = 'translateX(0)';
 
             const bar = document.getElementById('sharabar');
             if (ad.link) {
@@ -223,13 +256,15 @@
         bar.style.display = 'none';
         localStorage.setItem(CLOSED_KEY, 'true');
 
+        if (rafId) cancelAnimationFrame(rafId);
         if (rotationTimer) clearInterval(rotationTimer);
     }
 
     function restartAdBar() {
+        if (rafId) cancelAnimationFrame(rafId);
+        if (rotationTimer) clearInterval(rotationTimer);
         const container = document.getElementById('sharabarContainer');
         if (container) container.innerHTML = '';
-        if (rotationTimer) clearInterval(rotationTimer);
         localStorage.removeItem(CLOSED_KEY);
         createAdBar();
     }
@@ -297,24 +332,8 @@
         restartAdBar();
     };
 
-    // ═══════════════ إضافة CSS للأنيميشن السلس ═══════════════
-    function addAnimationStyles() {
-        if (document.getElementById('sharabarStyles')) return;
-        const style = document.createElement('style');
-        style.id = 'sharabarStyles';
-        style.textContent = `
-            @keyframes marqueeScroll {
-    0% { transform: translateX(-50%); }
-    100% { transform: translateX(0%); }
-}
-        `;
-        document.head.appendChild(style);
-    }
-
     function init() {
         if (localStorage.getItem(CLOSED_KEY) === 'true') return;
-        
-        addAnimationStyles();
         
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
