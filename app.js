@@ -1,12 +1,12 @@
 // ============================================================
-// الميزان Pro - app.js v23.0 (النسخة النهائية المصححة)
+// الميزان Pro - app.js v24.0 (النسخة النهائية الكاملة)
 // تسجيل الدخول + المستخدمين + الشركة + اللوجو
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('📱 app.js v23.0 - بدء التشغيل');
+    console.log('📱 app.js v24.0 - بدء التشغيل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: متغيرات عامة
@@ -80,19 +80,17 @@
         }
     };
 
-    // ★★★ دالة تحميل بيانات الشركة (المفقودة) ★★★
+    // ★★★ دالة تحميل بيانات الشركة (الجديدة والمهمة) ★★★
     window.loadCompanyData = function() {
         try {
-            // نجرب localStorage مباشرة
+            // نجرب مصادر متعددة
             let saved = localStorage.getItem('mizan_companyData');
-            
-            // لو مش موجود، نجرب DataStore
+
             if (!saved && window.DataStore && window.DataStore.get) {
                 const dsData = window.DataStore.get('companyData');
                 if (dsData) saved = JSON.stringify(dsData);
             }
 
-            // لو مش موجود، نجرب companyData الافتراضية
             if (!saved) {
                 saved = localStorage.getItem('companyData');
             }
@@ -136,7 +134,7 @@
             const curEl = document.getElementById('companyCurrency');
             if (curEl) curEl.value = c.currency || 'ج.م';
 
-            // المعاينة
+            // معاينة اللوجو
             const preview = document.getElementById('companyLogoPreview');
             const img = document.getElementById('companyLogoImg');
             if (preview && img) {
@@ -169,7 +167,6 @@
             }
         }
 
-        // لو لسه فاضية، نعمل المدير الافتراضي
         if (users.length === 0) {
             users = [
                 { id: 'user_admin', name: 'المدير', password: '123456', role: 'admin', active: true }
@@ -196,7 +193,7 @@
         const userId = userIdEl ? userIdEl.value : '';
         const password = passwordEl ? passwordEl.value : '';
 
-        // التحقق من قفل الحساب (لو الدالة موجودة)
+        // التحقق من قفل الحساب
         if (typeof window.isAccountLocked === 'function') {
             const lockStatus = window.isAccountLocked();
             if (lockStatus.locked) {
@@ -230,7 +227,6 @@
         if (typeof window.verifyPassword === 'function') {
             isPasswordValid = await window.verifyPassword(password, user.password);
         } else {
-            // مقارنة مباشرة
             isPasswordValid = (password === user.password);
         }
 
@@ -251,7 +247,7 @@
         if (typeof window.recordSuccessfulLogin === 'function') window.recordSuccessfulLogin();
 
         window.currentUser = user;
-        
+
         try {
             localStorage.setItem('mizan_current_user', JSON.stringify({
                 id: user.id,
@@ -268,11 +264,11 @@
         if (loginCont) loginCont.classList.add('hidden');
         if (appCont) appCont.style.display = 'block';
 
-        if (typeof window.updateUserUI === 'function') window.updateUserUI();
-        if (typeof window.showToast === 'function') window.showToast('🔓 مرحباً ' + user.name + '!', 'success');
-
         // ★★★ تحميل بيانات الشركة واللوجو بعد الدخول ★★★
         window.loadCompanyData();
+
+        if (typeof window.updateUserUI === 'function') window.updateUserUI();
+        if (typeof window.showToast === 'function') window.showToast('🔓 مرحباً ' + user.name + '!', 'success');
 
         setTimeout(function() {
             if (typeof window.initAppAfterLogin === 'function') {
@@ -441,7 +437,7 @@
             window.DataStore.set('users', window.users);
         }
         localStorage.setItem('mizan_users', JSON.stringify(window.users));
-        
+
         window.resetUserForm();
         window.renderUsers();
         window.populateLoginUsers();
@@ -511,7 +507,7 @@
             window.DataStore.set('users', window.users);
         }
         localStorage.setItem('mizan_users', JSON.stringify(window.users));
-        
+
         window.renderUsers();
         window.populateLoginUsers();
         if (typeof window.showToast === 'function') window.showToast('🗑️ تم الحذف', 'info');
@@ -577,12 +573,10 @@
                 return;
             }
 
-            // كمان نحفظ في DataStore لو موجود
             if (window.DataStore && window.DataStore.set) {
                 window.DataStore.set('companyData', window.companyData);
             }
 
-            // تحديث الواجهة
             window.applyLogoOnLoad();
 
             if (typeof window.showToast === 'function') {
@@ -608,7 +602,6 @@
         if (!window.companyData) window.companyData = {};
         window.companyData.logo = '';
 
-        // الحفظ المباشر
         localStorage.setItem('mizan_companyData', JSON.stringify(window.companyData));
 
         if (window.DataStore && window.DataStore.set) {
@@ -656,14 +649,12 @@
             updatedAt: new Date().toISOString()
         };
 
-        // ★★★ الحفظ المباشر ★★★
         localStorage.setItem('mizan_companyData', JSON.stringify(window.companyData));
 
         if (window.DataStore && window.DataStore.set) {
             window.DataStore.set('companyData', window.companyData);
         }
 
-        // تحديث الهيدر
         window.applyLogoOnLoad();
 
         if (typeof window.showToast === 'function') {
@@ -905,8 +896,9 @@
             }
         }
 
-        // ★★★ تحميل بيانات الشركة واللوجو ★★★
+        // ★★★ تحميل بيانات الشركة واللوجو - مهم جداً ★★★
         window.loadCompanyData();
+        window.applyLogoOnLoad();
 
         // ملء المستخدمين
         window.populateLoginUsers();
@@ -954,6 +946,6 @@
     }
 
     window.__appLoaded = true;
-    console.log('✅ app.js v23.0 كامل جاهز');
+    console.log('✅ app.js v24.0 كامل جاهز');
 
 })();
