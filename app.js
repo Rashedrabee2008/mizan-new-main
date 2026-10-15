@@ -399,13 +399,23 @@
 // الجزء 5: بيانات الشركة + اللوجو
 // ═══════════════════════════════════════════════════════════
 
-window.renderCompany = function() {
-    const c = window.companyData || {};
-
-    const setVal = function(id, val) {
-        const el = document.getElementById(id);
-        if (el) el.value = val || '';
-    };
+wfunction loadCompanyData() {
+    const saved = localStorage.getItem('companyData');
+    if (saved) {
+        window.companyData = JSON.parse(saved);
+        
+        // تحديث اللوجو في الهيدر
+        if (window.companyData.logo) {
+            const headerLogo = document.getElementById('headerLogo');
+            const headerDefaultIcon = document.getElementById('headerDefaultIcon');
+            if (headerLogo && headerDefaultIcon) {
+                headerLogo.src = window.companyData.logo;
+                headerLogo.style.display = 'block';
+                headerDefaultIcon.style.display = 'none';
+            }
+        }
+    }
+}
 
     setVal('companyName', c.name);
     setVal('companyTradeName', c.tradeName);
@@ -458,19 +468,19 @@ window.renderCompany = function() {
 };
 
 // ═══ اللوجو: رفع ═══
-window.uploadCompanyLogo = function(event) {
+function uploadCompanyLogo(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // التحقق من الصيغة
-    if (!file.type.match('image.*')) {
-        window.showToast('⚠️ الرجاء اختيار صورة (JPG أو PNG)', 'error');
+    // تأكد إن الملف صورة
+    if (!file.type.startsWith('image/')) {
+        alert('⚠️ الرجاء اختيار صورة (JPG أو PNG)');
         return;
     }
 
-    // التحقق من الحجم
-    if (file.size > 500000) {
-        window.showToast('⚠️ الصورة كبيرة (الحد 500KB)', 'error');
+    // تأكد إن حجم الملف مش كبير
+    if (file.size > 2 * 1024 * 1024) {
+        alert('⚠️ حجم الصورة كبير جداً (أقصى حد 2 ميجا)');
         return;
     }
 
@@ -478,12 +488,12 @@ window.uploadCompanyLogo = function(event) {
     reader.onload = function(e) {
         const logoData = e.target.result;
 
-        // حفظ في companyData
+        // تأكد إن companyData موجودة
         if (!window.companyData) window.companyData = {};
         window.companyData.logo = logoData;
 
-        // حفظ في localStorage
-        window.setData('companyData', window.companyData);
+        // ★★★ الحفظ في localStorage بدل window.setData ★★★
+        localStorage.setItem('companyData', JSON.stringify(window.companyData));
 
         // تحديث المعاينة
         const preview = document.getElementById('companyLogoPreview');
@@ -493,18 +503,24 @@ window.uploadCompanyLogo = function(event) {
             preview.style.display = 'block';
         }
 
-        // تطبيق اللوجو في كل مكان
-        window.applyLogoOnLoad();
-
-        // مزامنة مع Firebase
-        if (window.DataStore && window.DataStore.set) {
-            window.DataStore.set('companyData', window.companyData);
+        // تحديث اللوجو في الهيدر
+        const headerLogo = document.getElementById('headerLogo');
+        const headerDefaultIcon = document.getElementById('headerDefaultIcon');
+        if (headerLogo && headerDefaultIcon) {
+            headerLogo.src = logoData;
+            headerLogo.style.display = 'block';
+            headerDefaultIcon.style.display = 'none';
         }
 
-        window.showToast('✅ تم رفع الشعار', 'success');
+        // رسالة نجاح
+        if (typeof showToast === 'function') {
+            showToast('✅ تم رفع اللوجو بنجاح', 'success');
+        } else {
+            alert('✅ تم رفع اللوجو بنجاح');
+        }
     };
     reader.readAsDataURL(file);
-};
+}
 
 // ═══ اللوجو: حذف ═══
 window.removeCompanyLogo = async function() {
