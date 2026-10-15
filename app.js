@@ -1,19 +1,31 @@
 /* ============================================================
-   الميزان Pro - app.js v25.0 (حل مشكلة تسجيل الدخول)
+   الميزان Pro - app.js v24.0 (النسخة النهائية المصححة)
    ============================================================ */
 
 (function() {
     'use strict';
 
-    console.log('📱 app.js v25.0 - بدء التشغيل');
+    console.log('📱 app.js v24.0 - بدء التشغيل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: متغيرات عامة
     // ═══════════════════════════════════════════════════════════
 
     window.currentUser = null;
+    window.currentSaleItems = [];
+    window.currentPurItems = [];
+    window.currentRetItems = [];
+    window.currentTreasuryFilter = 'all';
+    window.currentInvoiceFilter = 'all';
+    window.currentPayTab = 'collect';
+    window.currentWarehouseItems = [];
+    window.currentWarehouseType = '';
+    window.currentReport = 'daily';
+    window.currentCoupon = null;
+    window.currentPointsToRedeem = 0;
+    window.currentCustomerName = '';
+    window.currentWarehouseFilter = 'all';
     window.companyData = window.companyData || {};
-    window.users = window.users || [];
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 2: تطبيق اللوجو
@@ -23,6 +35,7 @@
         const company = window.companyData || {};
         const logoData = company.logo || '';
 
+        // الهيدر
         const headerLogo = document.getElementById('headerLogo');
         const defaultIcon = document.getElementById('headerDefaultIcon');
 
@@ -37,11 +50,13 @@
             }
         }
 
+        // اسم الشركة في الهيدر
         const headerCompany = document.getElementById('headerCompanyName');
         if (headerCompany) {
             headerCompany.textContent = company.name || 'الميزان Pro';
         }
 
+        // في صفحة الشركة
         const preview = document.getElementById('companyLogoPreview');
         const img = document.getElementById('companyLogoImg');
         if (preview && img) {
@@ -68,8 +83,11 @@
             }
 
             const c = window.companyData;
+
+            // ★★★ تطبيق اللوجو ★★★
             window.applyLogoOnLoad();
 
+            // تعبئة الحقول
             const setVal = function(id, val) {
                 const el = document.getElementById(id);
                 if (el) el.value = val || '';
@@ -96,6 +114,7 @@
             const curEl = document.getElementById('companyCurrency');
             if (curEl) curEl.value = c.currency || 'ج.م';
 
+            // المعاينة
             const preview = document.getElementById('companyLogoPreview');
             const img = document.getElementById('companyLogoImg');
             if (preview && img) {
@@ -112,7 +131,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: رفع اللوجو
+    // الجزء 4: رفع اللوجو (الإصدار النهائي)
     // ═══════════════════════════════════════════════════════════
 
     window.uploadCompanyLogo = function(event) {
@@ -133,16 +152,21 @@
         reader.onload = function(e) {
             const logoData = e.target.result;
 
+            // ★★★ تأكد إن companyData موجودة ★★★
             if (!window.companyData) window.companyData = {};
             window.companyData.logo = logoData;
 
+            // ★★★ الحفظ في localStorage ★★★
             try {
                 localStorage.setItem('companyData', JSON.stringify(window.companyData));
+                console.log('✅ تم حفظ اللوجو في localStorage');
             } catch (err) {
                 alert('⚠️ فشل الحفظ: الصورة كبيرة جداً');
+                console.error(err);
                 return;
             }
 
+            // تحديث المعاينة
             const preview = document.getElementById('companyLogoPreview');
             const img = document.getElementById('companyLogoImg');
             if (preview && img) {
@@ -150,14 +174,17 @@
                 preview.style.display = 'block';
             }
 
+            // تحديث اللوجو في الهيدر
             window.applyLogoOnLoad();
 
+            // رسالة نجاح
             if (typeof window.showToast === 'function') {
                 window.showToast('✅ تم رفع اللوجو بنجاح', 'success');
             } else {
                 alert('✅ تم رفع اللوجو بنجاح');
             }
 
+            // تفريغ حقل الرفع
             event.target.value = '';
         };
         reader.readAsDataURL(file);
@@ -177,7 +204,10 @@
         if (!window.companyData) window.companyData = {};
         window.companyData.logo = '';
 
+        // الحفظ في localStorage
         localStorage.setItem('companyData', JSON.stringify(window.companyData));
+
+        // تحديث الواجهة
         window.applyLogoOnLoad();
 
         if (typeof window.showToast === 'function') {
@@ -195,6 +225,7 @@
             return el ? el.value.trim() : '';
         };
 
+        // احفظ اللوجو الحالي
         const currentLogo = (window.companyData || {}).logo || '';
 
         window.companyData = {
@@ -215,10 +246,14 @@
             primaryColor: getVal('companyPrimaryColor') || '#C9A94E',
             currency: getVal('companyCurrency') || 'ج.م',
             logo: currentLogo,
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date().toISOString(),
+            updatedBy: window.currentUser ? window.currentUser.name : ''
         };
 
+        // الحفظ في localStorage
         localStorage.setItem('companyData', JSON.stringify(window.companyData));
+
+        // تحديث الهيدر
         window.applyLogoOnLoad();
 
         if (typeof window.showToast === 'function') {
@@ -247,144 +282,15 @@
             return s + (parseFloat(x.total) || 0);
         }, 0);
 
-        setTxt('companySalesTotal', totalSales.toFixed(2) + ' ج.م');
+        if (typeof window.formatMoney === 'function') {
+            setTxt('companySalesTotal', window.formatMoney(totalSales) + ' ج.م');
+        } else {
+            setTxt('companySalesTotal', totalSales.toFixed(2) + ' ج.م');
+        }
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 8: تسجيل الدخول (الإصدار المبسط)
-    // ═══════════════════════════════════════════════════════════
-
-    // ★★★ تحميل المستخدمين أو إنشاء المدير الافتراضي ★★★
-    window.loadOrCreateUsers = function() {
-        try {
-            const saved = localStorage.getItem('users');
-            if (saved) {
-                window.users = JSON.parse(saved);
-                if (Array.isArray(window.users) && window.users.length > 0) {
-                    return;
-                }
-            }
-        } catch (e) {}
-
-        // إنشاء المدير الافتراضي
-        window.users = [
-            {
-                id: 'user_admin',
-                name: 'المدير',
-                password: '123456',
-                role: 'admin',
-                active: true,
-                storeId: 'store_default'
-            }
-        ];
-        localStorage.setItem('users', JSON.stringify(window.users));
-    };
-
-    // ★★★ تعبئة قائمة المستخدمين ★★★
-    window.populateLoginUsers = function() {
-        const sel = document.getElementById('loginUsername');
-        if (!sel) return;
-
-        window.loadOrCreateUsers();
-
-        let html = '<option value="">اختر المستخدم...</option>';
-        window.users.forEach(function(u) {
-            if (u.active !== false) {
-                const roleIcon = u.role === 'admin' ? '👑' : (u.role === 'manager' ? '📊' : '👤');
-                html += '<option value="' + u.id + '">' + roleIcon + ' ' + u.name + '</option>';
-            }
-        });
-        sel.innerHTML = html;
-    };
-
-    // ★★★ التحقق من تسجيل الدخول ★★★
-    window.checkLogin = function() {
-        const userIdEl = document.getElementById('loginUsername');
-        const passwordEl = document.getElementById('loginPassword');
-        const errorEl = document.getElementById('loginError');
-
-        const userId = userIdEl ? userIdEl.value : '';
-        const password = passwordEl ? passwordEl.value : '';
-
-        if (!userId) {
-            if (errorEl) {
-                errorEl.textContent = '⚠️ اختر المستخدم';
-                errorEl.classList.add('show');
-            }
-            return;
-        }
-
-        const user = (window.users || []).find(function(u) { return u.id == userId; });
-        if (!user) {
-            if (errorEl) {
-                errorEl.textContent = '⚠️ المستخدم غير موجود';
-                errorEl.classList.add('show');
-            }
-            return;
-        }
-
-        // مقارنة كلمة المرور (مباشرة)
-        if (password !== user.password) {
-            if (errorEl) {
-                errorEl.textContent = '⚠️ كلمة المرور خاطئة';
-                errorEl.classList.add('show');
-            }
-            if (passwordEl) passwordEl.value = '';
-            setTimeout(function() {
-                if (errorEl) errorEl.classList.remove('show');
-            }, 3000);
-            return;
-        }
-
-        // ✅ نجاح
-        window.currentUser = user;
-
-        try {
-            localStorage.setItem('currentUser', JSON.stringify(user));
-        } catch (e) {}
-
-        if (errorEl) errorEl.classList.remove('show');
-        if (passwordEl) passwordEl.value = '';
-
-        const loginCont = document.getElementById('loginContainer');
-        const appCont = document.getElementById('appContent');
-        if (loginCont) loginCont.classList.add('hidden');
-        if (appCont) appCont.style.display = 'block';
-
-        // ★★★ تحميل بيانات الشركة واللوجو ★★★
-        window.loadCompanyData();
-
-        if (typeof window.showToast === 'function') {
-            window.showToast('🔓 مرحباً ' + user.name + '!', 'success');
-        }
-
-        if (typeof window.navigateTo === 'function') {
-            window.navigateTo('dashboard');
-        }
-    };
-
-    // ★★★ قفل التطبيق ★★★
-    window.lockApp = function() {
-        if (!confirm('هل تريد تسجيل الخروج؟')) return;
-
-        window.currentUser = null;
-        localStorage.removeItem('currentUser');
-
-        const loginCont = document.getElementById('loginContainer');
-        const appCont = document.getElementById('appContent');
-        if (loginCont) loginCont.classList.remove('hidden');
-        if (appCont) appCont.style.display = 'none';
-
-        const passwordEl = document.getElementById('loginPassword');
-        const userEl = document.getElementById('loginUsername');
-        if (passwordEl) passwordEl.value = '';
-        if (userEl) userEl.value = '';
-
-        window.populateLoginUsers();
-    };
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 9: التنقل بين الصفحات
+    // الجزء 8: باقي الدوال (تسجيل الدخول، التنقل، إلخ)
     // ═══════════════════════════════════════════════════════════
 
     window.navigateTo = function(pageName) {
@@ -435,20 +341,25 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 10: التهيئة النهائية
+    // الجزء 9: التهيئة النهائية
     // ═══════════════════════════════════════════════════════════
 
     window.init = function() {
         console.log('🚀 بدء تهيئة التطبيق...');
 
-        // تحميل المستخدمين أو إنشاء المدير
-        window.loadOrCreateUsers();
+        if (typeof window.seedInitialData === 'function') window.seedInitialData();
+        if (window.DataStore && window.DataStore.loadAll) window.DataStore.loadAll();
 
-        // تحميل بيانات الشركة واللوجو
-        window.loadCompanyData();
+        // استرجاع الجلسة
+        if (typeof window.getSession === 'function') {
+            const session = window.getSession();
+            if (session && session.userId) {
+                const user = (window.users || []).find(function(u) { return u.id == session.userId; });
+                if (user) window.currentUser = user;
+            }
+        }
 
-        // تعبئة قائمة المستخدمين
-        window.populateLoginUsers();
+        if (typeof window.populateLoginUsers === 'function') window.populateLoginUsers();
 
         // إظهار شاشة الدخول
         const loginCont = document.getElementById('loginContainer');
@@ -456,16 +367,23 @@
         if (loginCont) loginCont.classList.remove('hidden');
         if (appCont) appCont.style.display = 'none';
 
+        // ★★★ تحميل بيانات الشركة واللوجو - مهم جداً ★★★
+        window.loadCompanyData();
+
         // الساعة
         if (typeof window.updateClock === 'function') {
             window.updateClock();
             setInterval(window.updateClock, 1000);
         }
 
+        if (window.EventBus) window.EventBus.emit('app:initialized');
         console.log('✅ التطبيق جاهز');
     };
 
+    // ═══════════════════════════════════════════════════════════
     // التحميل التلقائي
+    // ═══════════════════════════════════════════════════════════
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
             window.init();
@@ -475,6 +393,6 @@
     }
 
     window.__appLoaded = true;
-    console.log('✅ app.js v25.0 كامل جاهز');
+    console.log('✅ app.js v24.0 كامل جاهز');
 
 })();
