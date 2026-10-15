@@ -1586,7 +1586,9 @@
             <div class="page-content">
                 <h2><i class="fas fa-cog"></i> الإعدادات</h2>
 
-                <!-- ═══════════ إدارة الإعلانات ═══════════ -->
+                
+
+<!-- ═══════════ إدارة الإعلانات ═══════════ -->
 <div class="settings-section">
     <h3>📢 إدارة الإعلانات</h3>
     <p class="settings-desc">اكتب الإعلانات أو الملاحظات اللي هتظهر في الشريط العلوي للموظفين.</p>
@@ -1608,25 +1610,23 @@
         <i class="fas fa-plus"></i> إضافة إعلان
     </button>
     
-    <div id="adsListContainer" style="margin-top:10px;">
-        <!-- قائمة الإعلانات هتظهر هنا -->
+    <div id="adsListContainer" style="margin-top:10px;"></div>
+
+    <!-- أزرار التحكم في التحريك -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+        <button class="btn btn-info btn-block" onclick="toggleAdMotion()">
+            <i class="fas fa-play"></i> تحريك / إيقاف
+        </button>
+        <div class="form-group" style="margin:0;">
+            <select id="adSpeedSelect" class="pos-select" onchange="setAdSpeed(this.value)">
+                <option value="5">سريع جداً (5 ثواني)</option>
+                <option value="10">سريع (10 ثواني)</option>
+                <option value="15" selected>متوسط (15 ثانية)</option>
+                <option value="25">بطيء (25 ثانية)</option>
+            </select>
+        </div>
     </div>
 </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
-    <button class="btn btn-info btn-block" onclick="toggleAdMotion()">
-        <i class="fas fa-play"></i> تحريك / إيقاف
-    </button>
-    <div class="form-group" style="margin:0;">
-        <select id="adSpeedSelect" class="pos-select" onchange="setAdSpeed(this.value)">
-            <option value="5">سريع جداً (5 ثواني)</option>
-            <option value="10">سريع (10 ثواني)</option>
-            <option value="15" selected>متوسط (15 ثانية)</option>
-            <option value="25">بطيء (25 ثانية)</option>
-        </select>
-    </div>
-</div>
-
                 <div class="settings-section">
                     <h3>🏢 بيانات الشركة</h3>
                     <p class="settings-desc">لإدارة بيانات الشركة واللوجو، اذهب إلى صفحة "بيانات الشركة".</p>
