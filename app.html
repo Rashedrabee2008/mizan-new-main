@@ -1603,6 +1603,42 @@
         <label>الرابط (اختياري)</label>
         <input type="text" id="newAdLink" placeholder="https://..." />
     </div>
+
+    <!-- اللون المخصص للإعلان -->
+<div class="form-group">
+    <label>لون الخلفية (اختياري)</label>
+    <div style="display:flex;gap:8px;align-items:center;">
+        <input type="color" id="newAdColor" value="#1E3A8A" 
+               style="width:60px;height:40px;padding:2px;border-radius:8px;border:2px solid #3D3D3D;background:#0D0D0D;cursor:pointer;" />
+        <span style="font-size:11px;color:#A89070;">اختر لون مخصص للإعلان</span>
+    </div>
+</div>
+
+<!-- وقت البدء والانتهاء -->
+<div class="form-row">
+    <div class="form-group">
+        <label>يبدأ من (اختياري)</label>
+        <input type="datetime-local" id="newAdStart" />
+    </div>
+    <div class="form-group">
+        <label>ينتهي في (اختياري)</label>
+        <input type="datetime-local" id="newAdEnd" />
+    </div>
+</div>
+
+<!-- الدور المستهدف -->
+<div class="form-group">
+    <label>يظهر لمن (اختياري)</label>
+    <select id="newAdRole" class="pos-select">
+        <option value="">الكل (بدون تحديد)</option>
+        <option value="admin">👑 المدير فقط</option>
+        <option value="manager">📊 المشرف فقط</option>
+        <option value="cashier">💰 الكاشير فقط</option>
+        <option value="seller">🛒 البائع فقط</option>
+        <option value="viewer">👁️ المشاهد فقط</option>
+        <option value="staff">👥 كل الموظفين (بدون المدير)</option>
+    </select>
+</div>
     
     <button class="btn btn-success btn-block" onclick="addNewAd()" style="margin-bottom:10px;">
         <i class="fas fa-plus"></i> إضافة إعلان
@@ -1617,12 +1653,12 @@
         </button>
         <div class="form-group" style="margin:0;">
     <select id="adSpeedSelect" class="pos-select" onchange="setAdSpeed(this.value)">
-        <option value="10">⚡ سريع جداً (10 ثواني)</option>
-        <option value="15">🚀 سريع (15 ثانية)</option>
-        <option value="20" selected>🚶 متوسط (20 ثانية)</option>
-        <option value="30">🐢 بطيء (30 ثانية)</option>
-        <option value="45">🐌 بطيء جداً (45 ثانية)</option>
-    </select>
+    <option value="10">⚡ سريع جداً (10 ثواني)</option>
+    <option value="15">🚀 سريع (15 ثانية)</option>
+    <option value="20" selected>🚶 متوسط (20 ثانية)</option>
+    <option value="30">🐢 بطيء (30 ثانية)</option>
+    <option value="45">🐌 بطيء جداً (45 ثانية)</option>
+</select>
 </div>
     </div>
 </div>
