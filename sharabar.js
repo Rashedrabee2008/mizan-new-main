@@ -1,5 +1,5 @@
 /* ============================================================
-   sharabar.js - إدارة الإعلانات (الإصدار 6.0 - حركة ناعمة)
+   sharabar.js - إدارة الإعلانات (الإصدار 7.0 - حركة سلسة بدون ناتشة)
    ============================================================ */
 
 (function() {
@@ -63,7 +63,7 @@
             color: #fff;
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             z-index: 999999;
             overflow: hidden;
             font-family: 'Tajawal', sans-serif;
@@ -74,6 +74,7 @@
             box-sizing: border-box;
         `;
 
+        // حاوية الأنيميشن
         const content = document.createElement('div');
         content.id = 'sharabarContent';
         content.style.cssText = `
@@ -82,8 +83,8 @@
             gap: 10px;
             white-space: nowrap;
             direction: rtl;
-            transition: opacity 0.3s ease;
-            width: 100%;
+            width: max-content;
+            animation: none;
         `;
 
         const closeBtn = document.createElement('button');
@@ -123,7 +124,7 @@
         }
     }
 
-    // ═══════════════ وضع التحريك (Marquee) الناعم ═══════════════
+    // ═══════════════ وضع التحريك السلس ═══════════════
     function startMarquee(container, ads) {
         if (rotationTimer) clearInterval(rotationTimer);
 
@@ -134,22 +135,23 @@
             const ad = ads[adIndex];
             if (!ad) return;
 
-            // تكرار النص مرتين ورا بعض عشان الحركة تبقى ناعمة ومستمرة
             const icon = ad.icon || '⭐';
             const text = ad.text;
             
-            // بنكرر النص مرتين عشان ميبقاش فيه فراغ في الآخر
-            const repeatedText = `
+            // بنكرر النص مرتين عشان الحركة تبقى مستمرة ومفيش ناتشة
+            // الحاوية هتتحرك من 0 لـ -50% وبس، عشان لما توصل للنص التاني تكون لسه فيه نص تاني ورا
+            const repeatedContent = `
                 <span style="font-size:18px;">${icon}</span>
-                <span class="ad-marquee-text">${text}</span>
+                <span style="padding: 0 10px;">${text}</span>
                 <span style="font-size:18px;">${icon}</span>
-                <span style="display:inline-block; width: 50px;"></span>
+                <span style="display:inline-block; width: 100px;"></span>
                 <span style="font-size:18px;">${icon}</span>
-                <span class="ad-marquee-text">${text}</span>
+                <span style="padding: 0 10px;">${text}</span>
                 <span style="font-size:18px;">${icon}</span>
+                <span style="display:inline-block; width: 100px;"></span>
             `;
 
-            container.innerHTML = repeatedText;
+            container.innerHTML = repeatedContent;
 
             // إعداد الرابط
             const bar = document.getElementById('sharabar');
@@ -163,15 +165,10 @@
                 bar.onclick = null;
             }
 
-            // تحريك النص
-            const textEls = container.querySelectorAll('.ad-marquee-text');
-            textEls.forEach(el => {
-                el.style.display = 'inline-block';
-                el.style.whiteSpace = 'nowrap';
-                el.style.animation = 'none';
-                void el.offsetWidth;
-                el.style.animation = `marquee ${speed}s linear infinite`;
-            });
+            // تحريك الحاوية نفسها مش النص
+            container.style.animation = 'none';
+            void container.offsetWidth; // إعادة تشغيل الأنيميشن
+            container.style.animation = `marqueeScroll ${speed}s linear infinite`;
 
             adIndex = (adIndex + 1) % ads.length;
         }
@@ -300,19 +297,15 @@
         restartAdBar();
     };
 
-    // ═══════════════ إضافة CSS للأنيميشن الناعم ═══════════════
+    // ═══════════════ إضافة CSS للأنيميشن السلس ═══════════════
     function addAnimationStyles() {
         if (document.getElementById('sharabarStyles')) return;
         const style = document.createElement('style');
         style.id = 'sharabarStyles';
         style.textContent = `
-            @keyframes marquee {
-                0% { transform: translateX(-100%); }
-                100% { transform: translateX(0%); }
-            }
-            .ad-marquee-text {
-                display: inline-block;
-                white-space: nowrap;
+            @keyframes marqueeScroll {
+                0% { transform: translateX(0%); }
+                100% { transform: translateX(-50%); }
             }
         `;
         document.head.appendChild(style);
