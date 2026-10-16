@@ -1,12 +1,12 @@
 // ============================================================
-// الميزان Pro - search.js v4.0
+// الميزان Pro - search.js v5.0 (مُصلَّح)
 // بحث ذكي كامل مع ربط كامل مع pos.js و inventory.js
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🔍 search.js v4.0 - بدء التحميل');
+    console.log('🔍 search.js v5.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: الإعدادات
@@ -17,21 +17,21 @@
             getData: function() { return window.customers || []; },
             searchFields: ['name', 'phone', 'whatsapp'],
             icon: '👤',
-            placeholder: '🔍 ابحث باسم العميل أو الموبايل...',
+            placeholder: 'ابحث باسم العميل أو الموبايل...',
             emptyLabel: 'لا يوجد عملاء'
         },
         'suppliers': {
             getData: function() { return window.suppliers || []; },
             searchFields: ['name', 'phone', 'whatsapp'],
             icon: '🚚',
-            placeholder: '🔍 ابحث باسم المورد أو الموبايل...',
+            placeholder: 'ابحث باسم المورد أو الموبايل...',
             emptyLabel: 'لا يوجد موردين'
         },
         'products': {
             getData: function() { return window.products || []; },
             searchFields: ['name', 'barcode'],
             icon: '📦',
-            placeholder: '🔍 ابحث باسم المنتج أو الباركود...',
+            placeholder: 'ابحث باسم المنتج أو الباركود...',
             emptyLabel: 'لا توجد منتجات'
         }
     };
@@ -132,7 +132,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: ضبط الحقل المخفي (القلب الحقيقي)
+    // الجزء 4: ضبط الحقل المخفي
     // ═══════════════════════════════════════════════════════════
 
     function setSelectValue(selectEl, value, id) {
@@ -140,12 +140,10 @@
 
         const actualValue = id ? String(id) : String(value);
 
-        // مسح كل الاختيارات
         Array.from(selectEl.options).forEach(function(opt) {
             opt.selected = false;
         });
 
-        // البحث عن option موجود
         let foundIndex = -1;
         for (let i = 0; i < selectEl.options.length; i++) {
             if (String(selectEl.options[i].value) === actualValue) {
@@ -154,7 +152,6 @@
             }
         }
 
-        // لو مش موجود، نضيف واحد جديد
         if (foundIndex === -1) {
             const newOption = document.createElement('option');
             newOption.value = actualValue;
@@ -163,15 +160,12 @@
             foundIndex = selectEl.options.length - 1;
         }
 
-        // ضبط القيمة
         selectEl.selectedIndex = foundIndex;
         selectEl.value = actualValue;
 
-        // تخزين الـ id في dataset
         selectEl.dataset.selectedId = actualValue;
         selectEl.dataset.selectedName = value;
 
-        // ⚡ إطلاق الأحداث بطريقة مضمونة
         try {
             selectEl.dispatchEvent(new Event('change', { bubbles: true }));
         } catch (e) {
@@ -255,7 +249,7 @@
             }
         });
 
-        // ⚡ الاختيار من النتائج (القلب)
+        // ⚡ الاختيار من النتائج
         results.addEventListener('click', function(e) {
             const item = e.target.closest('.smart-search-item');
             if (!item) return;
@@ -263,20 +257,16 @@
             const value = item.dataset.value;
             const id = item.dataset.id;
 
-            // ضبط الـ select المخفي
             if (hiddenSelect) {
                 setSelectValue(hiddenSelect, value, id);
             }
 
-            // ضبط الـ input
             input.value = value;
 
-            // إخفاء النتائج
             results.classList.remove('show');
             results.innerHTML = '';
             input.blur();
 
-            // إطلاق الأحداث مرة تانية بعد 50ms (ضمان)
             setTimeout(function() {
                 if (hiddenSelect) {
                     try {
@@ -295,19 +285,16 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 6: دوال مساعدة عامة (تستخدمها pos.js)
+    // الجزء 6: دوال مساعدة عامة
     // ═══════════════════════════════════════════════════════════
 
-    // قراءة القيمة الحالية من أي حقل بحث
     window.getSmartSearchValue = function(targetId) {
         const selectEl = document.getElementById(targetId);
         if (!selectEl) return '';
 
-        // الأولوية للـ select.value
         if (selectEl.value) return selectEl.value;
         if (selectEl.dataset.selectedId) return selectEl.dataset.selectedId;
 
-        // بديل: نقرأ من حقل البحث
         const container = document.querySelector('.smart-search-container[data-search-target="' + targetId + '"]');
         if (container) {
             const input = container.querySelector('.smart-search-input');
@@ -317,7 +304,6 @@
         return '';
     };
 
-    // الحصول على الـ ID الكامل
     window.getSmartSearchId = function(targetId) {
         const selectEl = document.getElementById(targetId);
         if (!selectEl) return '';
@@ -325,7 +311,6 @@
         if (selectEl.dataset.selectedId) return selectEl.dataset.selectedId;
         if (selectEl.value) return selectEl.value;
 
-        // ابحث في البيانات
         const container = document.querySelector('.smart-search-container[data-search-target="' + targetId + '"]');
         if (!container) return '';
 
@@ -340,7 +325,6 @@
         if (type === 'customers') data = window.customers || [];
         if (type === 'suppliers') data = window.suppliers || [];
 
-        // ابحث بالاسم أو الـ id
         const found = data.find(function(item) {
             return String(item.id) === searchValue || item.name === searchValue;
         });
@@ -348,7 +332,6 @@
         return found ? String(found.id) : searchValue;
     };
 
-    // إعادة تعيين حقل بحث
     window.resetSmartSearch = function(targetId) {
         const selectEl = document.getElementById(targetId);
         if (selectEl) {
@@ -417,7 +400,6 @@
             results.innerHTML = '';
         }
 
-        // نفرغ الـ select
         window.resetSmartSearch('retParty');
     }
 
@@ -464,7 +446,7 @@
         setTimeout(tryInit, 800);
     }
 
-    // إعادة الفحص كل 2 ثانية (لو حقل جديد ظهر)
+    // إعادة الفحص كل 2 ثانية
     setInterval(function() {
         const containers = document.querySelectorAll('.smart-search-container:not([data-search-init="true"])');
         if (containers.length > 0) {
@@ -475,6 +457,6 @@
     }, 2000);
 
     window.__searchLoaded = true;
-    console.log('✅ search.js v4.0 جاهز');
+    console.log('✅ search.js v5.0 جاهز');
 
 })();
