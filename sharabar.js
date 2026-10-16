@@ -1,8 +1,7 @@
 /* ============================================================
-   sharabar.js - إدارة الإعلانات (الإصدار 13.0)
-   - لون مخصص لكل إعلان
-   - بدون ناتشة
-   - حركة من الشمال لليمين
+   sharabar.js - إدارة الإعلانات (الإصدار 14.0 - نهائي)
+   - لون مخصص لكل إعلان يعمل بشكل صحيح
+   - حفظ فوري + إعادة بناء الشريط
    ============================================================ */
 
 (function() {
@@ -11,12 +10,12 @@
     const DEFAULT_ADS = [
         { text: "🎉 السلام عليكم ورحمة الله وبركاته 🎉", icon: "⭐", link: "", color: "#1E3A8A" }
     ];
-    
+
     const STORAGE_KEY = 'sharabar_ads';
     const CLOSED_KEY = 'sharabar_closed';
     const MOTION_KEY = 'sharabar_motion';
     const SPEED_KEY = 'sharabar_speed';
-    
+
     let rotationTimer = null;
 
     function getAds() {
@@ -39,7 +38,9 @@
     }
 
     function saveAds(ads) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(ads));
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(ads));
+        } catch (e) {}
         restartAdBar();
     }
 
@@ -58,6 +59,7 @@
 
         const bar = document.createElement('div');
         bar.id = 'sharabar';
+        bar.setAttribute('data-color', bgColor);
         bar.style.cssText = `
             position: fixed;
             top: 0;
@@ -141,13 +143,14 @@
             const ad = ads[adIndex];
             if (!ad) return;
 
-            // ★★★ تحديث لون الشريط مع كل إعلان ★★★
+            // ⚡ تحديث اللون لكل إعلان
             const bgColor = ad.color || '#1E3A8A';
             bar.style.background = `linear-gradient(90deg, ${bgColor}, ${bgColor}dd, ${bgColor})`;
+            bar.setAttribute('data-color', bgColor);
 
             const icon = ad.icon || '⭐';
             const text = ad.text;
-            
+
             let repeatedContent = '';
             for (let i = 0; i < 4; i++) {
                 repeatedContent += `
@@ -191,9 +194,10 @@
             const ad = ads[adIndex];
             if (!ad) return;
 
-            // ★★★ تحديث لون الشريط ★★★
+            // ⚡ تحديث اللون
             const bgColor = ad.color || '#1E3A8A';
             bar.style.background = `linear-gradient(90deg, ${bgColor}, ${bgColor}dd, ${bgColor})`;
+            bar.setAttribute('data-color', bgColor);
 
             container.style.animation = 'none';
             container.innerHTML = `
@@ -233,34 +237,66 @@
     }
 
     function restartAdBar() {
-        if (rotationTimer) clearInterval(rotationTimer);
+        if (rotationTimer) {
+            clearInterval(rotationTimer);
+            rotationTimer = null;
+        }
+
         const container = document.getElementById('sharabarContainer');
         if (container) container.innerHTML = '';
+
         localStorage.removeItem(CLOSED_KEY);
-        createAdBar();
+
+        setTimeout(function() {
+            createAdBar();
+        }, 50);
     }
 
-    // ═══════════════ دوال إدارة الإعلانات ═══════════════
+    // ═══════════════ إدارة الإعلانات ═══════════════
+
     window.addNewAd = function() {
-        const text = document.getElementById('newAdText')?.value.trim();
-        const icon = document.getElementById('newAdIcon')?.value.trim() || '⭐';
-        const link = document.getElementById('newAdLink')?.value.trim() || '';
-        const color = document.getElementById('newAdColor')?.value || '#1E3A8A';
+        const textEl = document.getElementById('newAdText');
+        const iconEl = document.getElementById('newAdIcon');
+        const linkEl = document.getElementById('newAdLink');
+        const colorEl = document.getElementById('newAdColor');
+
+        const text = textEl ? textEl.value.trim() : '';
+        const icon = iconEl ? iconEl.value.trim() : '⭐';
+        const link = linkEl ? linkEl.value.trim() : '';
+        const color = colorEl ? colorEl.value : '#1E3A8A';
 
         if (!text) {
             alert('⚠️ اكتب نص الإعلان الأول!');
             return;
         }
 
-        const ads = getAds();
-        ads.push({ text: text, icon: icon, link: link, color: color });
-        saveAds(ads);
+        const finalColor = (color && color !== '') ? color : '#1E3A8A';
 
-        document.getElementById('newAdText').value = '';
-        document.getElementById('newAdLink').value = '';
-        document.getElementById('newAdColor').value = '#1E3A8A';
-        
-        if (typeof renderAdsList === 'function') renderAdsList();
+        const ads = getAds();
+        ads.push({
+            text: text,
+            icon: icon || '⭐',
+            link: link || '',
+            color: finalColor
+        });
+
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(ads));
+        } catch (e) {
+            alert('⚠️ فشل الحفظ');
+            return;
+        }
+
+        // ⚡ إعادة بناء الشريط
+        restartAdBar();
+
+        // ⚡ مسح الحقول
+        if (textEl) textEl.value = '';
+        if (linkEl) linkEl.value = '';
+        if (colorEl) colorEl.value = '#1E3A8A';
+
+        if (typeof window.renderAdsList === 'function') window.renderAdsList();
+
         alert('✅ تم إضافة الإعلان بنجاح!');
     };
 
@@ -269,7 +305,7 @@
         const ads = getAds();
         ads.splice(index, 1);
         saveAds(ads);
-        if (typeof renderAdsList === 'function') renderAdsList();
+        if (typeof window.renderAdsList === 'function') window.renderAdsList();
     };
 
     window.renderAdsList = function() {
@@ -289,6 +325,7 @@
                 <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#F5E6C8;flex:1;min-width:0;">
                     <span>${ad.icon || '⭐'}</span>
                     <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ad.text}</span>
+                    <span style="width:20px;height:20px;border-radius:4px;background:${bgColor};border:1px solid #3D3D3D;flex-shrink:0;"></span>
                 </div>
                 <button onclick="deleteAd(${i})" style="background:#E06060;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:800;">✕</button>
             </div>
@@ -324,9 +361,9 @@
 
     function init() {
         if (localStorage.getItem(CLOSED_KEY) === 'true') return;
-        
+
         addAnimationStyles();
-        
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 createAdBar();
