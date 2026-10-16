@@ -1,16 +1,12 @@
 // ============================================================
-// الميزان Pro - search.js v5.0 (مُصلَّح)
-// بحث ذكي كامل مع ربط كامل مع pos.js و inventory.js
+// الميزان Pro - search.js v6.0 (نهائي)
+// بحث ذكي + تحديث السعر تلقائياً
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🔍 search.js v5.0 - بدء التحميل');
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 1: الإعدادات
-    // ═══════════════════════════════════════════════════════════
+    console.log('🔍 search.js v6.0 - بدء التحميل');
 
     const SEARCH_CONFIG = {
         'customers': {
@@ -36,10 +32,6 @@
         }
     };
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 2: دوال مساعدة
-    // ═══════════════════════════════════════════════════════════
-
     function escapeHtml(s) {
         if (s == null) return '';
         return String(s)
@@ -58,10 +50,6 @@
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
     }
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 3: بناء نتائج البحث
-    // ═══════════════════════════════════════════════════════════
 
     function getResultsHTML(type, query) {
         const config = SEARCH_CONFIG[type];
@@ -110,7 +98,7 @@
         });
 
         if (total > MAX) {
-            html += '<div class="smart-search-more">و ' + (total - MAX) + ' نتيجة أخرى... اكتب أكثر للتصفية</div>';
+            html += '<div class="smart-search-more">و ' + (total - MAX) + ' نتيجة أخرى...</div>';
         }
 
         return html;
@@ -131,10 +119,7 @@
         return parts.join(' • ');
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 4: ضبط الحقل المخفي
-    // ═══════════════════════════════════════════════════════════
-
+    // ⚡⚡⚡ الدالة المُصلَّحة - تحديث السعر بعد الاختيار
     function setSelectValue(selectEl, value, id) {
         if (!selectEl) return;
 
@@ -181,11 +166,50 @@
             evt.initEvent('input', true, false);
             selectEl.dispatchEvent(evt);
         }
-    }
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 5: تهيئة مكون بحث واحد
-    // ═══════════════════════════════════════════════════════════
+        // ⚡⚡⚡ الحل: تحديث السعر فوراً
+        const targetId = selectEl.id;
+
+        // للبيع والمرتجعات: سعر البيع
+        if (targetId === 'saleProduct' || targetId === 'retProduct') {
+            const priceInput = document.getElementById(targetId === 'saleProduct' ? 'salePrice' : 'retPrice');
+            if (priceInput) {
+                const product = (window.products || []).find(function(pr) {
+                    return String(pr.id) === String(actualValue) || String(pr.name) === String(value);
+                });
+                if (product) {
+                    priceInput.value = (targetId === 'saleProduct') ? (product.sell || 0) : (product.sell || 0);
+                }
+            }
+        }
+
+        // للمشتريات: سعر الشراء
+        if (targetId === 'purProduct') {
+            const priceInput = document.getElementById('purPrice');
+            if (priceInput) {
+                const product = (window.products || []).find(function(pr) {
+                    return String(pr.id) === String(actualValue) || String(pr.name) === String(value);
+                });
+                if (product) {
+                    priceInput.value = product.buy || 0;
+                }
+            }
+        }
+
+        // للعميل: تحديث المديونية
+        if (targetId === 'collectCustomer') {
+            setTimeout(function() {
+                if (typeof window.updateCollectInfo === 'function') window.updateCollectInfo();
+            }, 50);
+        }
+
+        // للمورد: تحديث المديونية
+        if (targetId === 'paySupplier') {
+            setTimeout(function() {
+                if (typeof window.updatePayInfo === 'function') window.updatePayInfo();
+            }, 50);
+        }
+    }
 
     function initSearchComponent(container) {
         if (container.dataset.searchInit === 'true') return;
@@ -194,20 +218,13 @@
         const type = container.dataset.searchType;
         const targetId = container.dataset.searchTarget;
 
-        if (!type || !targetId) {
-            console.warn('⚠️ مكون بحث بدون type أو target');
-            return;
-        }
+        if (!type || !targetId) return;
 
         const config = SEARCH_CONFIG[type];
-        if (!config) {
-            console.warn('⚠️ نوع بحث غير معروف:', type);
-            return;
-        }
+        if (!config) return;
 
         const hiddenSelect = document.getElementById(targetId);
 
-        // البحث/إنشاء الـ input
         let input = container.querySelector('.smart-search-input');
         if (!input) {
             input = document.createElement('input');
@@ -220,15 +237,12 @@
 
         input.placeholder = config.placeholder;
 
-        // البحث/إنشاء قائمة النتائج
         let results = container.querySelector('.smart-search-results');
         if (!results) {
             results = document.createElement('div');
             results.className = 'smart-search-results';
             container.appendChild(results);
         }
-
-        // ═══ الأحداث ═══
 
         input.addEventListener('input', function() {
             const html = getResultsHTML(type, input.value);
@@ -249,7 +263,6 @@
             }
         });
 
-        // ⚡ الاختيار من النتائج
         results.addEventListener('click', function(e) {
             const item = e.target.closest('.smart-search-item');
             if (!item) return;
@@ -262,21 +275,11 @@
             }
 
             input.value = value;
-
             results.classList.remove('show');
             results.innerHTML = '';
             input.blur();
-
-            setTimeout(function() {
-                if (hiddenSelect) {
-                    try {
-                        hiddenSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                    } catch (err) {}
-                }
-            }, 50);
         });
 
-        // إغلاق النتائج عند النقر خارج المكون
         document.addEventListener('click', function(e) {
             if (!container.contains(e.target)) {
                 results.classList.remove('show');
@@ -284,14 +287,9 @@
         });
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 6: دوال مساعدة عامة
-    // ═══════════════════════════════════════════════════════════
-
     window.getSmartSearchValue = function(targetId) {
         const selectEl = document.getElementById(targetId);
         if (!selectEl) return '';
-
         if (selectEl.value) return selectEl.value;
         if (selectEl.dataset.selectedId) return selectEl.dataset.selectedId;
 
@@ -307,7 +305,6 @@
     window.getSmartSearchId = function(targetId) {
         const selectEl = document.getElementById(targetId);
         if (!selectEl) return '';
-
         if (selectEl.dataset.selectedId) return selectEl.dataset.selectedId;
         if (selectEl.value) return selectEl.value;
 
@@ -352,10 +349,6 @@
         }
     };
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 7: التهيئة
-    // ═══════════════════════════════════════════════════════════
-
     window.initSmartSearch = function() {
         const containers = document.querySelectorAll('.smart-search-container');
         let count = 0;
@@ -364,17 +357,11 @@
             try {
                 initSearchComponent(container);
                 count++;
-            } catch (e) {
-                console.warn('⚠️ فشل تهيئة مكون:', e.message);
-            }
+            } catch (e) {}
         });
 
         console.log('✅ تم تفعيل البحث الذكي على ' + count + ' حقل');
     };
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 8: تحديث المرتجعات حسب النوع
-    // ═══════════════════════════════════════════════════════════
 
     function updateRetPartySearch() {
         const retTypeEl = document.getElementById('retType');
@@ -409,25 +396,6 @@
         }
     });
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 9: ربط الأحداث
-    // ═══════════════════════════════════════════════════════════
-
-    if (window.EventBus) {
-        ['products', 'customers', 'suppliers'].forEach(function(key) {
-            window.EventBus.on('data:' + key + ':changed', function() {
-                document.querySelectorAll('.smart-search-container').forEach(function(c) {
-                    const results = c.querySelector('.smart-search-results');
-                    if (results) results.classList.remove('show');
-                });
-            });
-        });
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 10: التحميل
-    // ═══════════════════════════════════════════════════════════
-
     function tryInit() {
         const containers = document.querySelectorAll('.smart-search-container');
         if (containers.length === 0) {
@@ -446,7 +414,6 @@
         setTimeout(tryInit, 800);
     }
 
-    // إعادة الفحص كل 2 ثانية
     setInterval(function() {
         const containers = document.querySelectorAll('.smart-search-container:not([data-search-init="true"])');
         if (containers.length > 0) {
@@ -457,6 +424,6 @@
     }, 2000);
 
     window.__searchLoaded = true;
-    console.log('✅ search.js v5.0 جاهز');
+    console.log('✅ search.js v6.0 جاهز');
 
 })();
