@@ -1,18 +1,17 @@
 // ============================================================
-// الميزان Pro - activation.js v5.0
-// نظام كود التفعيل + الدخول لمتجر موجود + Firebase Init جوهري
+// الميزان Pro - activation.js v5.1 (مُصلَّح)
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🔐 activation.js v5.0 - بدء التحميل');
+    console.log('🔐 activation.js v5.1 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 1: الإعدادات — Firebase Config (داخل الملف)
+    // الجزء 1: الإعدادات
     // ═══════════════════════════════════════════════════════════
 
-    const FIREBASE_CONFIG = {
+    const FIREBASE_CONFIG_FALLBACK = {
         apiKey: "AIzaSyB3cnrETONbcrH1d_94w3TzeUEQIF0MSXw",
         authDomain: "mizan-new-main.firebaseapp.com",
         databaseURL: "https://mizan-new-main-default-rtdb.europe-west1.firebasedatabase.app",
@@ -27,19 +26,18 @@
     const ACTIVATION_PATH = 'activations';
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 2: تهيئة Firebase — من الأول
+    // الجزء 2: تهيئة Firebase
     // ═══════════════════════════════════════════════════════════
 
     function ensureFirebaseInitialized() {
         if (typeof firebase === 'undefined') {
-            console.warn('⚠️ Firebase SDK غير محمّل بعد');
             return false;
         }
 
         try {
             if (!firebase.apps || firebase.apps.length === 0) {
-                // استخدم الإعدادات من الملف أو من window
-                const config = window.FIREBASE_CONFIG || FIREBASE_CONFIG;
+                // ⚡ استخدم إعدادات data.js لو موجودة، وإلا نستخدم الـ fallback
+                const config = window.FIREBASE_CONFIG || FIREBASE_CONFIG_FALLBACK;
                 firebase.initializeApp(config);
                 console.log('✅ Firebase تم تهيئته من activation.js');
             }
@@ -52,17 +50,14 @@
         }
     }
 
-    // محاولة تهيئة Firebase — تعمل بجد لحد ما Firebase SDK يتحمّل
     function waitForFirebaseAndInit() {
         if (typeof firebase === 'undefined') {
-            // Firebase SDK لسه ما اتحمّلش — نستنى
             setTimeout(waitForFirebaseAndInit, 300);
             return;
         }
         ensureFirebaseInitialized();
     }
 
-    // نبدأ فوراً
     waitForFirebaseAndInit();
 
     // ═══════════════════════════════════════════════════════════
@@ -95,12 +90,11 @@
 
     function saveActivation(code) {
         try {
-            const data = {
+            localStorage.setItem(ACTIVATION_KEY, JSON.stringify({
                 code: code,
                 storeId: getCurrentStoreId(),
                 activatedAt: new Date().toISOString()
-            };
-            localStorage.setItem(ACTIVATION_KEY, JSON.stringify(data));
+            }));
             return true;
         } catch (e) {
             return false;
@@ -108,21 +102,17 @@
     }
 
     function clearActivation() {
-        try {
-            localStorage.removeItem(ACTIVATION_KEY);
-        } catch (e) {}
+        try { localStorage.removeItem(ACTIVATION_KEY); } catch (e) {}
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: التخزين المؤقت للأكواد
+    // الجزء 4: التخزين المؤقت
     // ═══════════════════════════════════════════════════════════
 
     function cacheActivationCode(code, data) {
         try {
             const cachedCodes = JSON.parse(localStorage.getItem(CACHED_CODES_KEY) || '{}');
-            cachedCodes[code] = Object.assign({}, data, {
-                cachedAt: new Date().toISOString()
-            });
+            cachedCodes[code] = Object.assign({}, data, { cachedAt: new Date().toISOString() });
             localStorage.setItem(CACHED_CODES_KEY, JSON.stringify(cachedCodes));
         } catch (e) {}
     }
@@ -137,7 +127,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 5: التحقق من كود التفعيل
+    // الجزء 5: التحقق من الكود
     // ═══════════════════════════════════════════════════════════
 
     async function verifyCodeWithFirebase(code) {
@@ -165,7 +155,6 @@
             }
 
             return { valid: true, data: data };
-
         } catch (e) {
             console.error('❌ خطأ في التحقق:', e);
             return { valid: false, reason: 'error', error: e.message };
@@ -175,11 +164,7 @@
     async function verifyCodeSmart(code) {
         if (navigator.onLine) {
             const result = await verifyCodeWithFirebase(code);
-
-            if (result.valid) {
-                cacheActivationCode(code, result.data);
-            }
-
+            if (result.valid) cacheActivationCode(code, result.data);
             return result;
         }
 
@@ -192,7 +177,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 6: تسجيل استخدام الكود
+    // الجزء 6: تسجيل الاستخدام
     // ═══════════════════════════════════════════════════════════
 
     async function registerCodeUsage(code) {
@@ -229,21 +214,10 @@
     // ═══════════════════════════════════════════════════════════
 
     async function verifyExistingStore(storeId) {
-        if (!storeId) {
-            return { valid: false, reason: 'empty' };
-        }
-
-        if (storeId.indexOf('store_') !== 0) {
-            return { valid: false, reason: 'invalid_format' };
-        }
-
-        if (!ensureFirebaseInitialized()) {
-            return { valid: false, reason: 'no_firebase' };
-        }
-
-        if (!navigator.onLine) {
-            return { valid: false, reason: 'offline' };
-        }
+        if (!storeId) return { valid: false, reason: 'empty' };
+        if (storeId.indexOf('store_') !== 0) return { valid: false, reason: 'invalid_format' };
+        if (!ensureFirebaseInitialized()) return { valid: false, reason: 'no_firebase' };
+        if (!navigator.onLine) return { valid: false, reason: 'offline' };
 
         try {
             const storeRef = firebase.database().ref('stores/' + storeId);
@@ -259,12 +233,7 @@
                 return { valid: false, reason: 'empty_store' };
             }
 
-            return {
-                valid: true,
-                data: data,
-                storeId: storeId
-            };
-
+            return { valid: true, data: data, storeId: storeId };
         } catch (e) {
             console.error('❌ خطأ:', e);
             return { valid: false, reason: 'error' };
@@ -272,19 +241,17 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 8: ربط المتجر الموجود
+    // الجزء 8: ربط المتجر
     // ═══════════════════════════════════════════════════════════
 
     function linkToExistingStore(storeId) {
         try {
-            // 1. حفظ Store ID الجديد
             if (typeof window.setStoreId === 'function') {
                 window.setStoreId(storeId);
             } else {
                 localStorage.setItem('mizan_store_id_v18', storeId);
             }
 
-            // 2. حفظ تفعيل دائم (نوع: متجر موجود)
             localStorage.setItem(ACTIVATION_KEY, JSON.stringify({
                 code: 'EXISTING_STORE',
                 storeId: storeId,
@@ -292,7 +259,6 @@
                 type: 'existing'
             }));
 
-            // 3. مسح البيانات القديمة
             if (typeof window.DataStore !== 'undefined' && window.DataStore.clearAll) {
                 window.DataStore.clearAll();
             }
@@ -372,32 +338,15 @@
         const loginExistingBtn = document.getElementById('loginExistingBtn');
         const errorEl = document.getElementById('activationError');
 
-        if (btn) {
-            btn.onclick = function() {
-                handleActivation();
-            };
-        }
-
-        if (loginExistingBtn) {
-            loginExistingBtn.onclick = function() {
-                showExistingStoreDialog();
-            };
-        }
-
+        if (btn) btn.onclick = handleActivation;
+        if (loginExistingBtn) loginExistingBtn.onclick = showExistingStoreDialog;
         if (input) {
             input.onkeydown = function(e) {
-                if (e.key === 'Enter') {
-                    handleActivation();
-                }
+                if (e.key === 'Enter') handleActivation();
             };
-            setTimeout(function() {
-                input.focus();
-            }, 300);
+            setTimeout(function() { input.focus(); }, 300);
         }
-
-        if (errorEl) {
-            errorEl.classList.remove('show');
-        }
+        if (errorEl) errorEl.classList.remove('show');
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -451,14 +400,10 @@
         const confirmBtn = document.getElementById('confirmExistingStore');
         const closeBtn = document.getElementById('closeExistingModal');
 
-        closeBtn.onclick = function() {
-            overlay.style.display = 'none';
-        };
+        closeBtn.onclick = function() { overlay.style.display = 'none'; };
 
         overlay.onclick = function(e) {
-            if (e.target === overlay) {
-                overlay.style.display = 'none';
-            }
+            if (e.target === overlay) overlay.style.display = 'none';
         };
 
         confirmBtn.onclick = handleExistingStoreLogin;
@@ -466,13 +411,9 @@
         if (input) {
             input.value = '';
             input.onkeydown = function(e) {
-                if (e.key === 'Enter') {
-                    handleExistingStoreLogin();
-                }
+                if (e.key === 'Enter') handleExistingStoreLogin();
             };
-            setTimeout(function() {
-                input.focus();
-            }, 300);
+            setTimeout(function() { input.focus(); }, 300);
         }
     }
 
@@ -521,7 +462,6 @@
             return;
         }
 
-        // ✅ ربط الجهاز
         const linked = linkToExistingStore(storeId);
 
         if (!linked) {
@@ -537,9 +477,7 @@
             window.showToast('✅ جاري تحميل بيانات متجرك...', 'success');
         }
 
-        setTimeout(function() {
-            location.reload();
-        }, 1200);
+        setTimeout(function() { location.reload(); }, 1200);
     }
 
     function showExistingError(message) {
@@ -607,8 +545,7 @@
             window.showToast('✅ تم تفعيل التطبيق بنجاح', 'success');
         }
 
-                setTimeout(function() {
-            // ⚡ نوجّه العميل لصفحة الشكر
+        setTimeout(function() {
             const code = input.value.trim().toUpperCase();
             window.location.href = 'thanks.html?code=' + encodeURIComponent(code);
         }, 1200);
@@ -682,8 +619,7 @@
         linkStore: linkToExistingStore,
         show: showActivationScreen,
         showExisting: showExistingStoreDialog,
-        initFirebase: ensureFirebaseInitialized,
-        config: FIREBASE_CONFIG
+        initFirebase: ensureFirebaseInitialized
     };
 
     // ═══════════════════════════════════════════════════════════
@@ -703,6 +639,6 @@
     }
 
     window.__activationLoaded = true;
-    console.log('✅ activation.js v5.0 جاهز');
+    console.log('✅ activation.js v5.1 جاهز');
 
 })();
