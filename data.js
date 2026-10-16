@@ -1,12 +1,12 @@
 // ============================================================
-// الميزان Pro - data.js v2.0
+// الميزان Pro - data.js v2.1 (مُصلَّح)
 // طبقة البيانات + Firebase Sync + Multi-Tenant
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('💾 data.js v2.0 - بدء التحميل');
+    console.log('💾 data.js v2.1 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: Firebase Config
@@ -41,7 +41,7 @@
     ];
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 3: Store ID (Multi-Tenant)
+    // الجزء 3: Store ID
     // ═══════════════════════════════════════════════════════════
 
     const STORE_KEY = 'mizan_store_id_v18';
@@ -101,25 +101,15 @@
     window.warehouseTransfers = [];
     window.warehouseAdjustments = [];
     window.openingBalances = [];
+    window.currencies = window.DEFAULT_CURRENCIES || [];
 
     window.companyData = {
         name: 'الميزان',
-        tradeName: '',
-        phone: '',
-        phone2: '',
-        email: '',
-        website: '',
-        address: '',
-        city: '',
-        country: 'مصر',
-        tax: '',
-        commercial: '',
-        taxCard: '',
-        nationalId: '',
+        tradeName: '', phone: '', phone2: '', email: '', website: '',
+        address: '', city: '', country: 'مصر',
+        tax: '', commercial: '', taxCard: '', nationalId: '',
         footer: 'شكراً لتعاملكم معنا 🌟',
-        primaryColor: '#C9A94E',
-        currency: 'ج.م',
-        logo: ''
+        primaryColor: '#C9A94E', currency: 'ج.م', logo: ''
     };
 
     // ═══════════════════════════════════════════════════════════
@@ -129,13 +119,10 @@
     const STORAGE_PREFIX = 'mizan_v18_';
 
     window.DataStore = {
-        get: function(key) {
-            return window[key] || [];
-        },
+        get: function(key) { return window[key] || []; },
 
         set: function(key, data) {
             window[key] = data;
-
             try {
                 localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(data));
             } catch (e) {
@@ -232,19 +219,15 @@
 
         clearAll: function() {
             window.SYNC_KEYS.forEach(function(key) {
-                try {
-                    localStorage.removeItem(STORAGE_PREFIX + key);
-                } catch (e) {}
+                try { localStorage.removeItem(STORAGE_PREFIX + key); } catch (e) {}
             });
         },
 
         export: function() {
             const data = {};
-            window.SYNC_KEYS.forEach(function(key) {
-                data[key] = window[key];
-            });
+            window.SYNC_KEYS.forEach(function(key) { data[key] = window[key]; });
             return {
-                version: '2.0',
+                version: '2.1',
                 storeId: window.getStoreId(),
                 exportDate: new Date().toISOString(),
                 data: data
@@ -268,7 +251,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 6: CloudSync — Firebase
+    // الجزء 6: CloudSync
     // ═══════════════════════════════════════════════════════════
 
     let firebaseListeners = [];
@@ -324,16 +307,13 @@
                         statusEl.style.color = connected ? '#2D8F5E' : '#E06060';
                     }
 
-                    // لو اتصل، ارفع كل البيانات المتأخرة
                     if (connected && !syncInProgress) {
                         setTimeout(function() {
                             window.CloudSync.pushAll(true);
                         }, 2000);
                     }
                 });
-            } catch (e) {
-                console.warn('⚠️ فشل مراقبة الاتصال');
-            }
+            } catch (e) {}
         },
 
         push: function(key, data) {
@@ -418,7 +398,6 @@
                     if (arr && arr.length > 0) {
                         const localArr = window[key] || [];
 
-                        // ⚡ الدمج الذكي — نختار الأكبر
                         if (arr.length >= localArr.length) {
                             window[key] = arr;
                             try {
@@ -498,7 +477,6 @@
             console.log('✅ Auto push كل 30 ثانية');
         },
 
-        // ⚡ رفع فوري لكل شيء
         forcePushAll: async function() {
             if (!window.CloudSync.isReady()) {
                 if (typeof window.showToast === 'function') {
@@ -507,7 +485,7 @@
                 return 0;
             }
 
-            syncInProgress = false; // reset
+            syncInProgress = false;
             return await window.CloudSync.pushAll(false);
         },
 
@@ -530,14 +508,15 @@
 
     window.seedInitialData = function() {
         let changed = false;
+        const currentStoreId = window.getStoreId();
 
         if (!window.users || window.users.length === 0) {
             window.users = [
-                { id: 1, name: 'المدير',  password: '123456', role: 'admin',   active: true, storeId: window.getStoreId() },
-                { id: 2, name: 'محمد',   password: '123456', role: 'manager', active: true, storeId: window.getStoreId() },
-                { id: 3, name: 'أحمد',   password: '123456', role: 'cashier', active: true, storeId: window.getStoreId() },
-                { id: 4, name: 'علي',    password: '123456', role: 'seller',  active: true, storeId: window.getStoreId() },
-                { id: 5, name: 'زائر',   password: '123456', role: 'viewer',  active: true, storeId: window.getStoreId() }
+                { id: 1, name: 'المدير',  password: '123456', role: 'admin',   active: true, storeId: currentStoreId },
+                { id: 2, name: 'محمد',   password: '123456', role: 'manager', active: true, storeId: currentStoreId },
+                { id: 3, name: 'أحمد',   password: '123456', role: 'cashier', active: true, storeId: currentStoreId },
+                { id: 4, name: 'علي',    password: '123456', role: 'seller',  active: true, storeId: currentStoreId },
+                { id: 5, name: 'زائر',   password: '123456', role: 'viewer',  active: true, storeId: currentStoreId }
             ];
             try {
                 localStorage.setItem(STORAGE_PREFIX + 'users', JSON.stringify(window.users));
@@ -898,6 +877,6 @@
     window.seedInitialData();
 
     window.__dataLoaded = true;
-    console.log('✅ data.js v2.0 جاهز');
+    console.log('✅ data.js v2.1 جاهز');
 
 })();
