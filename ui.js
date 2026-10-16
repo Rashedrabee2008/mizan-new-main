@@ -1,5 +1,5 @@
 // ============================================================
-// الميزان Pro - ui.js
+// الميزان Pro - ui.js v19.0 (مُصلَّح)
 // التنقل + Modal + Toast + القوائم + تحديث الواجهات
 // ============================================================
 
@@ -29,7 +29,9 @@
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 2: Modal
-    // ═══════════════════════════════════════════════════════════    window.openModal = function(html) {
+    // ═══════════════════════════════════════════════════════════
+
+    window.openModal = function(html) {
         const overlay = document.getElementById('modalOverlay');
         if (!overlay) return;
 
@@ -54,7 +56,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 3: التنقل (مع حماية من الصفحة الفاضية)
+    // الجزء 3: التنقل — النسخة الوحيدة (محسّنة)
     // ═══════════════════════════════════════════════════════════
 
     const PAGE_REFRESHERS = {
@@ -81,7 +83,7 @@
                          'populateCashBoxDropdowns', 'populateWarehouseField',
                          'updateReturnsStats', 'renderReturns'],
         'accounts':     ['renderAccounts', 'renderJournalEntries', 'updateAccountsStats'],
-        'erp':          ['renderWarehouses', 'renderBranches', 'renderCurrencies'],
+        'erp':          ['renderWarehouses', 'renderBranches'],  // ✅ شيلنا renderCurrencies
         'warehouses':   ['populateWarehouseDropdowns',
                          'renderWarehouseReceipts', 'renderWarehouseIssues',
                          'renderWarehouseTransfers', 'renderWarehouseAdjustments',
@@ -93,13 +95,12 @@
     };
 
     window.navigateTo = function(page) {
-        // ★★★ لو page مش محدد، استخدم dashboard ★★★
-        if (!page) page = 'dashboard';
-
-        // ⚡ فحص الصلاحية قبل التنقل
+        // ⚡ فحص الصلاحية
         if (window.currentUser && typeof window.canAccessPage === 'function') {
             if (!window.canAccessPage(page)) {
-                window.showToast('🚫 ليس لديك صلاحية الوصول لهذه الصفحة', 'error');
+                if (typeof window.showToast === 'function') {
+                    window.showToast('🚫 ليس لديك صلاحية الوصول لهذه الصفحة', 'error');
+                }
                 return;
             }
         }
@@ -111,13 +112,7 @@
 
         // إظهار الصفحة المطلوبة
         const target = document.getElementById('page-' + page);
-        if (target) {
-            target.classList.add('active');
-        } else {
-            // ★★★ لو الصفحة مش موجودة، فعّل dashboard ★★★
-            const dash = document.getElementById('page-dashboard');
-            if (dash) dash.classList.add('active');
-        }
+        if (target) target.classList.add('active');
 
         // تفعيل زر التنقل
         document.querySelectorAll('.nav-item').forEach(function(el) {
@@ -128,21 +123,20 @@
         const refreshers = PAGE_REFRESHERS[page] || [];
         refreshers.forEach(function(fn) {
             if (typeof window[fn] === 'function') {
-                try {
-                    window[fn]();
-                } catch (e) {
+                try { window[fn](); } catch (e) {
                     console.warn('⚠️ خطأ في ' + fn + ':', e.message);
                 }
             }
         });
 
-        // إغلاق قائمة المزيد لو مفتوحة
+        // إغلاق قائمة المزيد
         const moreMenu = document.getElementById('moreMenu');
         if (moreMenu && moreMenu.style.display !== 'none') {
             moreMenu.style.display = 'none';
         }
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
+
         if (window.EventBus) window.EventBus.emit('page:navigated', page);
     };
 
@@ -156,7 +150,6 @@
         menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
     };
 
-    // إغلاق القائمة عند النقر خارجها
     document.addEventListener('click', function(e) {
         const menu = document.getElementById('moreMenu');
         if (!menu || menu.style.display === 'none') return;
@@ -233,23 +226,8 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 7: عرض المستخدم الحالي
+    // الجزء 7: updateUserUI — ⚡ محذوفة (موجودة في core.js)
     // ═══════════════════════════════════════════════════════════
-
-    window.updateUserUI = function() {
-        if (!window.currentUser) return;
-
-        const el = document.getElementById('currentUserName');
-        if (el) {
-            const roleInfo = window.ROLES[window.currentUser.role] || { icon: '❓' };
-            el.textContent = roleInfo.icon + ' ' + window.currentUser.name;
-        }
-
-        const headerCompany = document.getElementById('headerCompanyName');
-        if (headerCompany && window.companyData && window.companyData.name) {
-            headerCompany.textContent = window.companyData.name;
-        }
-    };
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 8: ربط الأحداث
@@ -293,7 +271,7 @@
     });
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 9: أدوات واجهة إضافية
+    // الجزء 9: أدوات إضافية
     // ═══════════════════════════════════════════════════════════
 
     window.setButtonLoading = function(btn, isLoading, loadingText) {
@@ -392,15 +370,11 @@
         });
     };
 
-    // ═══════════════════════════════════════════════════════════
-    // جاهز
-    // ═══════════════════════════════════════════════════════════
-
     window.__uiLoaded = true;
     console.log('✅ ui.js v19.0 جاهز');
 
     // ═══════════════════════════════════════════════════════════
-    // ربط الصلاحيات بأحداث التطبيق
+    // ربط الصلاحيات
     // ═══════════════════════════════════════════════════════════
 
     if (window.EventBus) {
@@ -417,7 +391,7 @@
         });
     }
 
-    // ═══════════════ تحديث قائمة الإعلانات تلقائياً ═══════════════
+    // تحديث قائمة الإعلانات
     document.addEventListener('click', function(e) {
         if (e.target.closest('.nav-item[data-page="settings"]') ||
             e.target.closest('button[onclick*="settings"]') ||
@@ -436,4 +410,5 @@
             window.renderAdsList();
         }
     });
+
 })();
