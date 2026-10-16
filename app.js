@@ -515,58 +515,51 @@
         setTxt('companySalesTotal', window.formatMoney ? window.formatMoney(totalSales) + ' ج.م' : totalSales.toFixed(2) + ' ج.م');
     };
 
-    window.uploadCompanyLogo = function(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+    // ⚡⚡⚡ استبدل applyLogoOnLoad كاملة:
 
-        if (!file.type.match('image.*')) {
-            if (typeof window.showToast === 'function') {
-                window.showToast('⚠️ الرجاء اختيار صورة (JPG أو PNG)', 'error');
-            } else {
-                alert('⚠️ الرجاء اختيار صورة');
-            }
-            return;
+window.applyLogoOnLoad = function() {
+    const company = window.companyData || {};
+    const logoData = company.logo || '';
+
+    const headerLogo = document.getElementById('headerLogo');
+    const defaultIcon = document.getElementById('headerDefaultIcon');
+
+    if (headerLogo && defaultIcon) {
+        if (logoData) {
+            headerLogo.src = logoData;
+            headerLogo.style.display = 'block';
+            defaultIcon.style.display = 'none';
+        } else {
+            headerLogo.style.display = 'none';
+            defaultIcon.style.display = 'block';
         }
+    }
 
-        if (file.size > 2000000) {
-            if (typeof window.showToast === 'function') {
-                window.showToast('⚠️ الصورة كبيرة (الحد 2 ميجا)', 'error');
-            } else {
-                alert('⚠️ الصورة كبيرة');
-            }
-            return;
+    const headerCompany = document.getElementById('headerCompanyName');
+    if (headerCompany) {
+        headerCompany.textContent = company.name || 'الميزان Pro';
+    }
+
+    document.querySelectorAll('[data-logo]').forEach(function(el) {
+        if (logoData) {
+            el.src = logoData;
+            el.style.display = 'block';
+        } else {
+            el.style.display = 'none';
         }
+    });
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const logoData = e.target.result;
-
-            if (!window.companyData) window.companyData = {};
-            window.companyData.logo = logoData;
-
-            try {
-                localStorage.setItem('mizan_companyData', JSON.stringify(window.companyData));
-            } catch (err) {
-                alert('⚠️ فشل الحفظ: الصورة كبيرة جداً');
-                return;
-            }
-
-            if (window.DataStore && window.DataStore.set) {
-                window.DataStore.set('companyData', window.companyData);
-            }
-
-            window.applyLogoOnLoad();
-
-            if (typeof window.showToast === 'function') {
-                window.showToast('✅ تم رفع الشعار', 'success');
-            } else {
-                alert('✅ تم رفع الشعار');
-            }
-
-            event.target.value = '';
-        };
-        reader.readAsDataURL(file);
-    };
+    const preview = document.getElementById('companyLogoPreview');
+    const img = document.getElementById('companyLogoImg');
+    if (preview && img) {
+        if (logoData) {
+            img.src = logoData;
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+        }
+    }
+};
 
     window.removeCompanyLogo = async function() {
         let confirmed = true;
