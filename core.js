@@ -1,17 +1,16 @@
 // ============================================================
-// الميزان Pro - core.js
-// الأساسيات: أدوات + أمان + تشفير + جلسات + EventBus
+// الميزان Pro - core.js v19.0 (مُصلَّح)
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🚀 core.js v18.0 - بدء التحميل');
+    console.log('🚀 core.js v19.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 1: EventBus — نظام الأحداث المركزي
+    // الجزء 1: EventBus
     // ═══════════════════════════════════════════════════════════
-    
+
     const _listeners = {};
 
     window.EventBus = {
@@ -34,9 +33,7 @@
         emit: function(event, data) {
             if (!_listeners[event]) return;
             _listeners[event].forEach(function(cb) {
-                try {
-                    cb(data);
-                } catch (e) {
+                try { cb(data); } catch (e) {
                     console.error('❌ خطأ في listener لـ ' + event + ':', e.message);
                 }
             });
@@ -56,10 +53,7 @@
     // ═══════════════════════════════════════════════════════════
 
     window.$ = function(id) { return document.getElementById(id); };
-
-    window.$$ = function(selector) {
-        return Array.from(document.querySelectorAll(selector));
-    };
+    window.$$ = function(selector) { return Array.from(document.querySelectorAll(selector)); };
 
     window.getTodayDate = function() {
         const now = new Date();
@@ -128,12 +122,8 @@
 
     window.getPaymentMethodLabel = function(method) {
         const labels = {
-            'cash': '💵 نقدي',
-            'credit': '📝 آجل',
-            'wallet': '📱 موبايل',
-            'visa': '💳 فيزا',
-            'bank': '🏦 تحويل',
-            'installment': '📅 تقسيط'
+            'cash': '💵 نقدي', 'credit': '📝 آجل', 'wallet': '📱 موبايل',
+            'visa': '💳 فيزا', 'bank': '🏦 تحويل', 'installment': '📅 تقسيط'
         };
         return labels[method] || method;
     };
@@ -146,14 +136,12 @@
         return icons[method] || '💵';
     };
 
-    // توليد ID فريد
     window.generateId = function(prefix) {
         const timestamp = Date.now();
         const random = Math.floor(Math.random() * 10000);
         return (prefix || '') + timestamp + '_' + random;
     };
 
-    // كود قصير للعرض
     window.shortId = function(id) {
         if (!id) return '—';
         return '#' + String(id).slice(-6);
@@ -202,7 +190,7 @@
     window.canViewReports = function() { return window.hasPermission('view_reports'); };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: التشفير (Web Crypto API - SHA-256 + Salt)
+    // الجزء 4: التشفير
     // ═══════════════════════════════════════════════════════════
 
     window.generateSalt = function() {
@@ -235,8 +223,6 @@
             }).join('');
             return 'sha256_' + salt + '_' + hash;
         } catch (e) {
-            console.error('❌ خطأ تشفير:', e);
-            // fallback ضعيف
             let simple = '';
             const combined = salt + password;
             for (let i = 0; i < combined.length; i++) {
@@ -250,7 +236,6 @@
         if (!password || !storedHash) return false;
 
         try {
-            // SHA-256
             if (storedHash.indexOf('sha256_') === 0) {
                 const parts = storedHash.split('_');
                 if (parts.length !== 3) return false;
@@ -259,7 +244,6 @@
                 return newHash === storedHash;
             }
 
-            // Simple fallback
             if (storedHash.indexOf('simple_') === 0) {
                 const parts = storedHash.split('_');
                 if (parts.length !== 3) return false;
@@ -268,20 +252,18 @@
                 return newHash === storedHash;
             }
 
-            // Plain text (توافق مع البيانات القديمة)
             return storedHash === password;
         } catch (e) {
-            console.error('❌ خطأ تحقق:', e);
             return false;
         }
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 5: إدارة الجلسات
+    // الجزء 5: الجلسات
     // ═══════════════════════════════════════════════════════════
 
     const SESSION_KEY = 'mizan_session_v18';
-    const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 ساعة
+    const SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
 
     window.saveSession = function(user) {
         const session = {
@@ -318,9 +300,7 @@
     };
 
     window.clearSession = function() {
-        try {
-            localStorage.removeItem(SESSION_KEY);
-        } catch (e) {}
+        try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
     };
 
     window.refreshSession = function() {
@@ -336,11 +316,11 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 6: Rate Limiting للحماية من التجربة المتكررة
+    // الجزء 6: Rate Limiting
     // ═══════════════════════════════════════════════════════════
 
     const MAX_LOGIN_ATTEMPTS = 5;
-    const LOCKOUT_TIME = 15 * 60 * 1000; // 15 دقيقة
+    const LOCKOUT_TIME = 15 * 60 * 1000;
 
     window.getLoginAttempts = function() {
         try {
@@ -384,7 +364,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 7: تنسيقات خاصة
+    // الجزء 7: تنسيقات
     // ═══════════════════════════════════════════════════════════
 
     window.getArabicDayName = function(dateStr) {
@@ -410,7 +390,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 8: التحقق من صحة البيانات
+    // الجزء 8: التحقق
     // ═══════════════════════════════════════════════════════════
 
     window.isValidEmail = function(email) {
@@ -431,7 +411,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 9: ثوابت النظام
+    // الجزء 9: الثوابت
     // ═══════════════════════════════════════════════════════════
 
     window.VAT_SETTINGS = { defaultVAT: 14 };
@@ -472,13 +452,38 @@
     ];
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 10: Console Filter (تنظيف الرسائل المزعجة)
+    // الجزء 10: updateUserUI — النسخة الوحيدة
+    // ═══════════════════════════════════════════════════════════
+
+    window.updateUserUI = function() {
+        if (!window.currentUser) return;
+
+        const roleInfo = window.ROLES[window.currentUser.role] || { icon: '❓', name: 'مستخدم' };
+
+        const el = document.getElementById('currentUserName');
+        if (el) {
+            el.textContent = roleInfo.icon + ' ' + window.currentUser.name;
+        }
+
+        const headerCompany = document.getElementById('headerCompanyName');
+        if (headerCompany && window.companyData && window.companyData.name) {
+            headerCompany.textContent = window.companyData.name;
+        }
+
+        const roleDisplay = document.getElementById('userRoleDisplay');
+        if (roleDisplay) {
+            roleDisplay.textContent = roleInfo.icon + ' ' + roleInfo.name;
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 11: Console Filter
     // ═══════════════════════════════════════════════════════════
 
     const BLOCKED_KEYWORDS = [
         'manifest', 'favicon', 'apple-touch-icon',
         'failed to load resource', 'net::err', 'devtools',
-        'sockjs', 'websocket', 'firebase-database'
+        'sockjs', 'websocket'
     ];
 
     const filterEnabled = localStorage.getItem('mizan_console_filter_v18') !== 'off';
@@ -511,11 +516,7 @@
         location.reload();
     };
 
-    // ═══════════════════════════════════════════════════════════
-    // جاهز
-    // ═══════════════════════════════════════════════════════════
-
     window.__coreLoaded = true;
-    originalLog.call(console, '✅ core.js v18.0 جاهز');
+    originalLog.call(console, '✅ core.js v19.0 جاهز');
 
 })();
