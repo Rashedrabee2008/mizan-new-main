@@ -1941,5 +1941,72 @@
     })();
     </script>
 
+                                                            
+<!-- ★★★ ضمان تحميل البيانات قبل العرض ★★★ -->
+<script>
+(function() {
+    'use strict';
+
+    // إخفاء المحتوى لحد ما البيانات تتحمل
+    function waitForData(callback) {
+        let attempts = 0;
+        const maxAttempts = 50; // 5 ثواني كحد أقصى
+
+        const check = setInterval(function() {
+            attempts++;
+
+            const hasProducts = window.products && window.products.length >= 0;
+            const hasSales = window.sales && window.sales.length >= 0;
+            const hasUser = window.currentUser;
+            const hasDataStore = window.DataStore;
+
+            if ((hasProducts && hasSales && hasUser && hasDataStore) || attempts >= maxAttempts) {
+                clearInterval(check);
+                callback();
+            }
+        }, 100);
+    }
+
+    // بعد تحميل البيانات، فعّل الصفحة الافتراضية وحدّث الواجهة
+    document.addEventListener('DOMContentLoaded', function() {
+        waitForData(function() {
+            console.log('✅ البيانات اتحملت - جاري تحديث الواجهة');
+
+            // تأكد إن dashboard مفعّلة
+            const activePage = document.querySelector('.page-container.active');
+            if (!activePage) {
+                const dash = document.getElementById('page-dashboard');
+                if (dash) dash.classList.add('active');
+            }
+
+            // حدّث الساعة
+            if (typeof window.updateClock === 'function') {
+                window.updateClock();
+            }
+
+            // حمّل اللوجو
+            if (typeof window.loadCompanyData === 'function') {
+                window.loadCompanyData();
+            }
+
+            // حدّث كل الواجهات
+            if (typeof window.refreshAllUI === 'function') {
+                setTimeout(window.refreshAllUI, 200);
+            }
+
+            // حدّث الداشبورد
+            if (typeof window.updateDashboard === 'function') {
+                setTimeout(window.updateDashboard, 300);
+            }
+
+            // شغل الإعلانات
+            if (typeof window.initAdBar === 'function') {
+                setTimeout(window.initAdBar, 400);
+            }
+        });
+    });
+})();
+</script>
+    
 </body>
 </html>
