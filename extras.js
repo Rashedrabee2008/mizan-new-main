@@ -1,16 +1,12 @@
 // ============================================================
-// الميزان Pro - extras.js v19.0 (مُصلَّح)
-// HR + AI + Charts + Notifications
+// الميزان Pro - extras.js v20.0 (نهائي)
+// HR + AI + Notifications + فحص رصيد الخزنة
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('✨ extras.js v19.0 - بدء التحميل');
-
-    // ═══════════════════════════════════════════════════════════
-    // دوال مساعدة للتاريخ والوقت
-    // ═══════════════════════════════════════════════════════════
+    console.log('✨ extras.js v20.0 - بدء التحميل');
 
     function timeToMinutes(time24) {
         if (!time24) return null;
@@ -35,10 +31,6 @@
         return String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 1: التبويبات العامة
-    // ═══════════════════════════════════════════════════════════
-
     window.showHRTab = function(tab, btn) {
         ['employees', 'attendance', 'salaries'].forEach(function(t) {
             const el = document.getElementById('hrTab' + t.charAt(0).toUpperCase() + t.slice(1));
@@ -57,10 +49,6 @@
         if (tab === 'attendance') window.renderAttendanceList();
         if (tab === 'salaries') window.renderSalariesList();
     };
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 2: الموظفين
-    // ═══════════════════════════════════════════════════════════
 
     window.saveEmployee = function() {
         const id = document.getElementById('empId') ? document.getElementById('empId').value : '';
@@ -249,10 +237,6 @@
         window.openModal(html);
     };
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 3: الحضور
-    // ═══════════════════════════════════════════════════════════
-
     window.showAttendanceDialog = function(employeeId) {
         const emp = (window.employees || []).find(function(e) { return e.id == employeeId; });
         if (!emp) return;
@@ -396,10 +380,6 @@
         c.innerHTML = html;
     };
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 4: الرواتب
-    // ═══════════════════════════════════════════════════════════
-
     window.showSalaryDialog = function(employeeId) {
         const emp = (window.employees || []).find(function(e) { return e.id == employeeId; });
         if (!emp) return;
@@ -467,7 +447,6 @@
             const defaultBox = (window.cashBoxes || []).find(function(b) { return b.isDefault; });
             if (defaultBox) sel.value = defaultBox.id;
 
-            // ⚡ عرض رصيد الخزنة
             sel.onchange = function() {
                 window.updateSalaryCashBoxBalance();
             };
@@ -475,7 +454,6 @@
         }, 100);
     };
 
-    // ⚡ دالة جديدة لعرض رصيد الخزنة في نافذة الراتب
     window.updateSalaryCashBoxBalance = function() {
         const cashBoxId = document.getElementById('salCashBox') ? document.getElementById('salCashBox').value : '';
         const balanceBox = document.getElementById('salCashBoxBalance');
@@ -509,7 +487,6 @@
         const el = document.getElementById('salNetAmount');
         if (el) el.textContent = window.formatMoney(net);
 
-        // ⚡ تحديث عرض الرصيد
         window.updateSalaryCashBoxBalance();
     };
 
@@ -535,7 +512,6 @@
             return;
         }
 
-        // ⚡ فحص رصيد الخزنة
         const boxBalance = window.Balance.cashBox(cashBoxId);
         if (boxBalance < net) {
             window.showToast('⚠️ رصيد الخزنة غير كافٍ (المتاح: ' + window.formatMoney(boxBalance) + ' ج.م)', 'error');
@@ -576,7 +552,6 @@
             time: window.getNowTime()
         });
 
-        // قيد محاسبي
         const salaryAcc = window.Accounting.findByCode('5200');
         const cashAcc = window.Accounting.findByCode('1110');
         if (salaryAcc && cashAcc) {
@@ -591,7 +566,6 @@
         window.showToast('✅ تم دفع الراتب: ' + window.formatMoney(net) + ' ج.م', 'success');
         window.closeModal();
 
-        // ⚡ تحديث القوائم
         setTimeout(function() {
             if (typeof window.renderSalariesList === 'function') window.renderSalariesList();
             if (typeof window.updateDashboard === 'function') window.updateDashboard();
@@ -633,10 +607,6 @@
 
         c.innerHTML = html;
     };
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 5: الذكاء الاصطناعي - توقع المبيعات
-    // ═══════════════════════════════════════════════════════════
 
     window.predictNextWeekSales = function() {
         const salesByDay = {};
@@ -706,10 +676,6 @@
         window.openModal(html);
     };
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 6: الإشعارات
-    // ═══════════════════════════════════════════════════════════
-
     window.requestNotificationPermission = async function() {
         if (!('Notification' in window)) {
             window.showToast('⚠️ المتصفح لا يدعم الإشعارات', 'warning');
@@ -753,27 +719,7 @@
             { type: 'success', tag: 'invoice-' + invoice.number });
     };
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 7: ربط الأحداث
-    // ═══════════════════════════════════════════════════════════
-
-    if (window.EventBus) {
-        window.EventBus.on('data:salaries:changed', function() {
-            const activePage = document.querySelector('.page-container.active');
-            if (activePage && activePage.id === 'page-employees') {
-                setTimeout(window.renderSalariesList, 100);
-            }
-        });
-
-        window.EventBus.on('data:attendance:changed', function() {
-            const activePage = document.querySelector('.page-container.active');
-            if (activePage && activePage.id === 'page-employees') {
-                setTimeout(window.renderAttendanceList, 100);
-            }
-        });
-    }
-
     window.__extrasLoaded = true;
-    console.log('✅ extras.js v19.0 جاهز');
+    console.log('✅ extras.js v20.0 جاهز');
 
 })();
