@@ -1,6 +1,7 @@
 /* ============================================================
-   sharabar.js - إدارة الإعلانات (v16.0)
-   - إزالة زر الإغلاق (X) نهائياً
+   sharabar.js - إدارة الإعلانات (v17.0 - Final)
+   - إصلاح حركة الشريط (Marquee) نهائياً
+   - إزالة زر الإغلاق (X)
    - دعم تغيير الألوان للإعلانات
    ============================================================ */
 
@@ -16,7 +17,6 @@
     const SPEED_KEY = 'sharabar_speed';
 
     let rotationTimer = null;
-    let currentBarElement = null;
 
     function getAds() {
         try {
@@ -52,11 +52,21 @@
         } catch (e) {}
     }
 
-    function applyColorToBar(bar, color) {
-        if (!bar || !color) return;
-        const bgColor = color;
-        bar.style.background = `linear-gradient(90deg, ${bgColor}, ${bgColor}dd, ${bgColor})`;
-        bar.setAttribute('data-color', bgColor);
+    // ⚡ دالة إضافة الـ CSS للحركة (مهم جداً)
+    function addAnimationStyles() {
+        if (document.getElementById('sharabarStyles')) return;
+        const style = document.createElement('style');
+        style.id = 'sharabarStyles';
+        style.textContent = `
+            @keyframes marqueeScrollLTR {
+                0% { transform: translateX(-50%); }
+                100% { transform: translateX(0%); }
+            }
+            .sharabar-animated {
+                animation: marqueeScrollLTR linear infinite;
+            }
+        `;
+        document.head.appendChild(style);
     }
 
     function createAdBar() {
@@ -106,14 +116,10 @@
             white-space: nowrap;
             direction: rtl;
             width: max-content;
-            will-change: transform;
         `;
 
-        // ⚡ إضافة المحتوى فقط بدون زر إغلاق
         bar.appendChild(content);
         container.appendChild(bar);
-
-        currentBarElement = bar;
 
         document.body.style.paddingTop = '50px';
 
@@ -134,7 +140,10 @@
             const ad = ads[adIndex];
             if (!ad) return;
 
-            applyColorToBar(bar, ad.color || '#1E3A8A');
+            // تغيير اللون
+            const bgColor = ad.color || '#1E3A8A';
+            bar.style.background = `linear-gradient(90deg, ${bgColor}, ${bgColor}dd, ${bgColor})`;
+            bar.setAttribute('data-color', bgColor);
 
             const icon = ad.icon || '⭐';
             const text = ad.text;
@@ -152,17 +161,18 @@
 
             if (ad.link) {
                 bar.style.cursor = 'pointer';
-                bar.onclick = function() {
-                    window.open(ad.link, '_blank');
-                };
+                bar.onclick = function() { window.open(ad.link, '_blank'); };
             } else {
                 bar.style.cursor = 'default';
                 bar.onclick = null;
             }
 
-            container.style.animation = 'none';
-            void container.offsetWidth;
-            container.style.animation = `marqueeScrollLTR ${speedSeconds}s linear infinite`;
+            // ⚡ الطريقة المضمونة لتشغيل الحركة
+            container.classList.remove('sharabar-animated');
+            void container.offsetWidth; // إجبار المتصفح على التحديث
+            
+            container.style.animationDuration = speedSeconds + 's';
+            container.classList.add('sharabar-animated');
 
             adIndex = (adIndex + 1) % ads.length;
         }
@@ -182,9 +192,11 @@
             const ad = ads[adIndex];
             if (!ad) return;
 
-            applyColorToBar(bar, ad.color || '#1E3A8A');
+            const bgColor = ad.color || '#1E3A8A';
+            bar.style.background = `linear-gradient(90deg, ${bgColor}, ${bgColor}dd, ${bgColor})`;
+            bar.setAttribute('data-color', bgColor);
 
-            container.style.animation = 'none';
+            container.classList.remove('sharabar-animated');
             container.innerHTML = `
                 <span style="font-size:18px;">${ad.icon || '⭐'}</span>
                 <span>${ad.text}</span>
@@ -193,9 +205,7 @@
 
             if (ad.link) {
                 bar.style.cursor = 'pointer';
-                bar.onclick = function() {
-                    window.open(ad.link, '_blank');
-                };
+                bar.onclick = function() { window.open(ad.link, '_blank'); };
             } else {
                 bar.style.cursor = 'default';
                 bar.onclick = null;
@@ -211,7 +221,6 @@
         }
     }
 
-    // ⚡ إعادة بناء فورية للشريط
     function restartAdBar() {
         if (rotationTimer) {
             clearInterval(rotationTimer);
@@ -221,8 +230,8 @@
         const container = document.getElementById('sharabarContainer');
         if (container) container.innerHTML = '';
 
-        currentBarElement = null;
-        createAdBar();
+        // تأخير بسيط لضمان إعادة البناء بشكل صح
+        setTimeout(createAdBar, 50);
     }
 
     // ═══════════════ الإضافة ═══════════════
@@ -318,14 +327,6 @@
         restartAdBar();
     };
 
-    function addAnimationStyles() {
-        if (document.getElementById('sharabarStyles')) return;
-        const style = document.createElement('style');
-        style.id = 'sharabarStyles';
-        style.textContent = '@keyframes marqueeScrollLTR { 0% { transform: translateX(-50%); } 100% { transform: translateX(0%); } }';
-        document.head.appendChild(style);
-    }
-
     function init() {
         addAnimationStyles();
 
@@ -343,7 +344,7 @@
     init();
 
     window.addEventListener('storage', function(e) {
-        if (e.key === STORAGE_KEY) {
+        if (e.key === STORAGE_KEY || e.key === MOTION_KEY) {
             restartAdBar();
             if (typeof window.renderAdsList === 'function') window.renderAdsList();
         }
