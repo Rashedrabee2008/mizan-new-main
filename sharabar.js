@@ -1,6 +1,7 @@
 /* ============================================================
-   sharabar.js - إدارة الإعلانات (v15.0 - نهائي)
-   إصلاح كامل لتغيير الألوان
+   sharabar.js - إدارة الإعلانات (v16.0)
+   - إزالة زر الإغلاق (X) نهائياً
+   - دعم تغيير الألوان للإعلانات
    ============================================================ */
 
 (function() {
@@ -11,7 +12,6 @@
     ];
 
     const STORAGE_KEY = 'sharabar_ads';
-    const CLOSED_KEY = 'sharabar_closed';
     const MOTION_KEY = 'sharabar_motion';
     const SPEED_KEY = 'sharabar_speed';
 
@@ -52,7 +52,6 @@
         } catch (e) {}
     }
 
-    // ⚡⚡⚡ الدالة الأهم - تغيير اللون فوراً
     function applyColorToBar(bar, color) {
         if (!bar || !color) return;
         const bgColor = color;
@@ -93,7 +92,7 @@
             font-weight: 800;
             font-size: 14px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            padding: 0 40px;
+            padding: 0 20px;
             box-sizing: border-box;
             transition: background 0.6s ease;
         `;
@@ -110,31 +109,8 @@
             will-change: transform;
         `;
 
-        const closeBtn = document.createElement('button');
-        closeBtn.innerHTML = '✕';
-        closeBtn.style.cssText = `
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(255,255,255,0.25);
-            border: none;
-            color: #fff;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 900;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-        `;
-        closeBtn.onclick = closeAdBar;
-
+        // ⚡ إضافة المحتوى فقط بدون زر إغلاق
         bar.appendChild(content);
-        bar.appendChild(closeBtn);
         container.appendChild(bar);
 
         currentBarElement = bar;
@@ -158,7 +134,6 @@
             const ad = ads[adIndex];
             if (!ad) return;
 
-            // ⚡⚡⚡ تغيير اللون فوراً لكل إعلان
             applyColorToBar(bar, ad.color || '#1E3A8A');
 
             const icon = ad.icon || '⭐';
@@ -177,8 +152,8 @@
 
             if (ad.link) {
                 bar.style.cursor = 'pointer';
-                bar.onclick = function(e) {
-                    if (e.target.tagName !== 'BUTTON') window.open(ad.link, '_blank');
+                bar.onclick = function() {
+                    window.open(ad.link, '_blank');
                 };
             } else {
                 bar.style.cursor = 'default';
@@ -207,7 +182,6 @@
             const ad = ads[adIndex];
             if (!ad) return;
 
-            // ⚡ تغيير اللون
             applyColorToBar(bar, ad.color || '#1E3A8A');
 
             container.style.animation = 'none';
@@ -219,8 +193,8 @@
 
             if (ad.link) {
                 bar.style.cursor = 'pointer';
-                bar.onclick = function(e) {
-                    if (e.target.tagName !== 'BUTTON') window.open(ad.link, '_blank');
+                bar.onclick = function() {
+                    window.open(ad.link, '_blank');
                 };
             } else {
                 bar.style.cursor = 'default';
@@ -237,17 +211,7 @@
         }
     }
 
-    function closeAdBar() {
-        const bar = document.getElementById('sharabar');
-        if (!bar) return;
-
-        bar.style.display = 'none';
-        localStorage.setItem(CLOSED_KEY, 'true');
-
-        if (rotationTimer) clearInterval(rotationTimer);
-    }
-
-    // ⚡⚡⚡ إعادة بناء فورية
+    // ⚡ إعادة بناء فورية للشريط
     function restartAdBar() {
         if (rotationTimer) {
             clearInterval(rotationTimer);
@@ -257,10 +221,7 @@
         const container = document.getElementById('sharabarContainer');
         if (container) container.innerHTML = '';
 
-        localStorage.removeItem(CLOSED_KEY);
         currentBarElement = null;
-
-        // إعادة البناء فوراً
         createAdBar();
     }
 
@@ -284,7 +245,6 @@
 
         const finalColor = (color && color !== '') ? color : '#1E3A8A';
 
-        // ⚡ نضيف الإعلان الجديد في الأول عشان يظهر فوراً
         const ads = getAds();
         ads.unshift({
             text: text,
@@ -294,21 +254,16 @@
         });
 
         saveAds(ads);
-
-        // ⚡ إعادة بناء الشريط فوراً
         restartAdBar();
 
-        // ⚡ تحديث القائمة
         if (typeof window.renderAdsList === 'function') {
             window.renderAdsList();
         }
 
-        // ⚡ مسح الحقول
         if (textEl) textEl.value = '';
         if (linkEl) linkEl.value = '';
         if (colorEl) colorEl.value = '#1E3A8A';
 
-        // ⚡ إشعار بسيط (بدون alert عشان ما يزعجش)
         if (typeof window.showToast === 'function') {
             window.showToast('✅ تم إضافة الإعلان', 'success');
         }
@@ -372,7 +327,6 @@
     }
 
     function init() {
-        if (localStorage.getItem(CLOSED_KEY) === 'true') return;
         addAnimationStyles();
 
         if (document.readyState === 'loading') {
@@ -388,7 +342,6 @@
 
     init();
 
-    // ⚡ مراقبة localStorage عشان لو حد غيّر الإعلانات من تاب تاني
     window.addEventListener('storage', function(e) {
         if (e.key === STORAGE_KEY) {
             restartAdBar();
