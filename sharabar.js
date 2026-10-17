@@ -1,7 +1,6 @@
 /* ============================================================
-   sharabar.js - إدارة الإعلانات (الإصدار 14.0 - نهائي)
-   - لون مخصص لكل إعلان يعمل بشكل صحيح
-   - حفظ فوري + إعادة بناء الشريط
+   sharabar.js - إدارة الإعلانات (v15.0 - نهائي)
+   إصلاح كامل لتغيير الألوان
    ============================================================ */
 
 (function() {
@@ -17,13 +16,23 @@
     const SPEED_KEY = 'sharabar_speed';
 
     let rotationTimer = null;
+    let currentBarElement = null;
 
     function getAds() {
         try {
             const saved = localStorage.getItem(STORAGE_KEY);
             if (saved) {
                 const parsed = JSON.parse(saved);
-                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    return parsed.map(function(ad) {
+                        return {
+                            text: ad.text || '',
+                            icon: ad.icon || '⭐',
+                            link: ad.link || '',
+                            color: ad.color || '#1E3A8A'
+                        };
+                    });
+                }
             }
         } catch (e) {}
         return DEFAULT_ADS;
@@ -41,7 +50,14 @@
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(ads));
         } catch (e) {}
-        restartAdBar();
+    }
+
+    // ⚡⚡⚡ الدالة الأهم - تغيير اللون فوراً
+    function applyColorToBar(bar, color) {
+        if (!bar || !color) return;
+        const bgColor = color;
+        bar.style.background = `linear-gradient(90deg, ${bgColor}, ${bgColor}dd, ${bgColor})`;
+        bar.setAttribute('data-color', bgColor);
     }
 
     function createAdBar() {
@@ -79,7 +95,7 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
             padding: 0 40px;
             box-sizing: border-box;
-            transition: background 0.5s ease;
+            transition: background 0.6s ease;
         `;
 
         const content = document.createElement('div');
@@ -101,7 +117,7 @@
             left: 10px;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.25);
             border: none;
             color: #fff;
             width: 28px;
@@ -113,16 +129,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.2s;
             z-index: 10;
         `;
-        closeBtn.onmouseover = () => closeBtn.style.background = 'rgba(255,255,255,0.4)';
-        closeBtn.onmouseout = () => closeBtn.style.background = 'rgba(255,255,255,0.2)';
         closeBtn.onclick = closeAdBar;
 
         bar.appendChild(content);
         bar.appendChild(closeBtn);
         container.appendChild(bar);
+
+        currentBarElement = bar;
 
         document.body.style.paddingTop = '50px';
 
@@ -143,10 +158,8 @@
             const ad = ads[adIndex];
             if (!ad) return;
 
-            // ⚡ تحديث اللون لكل إعلان
-            const bgColor = ad.color || '#1E3A8A';
-            bar.style.background = `linear-gradient(90deg, ${bgColor}, ${bgColor}dd, ${bgColor})`;
-            bar.setAttribute('data-color', bgColor);
+            // ⚡⚡⚡ تغيير اللون فوراً لكل إعلان
+            applyColorToBar(bar, ad.color || '#1E3A8A');
 
             const icon = ad.icon || '⭐';
             const text = ad.text;
@@ -164,7 +177,7 @@
 
             if (ad.link) {
                 bar.style.cursor = 'pointer';
-                bar.onclick = (e) => {
+                bar.onclick = function(e) {
                     if (e.target.tagName !== 'BUTTON') window.open(ad.link, '_blank');
                 };
             } else {
@@ -194,10 +207,8 @@
             const ad = ads[adIndex];
             if (!ad) return;
 
-            // ⚡ تحديث اللون
-            const bgColor = ad.color || '#1E3A8A';
-            bar.style.background = `linear-gradient(90deg, ${bgColor}, ${bgColor}dd, ${bgColor})`;
-            bar.setAttribute('data-color', bgColor);
+            // ⚡ تغيير اللون
+            applyColorToBar(bar, ad.color || '#1E3A8A');
 
             container.style.animation = 'none';
             container.innerHTML = `
@@ -208,7 +219,7 @@
 
             if (ad.link) {
                 bar.style.cursor = 'pointer';
-                bar.onclick = (e) => {
+                bar.onclick = function(e) {
                     if (e.target.tagName !== 'BUTTON') window.open(ad.link, '_blank');
                 };
             } else {
@@ -236,6 +247,7 @@
         if (rotationTimer) clearInterval(rotationTimer);
     }
 
+    // ⚡⚡⚡ إعادة بناء فورية
     function restartAdBar() {
         if (rotationTimer) {
             clearInterval(rotationTimer);
@@ -246,13 +258,13 @@
         if (container) container.innerHTML = '';
 
         localStorage.removeItem(CLOSED_KEY);
+        currentBarElement = null;
 
-        setTimeout(function() {
-            createAdBar();
-        }, 50);
+        // إعادة البناء فوراً
+        createAdBar();
     }
 
-    // ═══════════════ إدارة الإعلانات ═══════════════
+    // ═══════════════ الإضافة ═══════════════
 
     window.addNewAd = function() {
         const textEl = document.getElementById('newAdText');
@@ -272,40 +284,45 @@
 
         const finalColor = (color && color !== '') ? color : '#1E3A8A';
 
+        // ⚡ نضيف الإعلان الجديد في الأول عشان يظهر فوراً
         const ads = getAds();
-        ads.push({
+        ads.unshift({
             text: text,
             icon: icon || '⭐',
             link: link || '',
             color: finalColor
         });
 
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(ads));
-        } catch (e) {
-            alert('⚠️ فشل الحفظ');
-            return;
-        }
+        saveAds(ads);
 
-        // ⚡ إعادة بناء الشريط
+        // ⚡ إعادة بناء الشريط فوراً
         restartAdBar();
+
+        // ⚡ تحديث القائمة
+        if (typeof window.renderAdsList === 'function') {
+            window.renderAdsList();
+        }
 
         // ⚡ مسح الحقول
         if (textEl) textEl.value = '';
         if (linkEl) linkEl.value = '';
         if (colorEl) colorEl.value = '#1E3A8A';
 
-        if (typeof window.renderAdsList === 'function') window.renderAdsList();
-
-        alert('✅ تم إضافة الإعلان بنجاح!');
+        // ⚡ إشعار بسيط (بدون alert عشان ما يزعجش)
+        if (typeof window.showToast === 'function') {
+            window.showToast('✅ تم إضافة الإعلان', 'success');
+        }
     };
 
     window.deleteAd = function(index) {
-        if (!confirm('⚠️ هل أنت متأكد من حذف الإعلان ده؟')) return;
+        if (!confirm('⚠️ حذف الإعلان ده؟')) return;
         const ads = getAds();
         ads.splice(index, 1);
         saveAds(ads);
-        if (typeof window.renderAdsList === 'function') window.renderAdsList();
+        restartAdBar();
+        if (typeof window.renderAdsList === 'function') {
+            window.renderAdsList();
+        }
     };
 
     window.renderAdsList = function() {
@@ -318,18 +335,16 @@
             return;
         }
 
-        container.innerHTML = ads.map((ad, i) => {
+        container.innerHTML = ads.map(function(ad, i) {
             const bgColor = ad.color || '#1E3A8A';
-            return `
-            <div style="display:flex;justify-content:space-between;align-items:center;background:#1C1C1C;padding:10px 12px;border-radius:8px;margin-bottom:6px;border:1px solid #3D3D3D;border-right:4px solid ${bgColor};">
-                <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#F5E6C8;flex:1;min-width:0;">
-                    <span>${ad.icon || '⭐'}</span>
-                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ad.text}</span>
-                    <span style="width:20px;height:20px;border-radius:4px;background:${bgColor};border:1px solid #3D3D3D;flex-shrink:0;"></span>
-                </div>
-                <button onclick="deleteAd(${i})" style="background:#E06060;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:800;">✕</button>
-            </div>
-            `;
+            return '<div style="display:flex;justify-content:space-between;align-items:center;background:#1C1C1C;padding:10px 12px;border-radius:8px;margin-bottom:6px;border:1px solid #3D3D3D;border-right:4px solid ' + bgColor + ';">' +
+                '<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#F5E6C8;flex:1;min-width:0;">' +
+                    '<span style="width:22px;height:22px;border-radius:6px;background:' + bgColor + ';border:1px solid #3D3D3D;flex-shrink:0;"></span>' +
+                    '<span>' + (ad.icon || '⭐') + '</span>' +
+                    '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + ad.text + '</span>' +
+                '</div>' +
+                '<button onclick="deleteAd(' + i + ')" style="background:#E06060;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:800;">✕</button>' +
+            '</div>';
         }).join('');
     };
 
@@ -338,7 +353,9 @@
         const newMode = mode === 'marquee' ? 'static' : 'marquee';
         localStorage.setItem(MOTION_KEY, newMode);
         restartAdBar();
-        alert(newMode === 'marquee' ? '✅ تم تفعيل التحريك' : '✅ تم إيقاف التحريك (ثابت)');
+        if (typeof window.showToast === 'function') {
+            window.showToast(newMode === 'marquee' ? '✅ تم تفعيل التحريك' : '✅ تم إيقاف التحريك', 'info');
+        }
     };
 
     window.setAdSpeed = function(seconds) {
@@ -350,22 +367,16 @@
         if (document.getElementById('sharabarStyles')) return;
         const style = document.createElement('style');
         style.id = 'sharabarStyles';
-        style.textContent = `
-            @keyframes marqueeScrollLTR {
-                0% { transform: translateX(-50%); }
-                100% { transform: translateX(0%); }
-            }
-        `;
+        style.textContent = '@keyframes marqueeScrollLTR { 0% { transform: translateX(-50%); } 100% { transform: translateX(0%); } }';
         document.head.appendChild(style);
     }
 
     function init() {
         if (localStorage.getItem(CLOSED_KEY) === 'true') return;
-
         addAnimationStyles();
 
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('DOMContentLoaded', function() {
                 createAdBar();
                 if (typeof window.renderAdsList === 'function') window.renderAdsList();
             });
@@ -376,5 +387,13 @@
     }
 
     init();
+
+    // ⚡ مراقبة localStorage عشان لو حد غيّر الإعلانات من تاب تاني
+    window.addEventListener('storage', function(e) {
+        if (e.key === STORAGE_KEY) {
+            restartAdBar();
+            if (typeof window.renderAdsList === 'function') window.renderAdsList();
+        }
+    });
 
 })();
