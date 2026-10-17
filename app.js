@@ -1,12 +1,12 @@
 // ============================================================
-// الميزان Pro - app.js v24.0 (مُصلَّح)
+// الميزان Pro - app.js v25.0 (النسخة النهائية)
 // تسجيل الدخول + المستخدمين + الشركة + اللوجو
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('📱 app.js v24.0 - بدء التشغيل');
+    console.log('📱 app.js v25.0 - بدء التشغيل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: متغيرات عامة
@@ -29,13 +29,14 @@
     window.companyData = window.companyData || {};
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 2: اللوجو والشركة
+    // الجزء 2: تطبيق اللوجو والشركة
     // ═══════════════════════════════════════════════════════════
 
     window.applyLogoOnLoad = function() {
         const company = window.companyData || {};
         const logoData = company.logo || '';
 
+        // الهيدر
         const headerLogo = document.getElementById('headerLogo');
         const defaultIcon = document.getElementById('headerDefaultIcon');
 
@@ -50,11 +51,13 @@
             }
         }
 
+        // اسم الشركة في الهيدر
         const headerCompany = document.getElementById('headerCompanyName');
         if (headerCompany) {
             headerCompany.textContent = company.name || 'الميزان Pro';
         }
 
+        // في كل عنصر data-logo
         document.querySelectorAll('[data-logo]').forEach(function(el) {
             if (logoData) {
                 el.src = logoData;
@@ -64,6 +67,7 @@
             }
         });
 
+        // في صفحة الشركة
         const preview = document.getElementById('companyLogoPreview');
         const img = document.getElementById('companyLogoImg');
         if (preview && img) {
@@ -76,11 +80,11 @@
         }
     };
 
-    // ⚡ نقلها فوق checkLogin عشان تتوفر
+    // ★★★ دالة تحميل بيانات الشركة ★★★
     window.loadCompanyData = function() {
         try {
             let saved = localStorage.getItem('mizan_companyData');
-
+            
             if (!saved && window.DataStore && window.DataStore.get) {
                 const dsData = window.DataStore.get('companyData');
                 if (dsData) saved = JSON.stringify(dsData);
@@ -91,7 +95,9 @@
             }
 
             if (saved) {
-                try { window.companyData = JSON.parse(saved); } catch (e) {}
+                try {
+                    window.companyData = JSON.parse(saved);
+                } catch (e) {}
             }
 
             if (!window.companyData) window.companyData = {};
@@ -125,6 +131,7 @@
             const curEl = document.getElementById('companyCurrency');
             if (curEl) curEl.value = c.currency || 'ج.م';
 
+            // المعاينة
             const preview = document.getElementById('companyLogoPreview');
             const img = document.getElementById('companyLogoImg');
             if (preview && img) {
@@ -234,7 +241,7 @@
         if (typeof window.recordSuccessfulLogin === 'function') window.recordSuccessfulLogin();
 
         window.currentUser = user;
-
+        
         try {
             localStorage.setItem('mizan_current_user', JSON.stringify({
                 id: user.id,
@@ -254,6 +261,7 @@
         if (typeof window.updateUserUI === 'function') window.updateUserUI();
         if (typeof window.showToast === 'function') window.showToast('🔓 مرحباً ' + user.name + '!', 'success');
 
+        // ★★★ تحميل بيانات الشركة واللوجو بعد الدخول ★★★
         window.loadCompanyData();
 
         setTimeout(function() {
@@ -266,7 +274,6 @@
             setTimeout(window.initAdBar, 200);
         }
 
-        // ⚡ استخدم navigateTo (اللي في ui.js)
         if (typeof window.navigateTo === 'function') window.navigateTo('dashboard');
     };
 
@@ -416,7 +423,7 @@
             window.DataStore.set('users', window.users);
         }
         localStorage.setItem('mizan_users', JSON.stringify(window.users));
-
+        
         window.resetUserForm();
         window.renderUsers();
         window.populateLoginUsers();
@@ -486,14 +493,14 @@
             window.DataStore.set('users', window.users);
         }
         localStorage.setItem('mizan_users', JSON.stringify(window.users));
-
+        
         window.renderUsers();
         window.populateLoginUsers();
         if (typeof window.showToast === 'function') window.showToast('🗑️ تم الحذف', 'info');
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 5: بيانات الشركة
+    // الجزء 5: بيانات الشركة + اللوجو
     // ═══════════════════════════════════════════════════════════
 
     window.renderCompany = function() {
@@ -515,51 +522,65 @@
         setTxt('companySalesTotal', window.formatMoney ? window.formatMoney(totalSales) + ' ج.م' : totalSales.toFixed(2) + ' ج.م');
     };
 
-    // ⚡⚡⚡ استبدل applyLogoOnLoad كاملة:
+    window.uploadCompanyLogo = function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
 
-window.applyLogoOnLoad = function() {
-    const company = window.companyData || {};
-    const logoData = company.logo || '';
-
-    const headerLogo = document.getElementById('headerLogo');
-    const defaultIcon = document.getElementById('headerDefaultIcon');
-
-    if (headerLogo && defaultIcon) {
-        if (logoData) {
-            headerLogo.src = logoData;
-            headerLogo.style.display = 'block';
-            defaultIcon.style.display = 'none';
-        } else {
-            headerLogo.style.display = 'none';
-            defaultIcon.style.display = 'block';
+        if (!file.type.match('image.*')) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('⚠️ الرجاء اختيار صورة (JPG أو PNG)', 'error');
+            } else {
+                alert('⚠️ الرجاء اختيار صورة');
+            }
+            return;
         }
-    }
 
-    const headerCompany = document.getElementById('headerCompanyName');
-    if (headerCompany) {
-        headerCompany.textContent = company.name || 'الميزان Pro';
-    }
-
-    document.querySelectorAll('[data-logo]').forEach(function(el) {
-        if (logoData) {
-            el.src = logoData;
-            el.style.display = 'block';
-        } else {
-            el.style.display = 'none';
+        if (file.size > 2000000) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('⚠️ الصورة كبيرة (الحد 2 ميجا)', 'error');
+            } else {
+                alert('⚠️ الصورة كبيرة');
+            }
+            return;
         }
-    });
 
-    const preview = document.getElementById('companyLogoPreview');
-    const img = document.getElementById('companyLogoImg');
-    if (preview && img) {
-        if (logoData) {
-            img.src = logoData;
-            preview.style.display = 'block';
-        } else {
-            preview.style.display = 'none';
-        }
-    }
-};
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const logoData = e.target.result;
+
+            if (!window.companyData) window.companyData = {};
+            window.companyData.logo = logoData;
+
+            try {
+                localStorage.setItem('mizan_companyData', JSON.stringify(window.companyData));
+            } catch (err) {
+                alert('⚠️ فشل الحفظ: الصورة كبيرة جداً');
+                return;
+            }
+
+            if (window.DataStore && window.DataStore.set) {
+                window.DataStore.set('companyData', window.companyData);
+            }
+
+            window.applyLogoOnLoad();
+
+            const preview = document.getElementById('companyLogoPreview');
+            const img = document.getElementById('companyLogoImg');
+            if (preview && img) {
+                img.src = logoData;
+                preview.style.display = 'block';
+            }
+
+            if (typeof window.showToast === 'function') {
+                window.showToast('✅ تم رفع الشعار', 'success');
+            } else {
+                alert('✅ تم رفع الشعار');
+            }
+
+            event.target.value = '';
+        };
+        reader.readAsDataURL(file);
+    };
 
     window.removeCompanyLogo = async function() {
         let confirmed = true;
@@ -776,12 +797,7 @@ window.applyLogoOnLoad = function() {
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 10: updateUserUI — النسخة الوحيدة (من core.js)
-    // ═══════════════════════════════════════════════════════════
-    // ⚡ محذوفة — موجودة في core.js/permissions.js
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 11: قائمة المزيد
+    // الجزء 10: قائمة المزيد
     // ═══════════════════════════════════════════════════════════
 
     window.toggleMoreMenu = function() {
@@ -791,7 +807,7 @@ window.applyLogoOnLoad = function() {
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 12: التهيئة النهائية
+    // الجزء 11: التهيئة النهائية
     // ═══════════════════════════════════════════════════════════
 
     window.init = function() {
@@ -850,6 +866,6 @@ window.applyLogoOnLoad = function() {
     }
 
     window.__appLoaded = true;
-    console.log('✅ app.js v24.0 كامل جاهز');
+    console.log('✅ app.js v25.0 كامل جاهز');
 
 })();
