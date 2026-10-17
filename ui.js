@@ -410,5 +410,221 @@
             window.renderAdsList();
         }
     });
+// ═══════════════════════════════════════════════════════════
+// عرض الخزائن (renderCashBoxes) - جديدة
+// ═══════════════════════════════════════════════════════════
 
+window.renderCashBoxes = function() {
+    const container = document.getElementById('cashBoxesList');
+    if (!container) {
+        console.warn('⚠️ cashBoxesList مش موجود في الصفحة');
+        return;
+    }
+
+    const boxes = window.cashBoxes || [];
+
+    if (boxes.length === 0) {
+        container.innerHTML = '<div class="empty-state">' +
+            '<i class="fas fa-money-bill-wave"></i>' +
+            '<span>لا توجد خزائن</span>' +
+            '<p style="font-size:11px;color:#5D5D5D;margin-top:8px;">أضف خزنة جديدة من الإعدادات</p>' +
+        '</div>';
+        return;
+    }
+
+    // حساب الإجمالي
+    let totalBalance = 0;
+    boxes.forEach(function(box) {
+        totalBalance += window.Balance.cashBox(box.id);
+    });
+
+    // بطاقة الإجمالي
+    let html = '<div class="cash-boxes-summary">' +
+        '<div class="summary-item">' +
+            '<div class="summary-label">💰 إجمالي الخزائن</div>' +
+            '<div class="summary-value">' + window.formatMoney(totalBalance) + '</div>' +
+        '</div>' +
+        '<div class="summary-item">' +
+            '<div class="summary-label">📊 عدد الخزائن</div>' +
+            '<div class="summary-value">' + boxes.length + '</div>' +
+        '</div>' +
+    '</div>';
+
+    // كل خزنة
+    boxes.forEach(function(box) {
+        if (box.active === false) return;
+
+        const balance = window.Balance.cashBox(box.id);
+        const isNegative = balance < 0;
+        const icon = box.icon || (box.type === 'cash' ? '💵' : box.type === 'wallet' ? '📱' : box.type === 'bank' ? '🏦' : '💰');
+        const typeName = box.type === 'cash' ? 'نقدي' : box.type === 'wallet' ? 'محفظة إلكترونية' : box.type === 'bank' ? 'بنك' : 'أخرى';
+
+        html += '<div class="cash-box-card' + (box.isDefault ? ' default' : '') + '" style="margin-bottom:12px;">' +
+            '<div class="cash-box-header">' +
+                '<div class="cash-box-icon">' + icon + '</div>' +
+                '<div class="cash-box-info">' +
+                    '<div class="cash-box-name">' + window.escapeHtml(box.name) +
+                        (box.isDefault ? ' ⭐' : '') +
+                    '</div>' +
+                    '<div class="cash-box-type">' + typeName + '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="cash-box-balance">' +
+                '<div class="balance-label">💰 الرصيد الحالي</div>' +
+                '<div class="balance-value' + (isNegative ? ' negative' : '') + '">' +
+                    window.formatMoney(balance) + ' ج.م' +
+                '</div>' +
+            '</div>' +
+            '<div class="cash-box-actions">' +
+                '<button class="btn btn-info btn-sm" onclick="showCashBoxHistory(\'' + box.id + '\')" style="flex:1;">' +
+                    '<i class="fas fa-history"></i> الحركات' +
+                '</button>' +
+                '<button class="btn btn-success btn-sm" onclick="showAddCashBoxTransaction(\'' + box.id + '\')" style="flex:1;">' +
+                    '<i class="fas fa-plus"></i> إضافة' +
+                '</button>' +
+            '</div>' +
+        '</div>';
+    });
+
+    container.innerHTML = html;
+};
+
+// ═══════════════════════════════════════════════════════════
+// عرض حركات خزنة معينة
+// ═══════════════════════════════════════════════════════════
+
+window.showCashBoxHistory = function(boxId) {
+    const box = (window.cashBoxes || []).find(function(b) { return String(b.id) === String(boxId); });
+    if (!box) return;
+
+    const transactions = (window.treasury || []).filter(function(t) {
+        return String(t.cashBoxId) === String(boxId);
+    }).sort(function(a, b) {
+        return (b.createdAt || '').localeCompare(a.createdAt || '');
+    }).slice(0, 50);
+
+    const balance = window.Balance.cashBox(boxId);
+    const icon = box.icon || '💰';
+
+    let html = '<button class="modal-close" onclick="closeModal()">&times;</button>' +
+        '<h3>' + icon + ' حركات ' + window.escapeHtml(box.name) + '</h3>' +
+        '<div style="background:linear-gradient(135deg,#C9A94E,#B8953A);border-radius:10px;padding:14px;text-align:center;color:#0D0D0D;margin-bottom:12px;">' +
+            '<div style="font-size:11px;">الرصيد الحالي</div>' +
+            '<div style="font-size:24px;font-weight:900;font-family:monospace;">' + window.formatMoney(balance) + ' ج.م</div>' +
+        '</div>';
+
+    if (transactions.length === 0) {
+        html += '<div class="empty-state"><i class="fas fa-history"></i><span>لا توجد حركات</span></div>';
+    } else {
+        html += '<div style="max-height:400px;overflow-y:auto;">';
+        transactions.forEach(function(t) {
+            const isDep = t.type === 'deposit';
+            const color = isDep ? '#2D8F5E' : '#E06060';
+            const icons = {
+                'sale': '💰', 'purchase': '🛒', 'expense': '💸',
+                'collect': '💵', 'pay': '💳', 'manual': '✋',
+                'return': '🔄', 'salary': '👤'
+            };
+            const refIcon = icons[t.refType] || '📋';
+
+            html += '<div style="background:#0D0D0D;border-radius:8px;padding:10px;margin-bottom:6px;border-right:3px solid ' + color + ';">' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
+                    '<span style="color:#F5E6C8;font-size:12px;">' + refIcon + ' ' + window.escapeHtml(t.note || '') + '</span>' +
+                    '<span style="color:' + color + ';font-weight:900;font-size:13px;font-family:monospace;">' +
+                        (isDep ? '+' : '-') + window.formatMoney(t.amount) +
+                    '</span>' +
+                '</div>' +
+                '<div style="color:#A89070;font-size:10px;">📅 ' + (t.date || '') + ' • 🕐 ' + (t.time || '') + '</div>' +
+            '</div>';
+        });
+        html += '</div>';
+    }
+
+    html += '<button class="btn btn-secondary btn-block" onclick="closeModal()" style="margin-top:12px;">إغلاق</button>';
+    window.openModal(html);
+};
+
+// ═══════════════════════════════════════════════════════════
+// نافذة إضافة حركة لخزنة
+// ═══════════════════════════════════════════════════════════
+
+window.showAddCashBoxTransaction = function(boxId) {
+    const box = (window.cashBoxes || []).find(function(b) { return String(b.id) === String(boxId); });
+    if (!box) return;
+
+    const icon = box.icon || '💰';
+
+    const html = '<button class="modal-close" onclick="closeModal()">&times;</button>' +
+        '<h3>' + icon + ' إضافة حركة - ' + window.escapeHtml(box.name) + '</h3>' +
+        '<div class="form-group">' +
+            '<label>النوع</label>' +
+            '<select id="cbTransType" class="pos-select">' +
+                '<option value="deposit">💚 إيداع</option>' +
+                '<option value="withdraw">❤️ سحب</option>' +
+            '</select>' +
+        '</div>' +
+        '<div class="form-group">' +
+            '<label>المبلغ *</label>' +
+            '<input type="number" id="cbTransAmount" step="0.01" min="0" placeholder="0.00" />' +
+        '</div>' +
+        '<div class="form-group">' +
+            '<label>البيان *</label>' +
+            '<input type="text" id="cbTransNote" placeholder="البيان..." />' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
+            '<button class="btn btn-success" onclick="saveCashBoxTransaction(\'' + boxId + '\')">' +
+                '<i class="fas fa-check"></i> حفظ' +
+            '</button>' +
+            '<button class="btn btn-secondary" onclick="closeModal()">إلغاء</button>' +
+        '</div>';
+
+    window.openModal(html);
+};
+
+window.saveCashBoxTransaction = function(boxId) {
+    const type = document.getElementById('cbTransType') ? document.getElementById('cbTransType').value : 'deposit';
+    const amount = parseFloat(document.getElementById('cbTransAmount') ? document.getElementById('cbTransAmount').value : 0) || 0;
+    const note = document.getElementById('cbTransNote') ? document.getElementById('cbTransNote').value.trim() : '';
+
+    if (amount <= 0) {
+        window.showToast('⚠️ أدخل مبلغ صحيح', 'error');
+        return;
+    }
+    if (!note) {
+        window.showToast('⚠️ أدخل البيان', 'error');
+        return;
+    }
+
+    const box = (window.cashBoxes || []).find(function(b) { return String(b.id) === String(boxId); });
+
+    // فحص الرصيد لو سحب
+    if (type === 'withdraw') {
+        const balance = window.Balance.cashBox(boxId);
+        if (balance < amount) {
+            window.showToast('⚠️ رصيد الخزنة غير كافٍ (المتاح: ' + window.formatMoney(balance) + ' ج.م)', 'error');
+            return;
+        }
+    }
+
+    window.DataStore.add('treasury', {
+        id: window.generateId('tr_'),
+        type: type,
+        amount: amount,
+        note: note,
+        cashBoxId: boxId,
+        cashBoxName: box ? box.name : '',
+        refType: 'manual',
+        refId: null,
+        date: window.getTodayDate(),
+        time: window.getNowTime()
+    });
+
+    window.showToast('✅ تم تسجيل الحركة', 'success');
+    window.closeModal();
+
+    setTimeout(function() {
+        window.renderCashBoxes();
+    }, 300);
+};
+    
 })();
