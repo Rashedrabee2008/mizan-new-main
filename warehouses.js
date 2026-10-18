@@ -1,18 +1,17 @@
 // ============================================================
-// الميزان Pro - warehouses.js
-// إدارة المخازن الكاملة: أذون + تحويلات + تسويات + جرد + تقارير
+// الميزان Pro - warehouses.js v19.0 (إصلاح شامل)
+// 🔧 إدارة كاملة للمخازن: أذون + تحويلات + تسويات + جرد
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🏭 warehouses.js v18.0 - بدء التحميل');
+    console.log('🏭 warehouses.js v19.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: الحالة العامة
     // ═══════════════════════════════════════════════════════════
 
-    // الأصناف الحالية للإذن (مؤقت)
     window.currentVoucherItems = [];
     window.currentVoucherType = '';
 
@@ -36,10 +35,8 @@
         });
         if (btn) btn.classList.add('active');
 
-        // ملء القوائم
         window.populateWarehouseDropdowns();
 
-        // عرض السجل المناسب
         if (tab === 'receipts') window.renderWarehouseReceipts();
         if (tab === 'issues') window.renderWarehouseIssues();
         if (tab === 'transfers') window.renderWarehouseTransfers();
@@ -47,7 +44,6 @@
         if (tab === 'opening') window.renderOpeningBalances();
         if (tab === 'reports') window.renderWarehouseReportsList();
 
-        // إعادة تعيين الأصناف
         window.currentVoucherItems = [];
         window.currentVoucherType = tab;
         window.renderVoucherItems();
@@ -58,7 +54,6 @@
     // ═══════════════════════════════════════════════════════════
 
     window.populateWarehouseDropdowns = function() {
-        // المستودعات في كل الأذون
         const warehouseSelects = [
             'whReceiptWarehouse', 'whIssueWarehouse',
             'whTransferFrom', 'whTransferTo',
@@ -82,7 +77,6 @@
             }
         });
 
-        // الموردين
         const supSel = document.getElementById('whReceiptSupplier');
         if (supSel) {
             const cv = supSel.value;
@@ -95,7 +89,6 @@
             supSel.value = cv;
         }
 
-        // العملاء (للصرف)
         const cusSel = document.getElementById('whIssueCustomer');
         if (cusSel) {
             const cv = cusSel.value;
@@ -108,7 +101,6 @@
             cusSel.value = cv;
         }
 
-        // المنتج العام للأصناف
         const voucherProduct = document.getElementById('whVoucherProduct');
         if (voucherProduct) {
             const cv = voucherProduct.value;
@@ -123,7 +115,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: إدارة أصناف الإذن (من القسم العام)
+    // الجزء 4: إدارة أصناف الإذن
     // ═══════════════════════════════════════════════════════════
 
     window.addVoucherItemFromGlobal = function() {
@@ -172,7 +164,6 @@
         window.showToast('✅ تم إضافة ' + product.name, 'success');
     };
 
-    // نسخة قديمة للتوافق (لا تُستخدم)
     window.addVoucherItem = function(type) {
         const prefix = type;
         const productId = document.getElementById(prefix + 'Product') ? document.getElementById(prefix + 'Product').value : '';
@@ -268,7 +259,6 @@
 
         container.innerHTML = html;
 
-        // الإجماليات
         const totalItems = window.currentVoucherItems.length;
         const totalQty = window.currentVoucherItems.reduce(function(s, i) { return s + i.qty; }, 0);
         const totalValue = window.currentVoucherItems.reduce(function(s, i) { return s + i.total; }, 0);
@@ -312,7 +302,6 @@
 
         const warehouse = (window.warehouses || []).find(function(w) { return w.id == warehouseId; });
 
-        // زيادة المخزون
         window.currentVoucherItems.forEach(function(item) {
             const p = (window.products || []).find(function(pr) { return pr.id == item.productId; });
             if (p) {
@@ -457,7 +446,6 @@
             return;
         }
 
-        // التحقق من المخزون
         for (let i = 0; i < window.currentVoucherItems.length; i++) {
             const item = window.currentVoucherItems[i];
             const p = (window.products || []).find(function(pr) { return pr.id == item.productId; });
@@ -474,7 +462,6 @@
 
         const warehouse = (window.warehouses || []).find(function(w) { return w.id == warehouseId; });
 
-        // خصم من المخزون
         window.currentVoucherItems.forEach(function(item) {
             const p = (window.products || []).find(function(pr) { return pr.id == item.productId; });
             if (p) {
@@ -551,7 +538,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 7: التحويل بين المستودعات
+    // الجزء 7: التحويل
     // ═══════════════════════════════════════════════════════════
 
     window.createWarehouseTransfer = function() {
@@ -582,7 +569,6 @@
             return;
         }
 
-        // التحقق من المخزون في المصدر
         for (let i = 0; i < window.currentVoucherItems.length; i++) {
             const item = window.currentVoucherItems[i];
             const p = (window.products || []).find(function(pr) { return pr.id == item.productId; });
@@ -600,7 +586,6 @@
         const fromWh = (window.warehouses || []).find(function(w) { return w.id == fromId; });
         const toWh = (window.warehouses || []).find(function(w) { return w.id == toId; });
 
-        // التحويل
         window.currentVoucherItems.forEach(function(item) {
             const p = (window.products || []).find(function(pr) { return pr.id == item.productId; });
             if (p) {
@@ -701,7 +686,6 @@
 
         const warehouse = (window.warehouses || []).find(function(w) { return w.id == warehouseId; });
 
-        // تعديل الكميات
         window.currentVoucherItems.forEach(function(item) {
             const p = (window.products || []).find(function(pr) { return pr.id == item.productId; });
             if (p) {
@@ -807,7 +791,6 @@
 
         const warehouse = (window.warehouses || []).find(function(w) { return w.id == warehouseId; });
 
-        // إضافة للمخزون
         window.currentVoucherItems.forEach(function(item) {
             const p = (window.products || []).find(function(pr) { return pr.id == item.productId; });
             if (p) {
@@ -880,7 +863,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 10: عرض تفاصيل وحذف أي إذن
+    // الجزء 10: عرض التفاصيل والحذف
     // ═══════════════════════════════════════════════════════════
 
     window.viewVoucherDetails = function(collection, id) {
@@ -954,32 +937,27 @@
         const confirmed = await window.confirmDialog('حذف #' + item.number + '؟ سيتم إرجاع التأثير على المخزون.');
         if (!confirmed) return;
 
-        // عكس التأثير على المخزون
         (item.items || []).forEach(function(it) {
             const p = (window.products || []).find(function(pr) { return pr.id == it.productId; });
             if (!p) return;
 
             if (collection === 'warehouseReceipts' || collection === 'openingBalances') {
-                // كان إضافة → نشيل
                 p.qty = Math.max(0, (p.qty || 0) - it.qty);
                 if (item.warehouseId && p.warehouseStock) {
                     p.warehouseStock[item.warehouseId] = Math.max(0,
                         (p.warehouseStock[item.warehouseId] || 0) - it.qty);
                 }
             } else if (collection === 'warehouseIssues') {
-                // كان صرف → نرجع
                 p.qty = (p.qty || 0) + it.qty;
                 if (item.warehouseId && p.warehouseStock) {
                     p.warehouseStock[item.warehouseId] = (p.warehouseStock[item.warehouseId] || 0) + it.qty;
                 }
             } else if (collection === 'warehouseTransfers') {
-                // كان تحويل → نرجعه
                 if (p.warehouseStock) {
                     p.warehouseStock[item.fromId] = (p.warehouseStock[item.fromId] || 0) + it.qty;
                     p.warehouseStock[item.toId] = Math.max(0, (p.warehouseStock[item.toId] || 0) - it.qty);
                 }
             } else if (collection === 'warehouseAdjustments') {
-                // كان تسوية → نرجع للكمية النظامية
                 if (it.systemQty !== undefined) {
                     p.qty = it.systemQty;
                     if (item.warehouseId && p.warehouseStock) {
@@ -992,7 +970,6 @@
         window.DataStore.remove(collection, id);
         window.DataStore.set('products', window.products);
 
-        // تحديث العرض
         if (collection === 'warehouseReceipts') window.renderWarehouseReceipts();
         if (collection === 'warehouseIssues') window.renderWarehouseIssues();
         if (collection === 'warehouseTransfers') window.renderWarehouseTransfers();
@@ -1013,7 +990,6 @@
         const warehouses = window.warehouses || [];
         const products = window.products || [];
 
-        // تقرير 1: رصيد كل مستودع
         let summaryHtml = '<div style="background:#0D0D0D;border-radius:10px;padding:14px;margin-bottom:12px;">' +
             '<h3 style="color:#C9A94E;font-size:14px;margin-bottom:12px;">📊 رصيد المستودعات</h3>';
 
@@ -1044,7 +1020,6 @@
 
         summaryHtml += '</div>';
 
-        // تقرير 2: عدد الأذون
         let vouchersHtml = '<div style="background:#0D0D0D;border-radius:10px;padding:14px;margin-bottom:12px;">' +
             '<h3 style="color:#C9A94E;font-size:14px;margin-bottom:12px;">📋 حركات المخازن</h3>' +
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
@@ -1067,7 +1042,6 @@
             '</div>' +
         '</div>';
 
-        // تقرير 3: الأصناف على وشك النفاذ
         const lowStock = products.filter(function(p) {
             return (parseInt(p.qty) || 0) <= (parseInt(p.min) || 5);
         });
@@ -1108,6 +1082,6 @@
     });
 
     window.__warehousesLoaded = true;
-    console.log('✅ warehouses.js v18.0 جاهز');
+    console.log('✅ warehouses.js v19.0 جاهز');
 
 })();
