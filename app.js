@@ -1,5 +1,6 @@
 // ============================================================
-// الميزان Pro - app.js (نسخة التشغيل النهائية - v35.0)
+// الميزان Pro - app.js v36.0 (حل جذري لتعارض التفعيل)
+// 🔧 التعديلات: انتظار التفعيل قبل عرض الدخول + حماية checkLogin
 // ============================================================
 
 (function() {
@@ -77,7 +78,7 @@
     window.loadCompanyData = function() {
         try {
             let saved = localStorage.getItem('mizan_companyData');
-            
+
             if (!saved && window.DataStore && window.DataStore.get) {
                 const dsData = window.DataStore.get('companyData');
                 if (dsData) saved = JSON.stringify(dsData);
@@ -140,7 +141,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 3: تسجيل الدخول
+    // الجزء 3: تسجيل الدخول — 🔧 مع حماية التفعيل
     // ═══════════════════════════════════════════════════════════
 
     window.populateLoginUsers = function() {
@@ -178,6 +179,17 @@
         const userIdEl = document.getElementById('loginUsername');
         const passwordEl = document.getElementById('loginPassword');
         const errorEl = document.getElementById('loginError');
+
+        // 🔧 حماية: لا تسمح بالدخول قبل التفعيل
+        if (window.Activation && typeof window.Activation.isActivated === 'function') {
+            if (!window.Activation.isActivated()) {
+                if (errorEl) {
+                    errorEl.textContent = '⚠️ يجب تفعيل التطبيق أولاً';
+                    errorEl.classList.add('show');
+                }
+                return;
+            }
+        }
 
         const userId = userIdEl ? userIdEl.value : '';
         const password = passwordEl ? passwordEl.value : '';
@@ -233,7 +245,7 @@
         if (typeof window.recordSuccessfulLogin === 'function') window.recordSuccessfulLogin();
 
         window.currentUser = user;
-        
+
         try {
             localStorage.setItem('mizan_current_user', JSON.stringify({
                 id: user.id,
@@ -414,7 +426,7 @@
             window.DataStore.set('users', window.users);
         }
         localStorage.setItem('mizan_users', JSON.stringify(window.users));
-        
+
         window.resetUserForm();
         window.renderUsers();
         window.populateLoginUsers();
@@ -484,7 +496,7 @@
             window.DataStore.set('users', window.users);
         }
         localStorage.setItem('mizan_users', JSON.stringify(window.users));
-        
+
         window.renderUsers();
         window.populateLoginUsers();
         if (typeof window.showToast === 'function') window.showToast('🗑️ تم الحذف', 'info');
@@ -769,7 +781,11 @@
         menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
     };
 
-    window.init = function() {
+    // ═══════════════════════════════════════════════════════════
+    // 🔧 الجزء 7: التهيئة — مُعاد هيكلتها لانتظار التفعيل
+    // ═══════════════════════════════════════════════════════════
+
+    function startApp() {
         console.log('🚀 بدء تهيئة التطبيق...');
 
         if (typeof window.seedInitialData === 'function') window.seedInitialData();
@@ -788,10 +804,21 @@
 
         window.populateLoginUsers();
 
+        // 🔧 لا تعرض شاشة الدخول إذا كانت شاشة التفعيل نشطة
         const loginCont = document.getElementById('loginContainer');
         const appCont = document.getElementById('appContent');
-        if (loginCont) loginCont.classList.remove('hidden');
-        if (appCont) appCont.style.display = 'none';
+
+        if (!document.body.hasAttribute('data-activation-screen')) {
+            if (loginCont) loginCont.classList.remove('hidden');
+            if (appCont) appCont.style.display = 'none';
+        } else {
+            console.log('⏸️ شاشة التفعيل نشطة — لن تُعرض شاشة الدخول');
+            if (loginCont) {
+                loginCont.style.display = 'none';
+                loginCont.classList.add('hidden');
+            }
+            if (appCont) appCont.style.display = 'none';
+        }
 
         if (typeof window.getTodayDate === 'function') {
             const today = window.getTodayDate();
@@ -814,6 +841,35 @@
 
         if (window.EventBus) window.EventBus.emit('app:initialized');
         console.log('✅ التطبيق جاهز');
+    }
+
+    window.init = function() {
+        // 🔧 انتظر نتيجة التفعيل قبل البدء
+        if (window.__activationChecked === true) {
+            // التفعيل فُحص بالفعل
+            if (window.__activationPassed === false) {
+                console.log('⏸️ التطبيق غير مفعّل — انتظار التفعيل');
+                // لا تفعل شيئاً — شاشة التفعيل ظاهرة
+                return;
+            }
+            startApp();
+        } else {
+            // التفعيل لم يُفحص بعد — انتظر الحدث
+            console.log('⏳ انتظار فحص التفعيل...');
+            if (window.EventBus) {
+                window.EventBus.once('activation:passed', startApp);
+                // احتياط: لو مرت 3 ثوانٍ بدون نتيجة، ابدأ على أي حال
+                setTimeout(function() {
+                    if (!window.__activationPassed) {
+                        console.log('⚠️ انتهت مهلة الانتظار — بدء التطبيق');
+                        startApp();
+                    }
+                }, 3000);
+            } else {
+                // لا يوجد EventBus — ابدأ فوراً
+                startApp();
+            }
+        }
     };
 
     if (document.readyState === 'loading') {
@@ -825,6 +881,6 @@
     }
 
     window.__appLoaded = true;
-    console.log('✅ app.js v35.0 كامل جاهز');
+    console.log('✅ app.js v36.0 كامل جاهز');
 
 })();
