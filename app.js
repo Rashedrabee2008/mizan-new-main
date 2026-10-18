@@ -1,15 +1,11 @@
 // ============================================================
-// الميزان Pro - app.js v27.0 (تحديث اسم الشركة في الهيدر)
+// الميزان Pro - app.js v29.0 (إصلاح اسم الشركة واللوجو جذرياً)
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('📱 app.js v27.0 - بدء التشغيل');
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 1: متغيرات عامة
-    // ═══════════════════════════════════════════════════════════
+    console.log('📱 app.js v29.0 - بدء التشغيل');
 
     window.currentUser = null;
     window.currentSaleItems = [];
@@ -28,14 +24,15 @@
     window.companyData = window.companyData || {};
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 2: تطبيق اللوجو واسم الشركة
+    // الجزء 1: تطبيق اللوجو واسم الشركة (مُحسّن)
     // ═══════════════════════════════════════════════════════════
 
     window.applyLogoOnLoad = function() {
         const company = window.companyData || {};
         const logoData = company.logo || '';
+        const companyName = company.name || 'الميزان Pro';
 
-        // 1. الهيدر
+        // 1. اللوجو في الهيدر
         const headerLogo = document.getElementById('headerLogo');
         const defaultIcon = document.getElementById('headerDefaultIcon');
 
@@ -50,13 +47,13 @@
             }
         }
 
-        // 2. ⚡ تحديث اسم الشركة في الهيدر
+        // 2. ⚡ إجبار اسم الشركة في الهيدر على التحديث
         const headerCompany = document.getElementById('headerCompanyName');
         if (headerCompany) {
-            headerCompany.textContent = company.name || 'الميزان Pro';
+            headerCompany.textContent = companyName;
         }
 
-        // 3. كل عنصر فيه data-logo
+        // 3. اللوجو في أي مكان تاني
         document.querySelectorAll('[data-logo]').forEach(function(el) {
             if (logoData && logoData.trim() !== '') {
                 el.src = logoData;
@@ -66,7 +63,7 @@
             }
         });
 
-        // 4. صفحة الشركة (المعاينة)
+        // 4. المعاينة في صفحة الشركة
         const preview = document.getElementById('companyLogoPreview');
         const img = document.getElementById('companyLogoImg');
         if (preview && img) {
@@ -80,7 +77,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 3: تحميل بيانات الشركة
+    // الجزء 2: تحميل بيانات الشركة
     // ═══════════════════════════════════════════════════════════
 
     window.loadCompanyData = function() {
@@ -149,7 +146,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: تسجيل الدخول
+    // الجزء 3: تسجيل الدخول
     // ═══════════════════════════════════════════════════════════
 
     window.populateLoginUsers = function() {
@@ -337,7 +334,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 5: إدارة المستخدمين
+    // الجزء 4: إدارة المستخدمين
     // ═══════════════════════════════════════════════════════════
 
     window.renderUsers = function() {
@@ -500,7 +497,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 6: بيانات الشركة (رفع اللوجو وحفظ الاسم)
+    // الجزء 5: بيانات الشركة واللوجو
     // ═══════════════════════════════════════════════════════════
 
     window.renderCompany = function() {
@@ -531,15 +528,6 @@
                 window.showToast('⚠️ الرجاء اختيار صورة (JPG أو PNG)', 'error');
             } else {
                 alert('⚠️ الرجاء اختيار صورة');
-            }
-            return;
-        }
-
-        if (file.size > 2000000) {
-            if (typeof window.showToast === 'function') {
-                window.showToast('⚠️ الصورة كبيرة (الحد 2 ميجا)', 'error');
-            } else {
-                alert('⚠️ الصورة كبيرة');
             }
             return;
         }
@@ -648,7 +636,7 @@
             window.DataStore.set('companyData', window.companyData);
         }
 
-        // ⚡ تحديث الهيدر فوراً بالاسم الجديد
+        // ⚡ إجبار الهيدر على التحديث فوراً
         const headerCompany = document.getElementById('headerCompanyName');
         if (headerCompany) {
             headerCompany.textContent = newName;
@@ -662,7 +650,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 7: الإعدادات
+    // الجزء 6: الإعدادات والتصدير
     // ═══════════════════════════════════════════════════════════
 
     window.renderSettings = function() {
@@ -686,10 +674,6 @@
             cloudEl.style.color = window.firebaseReady ? '#2D8F5E' : '#E6A830';
         }
     };
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 8: التصدير / الاستيراد
-    // ═══════════════════════════════════════════════════════════
 
     window.exportData = function() {
         if (!window.DataStore || !window.DataStore.export) return;
@@ -744,10 +728,6 @@
         }
     };
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 9: المزامنة اليدوية
-    // ═══════════════════════════════════════════════════════════
-
     window.manualSync = async function() {
         if (!window.CloudSync || !window.CloudSync.isReady()) {
             if (typeof window.showToast === 'function') window.showToast('⚠️ Firebase غير متصل', 'error');
@@ -764,10 +744,6 @@
             if (typeof window.showToast === 'function') window.showToast('❌ فشلت المزامنة', 'error');
         }
     };
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 10: إعادة التصفير
-    // ═══════════════════════════════════════════════════════════
 
     window.confirmFullReset = async function() {
         const doReset = async function(confirmed) {
@@ -803,19 +779,11 @@
         }
     };
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 11: قائمة المزيد
-    // ═══════════════════════════════════════════════════════════
-
     window.toggleMoreMenu = function() {
         const menu = document.getElementById('moreMenu');
         if (!menu) return;
         menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
     };
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 12: التهيئة النهائية
-    // ═══════════════════════════════════════════════════════════
 
     window.init = function() {
         console.log('🚀 بدء تهيئة التطبيق...');
@@ -873,6 +841,6 @@
     }
 
     window.__appLoaded = true;
-    console.log('✅ app.js v27.0 كامل جاهز');
+    console.log('✅ app.js v29.0 كامل جاهز');
 
 })();
