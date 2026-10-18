@@ -1,11 +1,15 @@
 // ============================================================
-// الميزان Pro - app.js v29.0 (إصلاح اسم الشركة واللوجو جذرياً)
+// الميزان Pro - app.js v30.0 (النسخة النهائية المستقرة)
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('📱 app.js v29.0 - بدء التشغيل');
+    console.log('📱 app.js v30.0 - بدء التشغيل');
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 1: متغيرات عامة
+    // ═══════════════════════════════════════════════════════════
 
     window.currentUser = null;
     window.currentSaleItems = [];
@@ -24,7 +28,7 @@
     window.companyData = window.companyData || {};
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 1: تطبيق اللوجو واسم الشركة (مُحسّن)
+    // الجزء 2: تطبيق اللوجو واسم الشركة
     // ═══════════════════════════════════════════════════════════
 
     window.applyLogoOnLoad = function() {
@@ -47,18 +51,11 @@
             }
         }
 
-        // 2. ⚡ إجبار اسم الشركة في الهيدر على التحديث
+        // 2. اسم الشركة في الهيدر
         const headerCompany = document.getElementById('headerCompanyName');
         if (headerCompany) {
             headerCompany.textContent = companyName;
-// ⚡ إجبار اللوجو إنه يظهر في الهيدر فوراً
-const headerLogo = document.getElementById('headerLogo');
-const defaultIcon = document.getElementById('headerDefaultIcon');
-if (currentLogo && currentLogo.trim() !== '') {
-    if(headerLogo) { headerLogo.src = currentLogo; headerLogo.style.display = 'block'; }
-    if(defaultIcon) { defaultIcon.style.display = 'none'; }
-}
-    }
+        }
 
         // 3. اللوجو في أي مكان تاني
         document.querySelectorAll('[data-logo]').forEach(function(el) {
@@ -84,7 +81,7 @@ if (currentLogo && currentLogo.trim() !== '') {
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 2: تحميل بيانات الشركة
+    // الجزء 3: تحميل بيانات الشركة
     // ═══════════════════════════════════════════════════════════
 
     window.loadCompanyData = function() {
@@ -153,7 +150,7 @@ if (currentLogo && currentLogo.trim() !== '') {
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 3: تسجيل الدخول
+    // الجزء 4: تسجيل الدخول
     // ═══════════════════════════════════════════════════════════
 
     window.populateLoginUsers = function() {
@@ -341,7 +338,7 @@ if (currentLogo && currentLogo.trim() !== '') {
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: إدارة المستخدمين
+    // الجزء 5: إدارة المستخدمين
     // ═══════════════════════════════════════════════════════════
 
     window.renderUsers = function() {
@@ -504,7 +501,7 @@ if (currentLogo && currentLogo.trim() !== '') {
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 5: بيانات الشركة واللوجو
+    // الجزء 6: بيانات الشركة واللوجو (المكان الصح للتحديث)
     // ═══════════════════════════════════════════════════════════
 
     window.renderCompany = function() {
@@ -643,12 +640,34 @@ if (currentLogo && currentLogo.trim() !== '') {
             window.DataStore.set('companyData', window.companyData);
         }
 
-        // ⚡ إجبار الهيدر على التحديث فوراً
+        // ⚡ إجبار اسم الشركة على التحديث في الهيدر فوراً
         const headerCompany = document.getElementById('headerCompanyName');
         if (headerCompany) {
             headerCompany.textContent = newName;
         }
 
+        // ⚡ إجبار اللوجو على الظهور في الهيدر فوراً (هنا في المكان الصح)
+        const headerLogo = document.getElementById('headerLogo');
+        const defaultIcon = document.getElementById('headerDefaultIcon');
+        
+        if (currentLogo && currentLogo.trim() !== '') {
+            if (headerLogo) { 
+                headerLogo.src = currentLogo; 
+                headerLogo.style.display = 'block'; 
+            }
+            if (defaultIcon) { 
+                defaultIcon.style.display = 'none'; 
+            }
+        } else {
+            if (headerLogo) { 
+                headerLogo.style.display = 'none'; 
+            }
+            if (defaultIcon) { 
+                defaultIcon.style.display = 'block'; 
+            }
+        }
+
+        // تحديث باقي الحاجات
         window.applyLogoOnLoad();
 
         if (typeof window.showToast === 'function') {
@@ -657,7 +676,7 @@ if (currentLogo && currentLogo.trim() !== '') {
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 6: الإعدادات والتصدير
+    // الجزء 7: الإعدادات والتصدير
     // ═══════════════════════════════════════════════════════════
 
     window.renderSettings = function() {
@@ -848,6 +867,6 @@ if (currentLogo && currentLogo.trim() !== '') {
     }
 
     window.__appLoaded = true;
-    console.log('✅ app.js v29.0 كامل جاهز');
+    console.log('✅ app.js v30.0 كامل جاهز');
 
 })();
