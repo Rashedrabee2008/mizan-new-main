@@ -1,8 +1,6 @@
 /* ============================================================
-   sharabar.js - إدارة الإعلانات (v18.0 - بدون ألوان)
-   - حركة مضمونة 100%
-   - بدون زر إغلاق (X)
-   - بدون تغيير ألوان (أزرق ثابت)
+   sharabar.js - إدارة الإعلانات (v19.0 - إصلاح شامل)
+   🔧 حركة مضمونة + بدون أزرار إغلاق + لون ثابت
    ============================================================ */
 
 (function() {
@@ -51,7 +49,6 @@
         } catch (e) {}
     }
 
-    // ⚡ إضافة الـ CSS للحركة
     function addAnimationStyles() {
         if (document.getElementById('sharabarStyles')) return;
         const style = document.createElement('style');
@@ -81,8 +78,7 @@
 
         const bar = document.createElement('div');
         bar.id = 'sharabar';
-        
-        // ⚡ لون أزرق ثابت
+
         bar.style.cssText = `
             position: fixed;
             top: 0;
@@ -159,9 +155,8 @@
                 bar.onclick = null;
             }
 
-            // ⚡ تشغيل الحركة
             container.classList.remove('sharabar-animated');
-            void container.offsetWidth; 
+            void container.offsetWidth;
             container.style.animationDuration = speedSeconds + 's';
             container.classList.add('sharabar-animated');
 
@@ -283,7 +278,7 @@
             return '<div style="display:flex;justify-content:space-between;align-items:center;background:#1C1C1C;padding:10px 12px;border-radius:8px;margin-bottom:6px;border:1px solid #3D3D3D;border-right:4px solid #3B82F6;">' +
                 '<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#F5E6C8;flex:1;min-width:0;">' +
                     '<span>' + (ad.icon || '⭐') + '</span>' +
-                    '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + ad.text + '</span>' +
+                    '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + window.escapeHtml(ad.text) + '</span>' +
                 '</div>' +
                 '<button onclick="deleteAd(' + i + ')" style="background:#E06060;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:800;">✕</button>' +
             '</div>';
@@ -327,5 +322,7 @@
             if (typeof window.renderAdsList === 'function') window.renderAdsList();
         }
     });
+
+    console.log('✅ sharabar.js v19.0 جاهز');
 
 })();
