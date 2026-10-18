@@ -1,18 +1,18 @@
 /* ============================================================
-   sharabar.js - إدارة الإعلانات (v17.0 - Final)
-   - إصلاح حركة الشريط (Marquee) نهائياً
-   - إزالة زر الإغلاق (X)
-   - دعم تغيير الألوان للإعلانات
+   sharabar.js - إدارة الإعلانات (v18.0 - بدون ألوان)
+   - حركة مضمونة 100%
+   - بدون زر إغلاق (X)
+   - بدون تغيير ألوان (أزرق ثابت)
    ============================================================ */
 
 (function() {
     'use strict';
 
     const DEFAULT_ADS = [
-        { text: "🎉 السلام عليكم ورحمة الله وبركاته 🎉", icon: "⭐", link: "", color: "#1E3A8A" }
+        { text: "🎉 السلام عليكم ورحمة الله وبركاته 🎉", icon: "⭐", link: "" }
     ];
 
-    const STORAGE_KEY = 'sharabar_ads';
+    const STORAGE_KEY = 'sharabar_ads_v2';
     const MOTION_KEY = 'sharabar_motion';
     const SPEED_KEY = 'sharabar_speed';
 
@@ -28,8 +28,7 @@
                         return {
                             text: ad.text || '',
                             icon: ad.icon || '⭐',
-                            link: ad.link || '',
-                            color: ad.color || '#1E3A8A'
+                            link: ad.link || ''
                         };
                     });
                 }
@@ -52,7 +51,7 @@
         } catch (e) {}
     }
 
-    // ⚡ دالة إضافة الـ CSS للحركة (مهم جداً)
+    // ⚡ إضافة الـ CSS للحركة
     function addAnimationStyles() {
         if (document.getElementById('sharabarStyles')) return;
         const style = document.createElement('style');
@@ -79,19 +78,18 @@
         if (ads.length === 0) return;
 
         const mode = getMotionMode();
-        const firstAd = ads[0];
-        const bgColor = firstAd.color || '#1E3A8A';
 
         const bar = document.createElement('div');
         bar.id = 'sharabar';
-        bar.setAttribute('data-color', bgColor);
+        
+        // ⚡ لون أزرق ثابت
         bar.style.cssText = `
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 45px;
-            background: linear-gradient(90deg, ${bgColor}, ${bgColor}dd, ${bgColor});
+            background: linear-gradient(90deg, #1E3A8A, #3B82F6, #1E3A8A);
             color: #fff;
             display: flex;
             align-items: center;
@@ -104,7 +102,6 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
             padding: 0 20px;
             box-sizing: border-box;
-            transition: background 0.6s ease;
         `;
 
         const content = document.createElement('div');
@@ -140,11 +137,6 @@
             const ad = ads[adIndex];
             if (!ad) return;
 
-            // تغيير اللون
-            const bgColor = ad.color || '#1E3A8A';
-            bar.style.background = `linear-gradient(90deg, ${bgColor}, ${bgColor}dd, ${bgColor})`;
-            bar.setAttribute('data-color', bgColor);
-
             const icon = ad.icon || '⭐';
             const text = ad.text;
 
@@ -167,10 +159,9 @@
                 bar.onclick = null;
             }
 
-            // ⚡ الطريقة المضمونة لتشغيل الحركة
+            // ⚡ تشغيل الحركة
             container.classList.remove('sharabar-animated');
-            void container.offsetWidth; // إجبار المتصفح على التحديث
-            
+            void container.offsetWidth; 
             container.style.animationDuration = speedSeconds + 's';
             container.classList.add('sharabar-animated');
 
@@ -191,10 +182,6 @@
         function showNextAd() {
             const ad = ads[adIndex];
             if (!ad) return;
-
-            const bgColor = ad.color || '#1E3A8A';
-            bar.style.background = `linear-gradient(90deg, ${bgColor}, ${bgColor}dd, ${bgColor})`;
-            bar.setAttribute('data-color', bgColor);
 
             container.classList.remove('sharabar-animated');
             container.innerHTML = `
@@ -230,7 +217,6 @@
         const container = document.getElementById('sharabarContainer');
         if (container) container.innerHTML = '';
 
-        // تأخير بسيط لضمان إعادة البناء بشكل صح
         setTimeout(createAdBar, 50);
     }
 
@@ -240,26 +226,21 @@
         const textEl = document.getElementById('newAdText');
         const iconEl = document.getElementById('newAdIcon');
         const linkEl = document.getElementById('newAdLink');
-        const colorEl = document.getElementById('newAdColor');
 
         const text = textEl ? textEl.value.trim() : '';
         const icon = iconEl ? iconEl.value.trim() : '⭐';
         const link = linkEl ? linkEl.value.trim() : '';
-        const color = colorEl ? colorEl.value : '#1E3A8A';
 
         if (!text) {
             alert('⚠️ اكتب نص الإعلان الأول!');
             return;
         }
 
-        const finalColor = (color && color !== '') ? color : '#1E3A8A';
-
         const ads = getAds();
         ads.unshift({
             text: text,
             icon: icon || '⭐',
-            link: link || '',
-            color: finalColor
+            link: link || ''
         });
 
         saveAds(ads);
@@ -271,7 +252,6 @@
 
         if (textEl) textEl.value = '';
         if (linkEl) linkEl.value = '';
-        if (colorEl) colorEl.value = '#1E3A8A';
 
         if (typeof window.showToast === 'function') {
             window.showToast('✅ تم إضافة الإعلان', 'success');
@@ -300,10 +280,8 @@
         }
 
         container.innerHTML = ads.map(function(ad, i) {
-            const bgColor = ad.color || '#1E3A8A';
-            return '<div style="display:flex;justify-content:space-between;align-items:center;background:#1C1C1C;padding:10px 12px;border-radius:8px;margin-bottom:6px;border:1px solid #3D3D3D;border-right:4px solid ' + bgColor + ';">' +
+            return '<div style="display:flex;justify-content:space-between;align-items:center;background:#1C1C1C;padding:10px 12px;border-radius:8px;margin-bottom:6px;border:1px solid #3D3D3D;border-right:4px solid #3B82F6;">' +
                 '<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#F5E6C8;flex:1;min-width:0;">' +
-                    '<span style="width:22px;height:22px;border-radius:6px;background:' + bgColor + ';border:1px solid #3D3D3D;flex-shrink:0;"></span>' +
                     '<span>' + (ad.icon || '⭐') + '</span>' +
                     '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + ad.text + '</span>' +
                 '</div>' +
