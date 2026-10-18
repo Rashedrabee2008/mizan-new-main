@@ -1,11 +1,11 @@
 // ============================================================
-// الميزان Pro - app.js v26.0 (إصلاح اللوجو النهائي)
+// الميزان Pro - app.js v27.0 (تحديث اسم الشركة في الهيدر)
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('📱 app.js v26.0 - بدء التشغيل');
+    console.log('📱 app.js v27.0 - بدء التشغيل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: متغيرات عامة
@@ -28,7 +28,7 @@
     window.companyData = window.companyData || {};
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 2: تطبيق اللوجو والشركة (تم إصلاحه)
+    // الجزء 2: تطبيق اللوجو واسم الشركة
     // ═══════════════════════════════════════════════════════════
 
     window.applyLogoOnLoad = function() {
@@ -50,7 +50,7 @@
             }
         }
 
-        // 2. اسم الشركة في الهيدر
+        // 2. ⚡ تحديث اسم الشركة في الهيدر
         const headerCompany = document.getElementById('headerCompanyName');
         if (headerCompany) {
             headerCompany.textContent = company.name || 'الميزان Pro';
@@ -500,7 +500,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 6: بيانات الشركة (رفع اللوجو)
+    // الجزء 6: بيانات الشركة (رفع اللوجو وحفظ الاسم)
     // ═══════════════════════════════════════════════════════════
 
     window.renderCompany = function() {
@@ -619,9 +619,10 @@
         };
 
         const currentLogo = (window.companyData || {}).logo || '';
+        const newName = getVal('companyName') || 'الميزان';
 
         window.companyData = {
-            name: getVal('companyName') || 'الميزان',
+            name: newName,
             tradeName: getVal('companyTradeName'),
             phone: getVal('companyPhone'),
             phone2: getVal('companyPhone2'),
@@ -645,6 +646,12 @@
 
         if (window.DataStore && window.DataStore.set) {
             window.DataStore.set('companyData', window.companyData);
+        }
+
+        // ⚡ تحديث الهيدر فوراً بالاسم الجديد
+        const headerCompany = document.getElementById('headerCompanyName');
+        if (headerCompany) {
+            headerCompany.textContent = newName;
         }
 
         window.applyLogoOnLoad();
@@ -866,6 +873,6 @@
     }
 
     window.__appLoaded = true;
-    console.log('✅ app.js v26.0 كامل جاهز');
+    console.log('✅ app.js v27.0 كامل جاهز');
 
 })();
