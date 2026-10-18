@@ -1,143 +1,327 @@
 // ============================================================
-// الميزان Pro - themes.js v2.0 (نسخة مستقرة)
+// الميزان Pro - tenant.js v2.0 (مُحسَّن)
+// إدارة Store ID (Multi-Tenant) والتنقل بين المتاجر
 // ============================================================
 
 (function() {
     'use strict';
 
-    const THEMES = {
-        'gold': {
-            name: 'ذهبي', icon: '⭐',
-            colors: { primary: '#C9A94E', primaryDark: '#B8953A', primaryLight: '#E6C570', bg: '#0D0D0D', bg2: '#1C1C1C', bg3: '#2D2D2D', text: '#F5E6C8', textMuted: '#A89070', border: '#3D3D3D' }
-        },
-        'blue': {
-            name: 'أزرق', icon: '💙',
-            colors: { primary: '#3B82F6', primaryDark: '#2563EB', primaryLight: '#60A5FA', bg: '#0A1628', bg2: '#0F1F3A', bg3: '#1E3A5F', text: '#E0F2FE', textMuted: '#7DD3FC', border: '#1E3A5F' }
-        },
-        'green': {
-            name: 'أخضر', icon: '💚',
-            colors: { primary: '#10B981', primaryDark: '#059669', primaryLight: '#34D399', bg: '#062019', bg2: '#0A2D22', bg3: '#0F3D2E', text: '#D1FAE5', textMuted: '#6EE7B7', border: '#0F3D2E' }
-        },
-        'purple': {
-            name: 'بنفسجي', icon: '💜',
-            colors: { primary: '#8B5CF6', primaryDark: '#7C3AED', primaryLight: '#A78BFA', bg: '#1A0D2E', bg2: '#241340', bg3: '#321A54', text: '#EDE9FE', textMuted: '#C4B5FD', border: '#321A54' }
-        },
-        'red': {
-            name: 'أحمر', icon: '❤️',
-            colors: { primary: '#EF4444', primaryDark: '#DC2626', primaryLight: '#F87171', bg: '#2A0D0D', bg2: '#3A1212', bg3: '#4F1818', text: '#FEE2E2', textMuted: '#FCA5A5', border: '#4F1818' }
-        },
-        'orange': {
-            name: 'برتقالي', icon: '🧡',
-            colors: { primary: '#F97316', primaryDark: '#EA580C', primaryLight: '#FB923C', bg: '#2A1200', bg2: '#3D1A00', bg3: '#552400', text: '#FED7AA', textMuted: '#FDBA74', border: '#552400' }
+    console.log('🏢 tenant.js v2.0 - بدء التحميل');
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 1: الحصول على Store ID
+    // ═══════════════════════════════════════════════════════════
+
+    function getStoreId() {
+        if (typeof window.getStoreId === 'function') {
+            return window.getStoreId();
         }
-    };
-
-    const THEME_KEY = 'mizan_theme_v1';
-
-    function applyTheme(themeId) {
-        if (!THEMES[themeId]) themeId = 'gold';
-        const theme = THEMES[themeId];
-        const root = document.documentElement;
-
-        root.style.setProperty('--primary', theme.colors.primary);
-        root.style.setProperty('--primary-dark', theme.colors.primaryDark);
-        root.style.setProperty('--primary-light', theme.colors.primaryLight);
-        root.style.setProperty('--bg', theme.colors.bg);
-        root.style.setProperty('--bg-2', theme.colors.bg2);
-        root.style.setProperty('--bg-3', theme.colors.bg3);
-        root.style.setProperty('--text', theme.colors.text);
-        root.style.setProperty('--text-muted', theme.colors.textMuted);
-        root.style.setProperty('--border', theme.colors.border);
-
-        try { localStorage.setItem(THEME_KEY, themeId); } catch (e) {}
-
-        const metaTheme = document.querySelector('meta[name="theme-color"]');
-        if (metaTheme) metaTheme.setAttribute('content', theme.colors.bg);
+        return localStorage.getItem('mizan_store_id_v18') || '—';
     }
 
-    function getCurrentTheme() {
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 2: نسخ Store ID
+    // ═══════════════════════════════════════════════════════════
+
+    window.copyStoreId = function() {
+        const storeId = getStoreId();
+        if (!storeId || storeId === '—') {
+            if (typeof window.showToast === 'function') window.showToast('⚠️ لا يوجد Store ID', 'warning');
+            return;
+        }
+
         try {
-            const saved = localStorage.getItem(THEME_KEY);
-            return saved && THEMES[saved] ? saved : 'gold';
-        } catch (e) { return 'gold'; }
-    }
+            // للموبايل
+            const tempInput = document.createElement('textarea');
+            tempInput.value = storeId;
+            tempInput.style.position = 'fixed';
+            tempInput.style.opacity = '0';
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            tempInput.setSelectionRange(0, 99999);
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
 
-    function renderThemesList() {
-        const currentTheme = getCurrentTheme();
-        let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px;">';
-
-        Object.keys(THEMES).forEach(function(themeId) {
-            const theme = THEMES[themeId];
-            const isActive = themeId === currentTheme;
-
-            html += `
-                <div onclick="changeTheme('${themeId}')" 
-                     style="position:relative; background:linear-gradient(135deg,${theme.colors.primary},${theme.colors.primaryDark}); border-radius:12px; padding:14px 8px; text-align:center; cursor:pointer; border:3px solid ${isActive ? '#fff' : 'transparent'}; transition:all 0.2s; box-shadow:${isActive ? '0 0 20px rgba(255,255,255,0.3)' : 'none'};">
-                    <div style="font-size:28px;margin-bottom:4px;">${theme.icon}</div>
-                    <div style="font-size:12px; font-weight:900; color:#0D0D0D; text-shadow:0 1px 2px rgba(255,255,255,0.3);">${theme.name}</div>
-                    ${isActive ? '<div style="position:absolute;top:4px;left:4px;background:#fff;color:#0D0D0D;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;">✓</div>' : ''}
-                </div>
-            `;
-        });
-
-        html += '</div>';
-        return html;
-    }
-
-    window.changeTheme = function(themeId) {
-        if (!THEMES[themeId]) return;
-        applyTheme(themeId);
-
-        const container = document.getElementById('themeSelector');
-        if (container) container.innerHTML = renderThemesList();
-
-        if (typeof window.showToast === 'function') {
-            window.showToast('🎨 تم تغيير الثيم إلى ' + THEMES[themeId].name, 'success');
+            if (typeof window.showToast === 'function') window.showToast('✅ تم نسخ Store ID', 'success');
+        } catch (e) {
+            // بديل للمتصفحات الحديثة
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(storeId)
+                    .then(function() {
+                        if (typeof window.showToast === 'function') window.showToast('✅ تم نسخ Store ID', 'success');
+                    })
+                    .catch(function() {
+                        if (typeof window.showToast === 'function') window.showToast('⚠️ فشل النسخ', 'warning');
+                    });
+            } else {
+                if (typeof window.showToast === 'function') window.showToast('⚠️ انسخه يدوياً: ' + storeId, 'info');
+            }
         }
     };
 
-    function addThemeSection() {
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 3: مشاركة Store ID (واتساب)
+    // ═══════════════════════════════════════════════════════════
+
+    window.shareStoreIdWhatsApp = function() {
+        const storeId = getStoreId();
+        const companyName = (window.companyData || {}).name || 'الميزان';
+
+        const message = '🏢 *' + companyName + '*\n\n' +
+            '💾 *كود المتجر الخاص بك:*\n' +
+            '`' + storeId + '`\n\n' +
+            '⚠️ احتفظ بهذا الكود في مكان آمن.\n' +
+            'ستحتاجه للدخول إلى بياناتك من أي جهاز آخر.';
+
+        window.copyStoreId();
+
+        setTimeout(function() {
+            const url = 'https://wa.me/?text=' + encodeURIComponent(message);
+            window.open(url, '_blank');
+        }, 500);
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 4: نافذة "معلومات متجري"
+    // ═══════════════════════════════════════════════════════════
+
+    window.showTenantInfo = function() {
+        const storeId = getStoreId();
+        const companyName = (window.companyData || {}).name || 'الميزان';
+
+        const stats = {
+            products: (window.products || []).length,
+            sales: (window.sales || []).length,
+            customers: (window.customers || []).length,
+            purchases: (window.purchases || []).length
+        };
+
+        const html = '<button class="modal-close" onclick="closeModal()">&times;</button>' +
+            '<h3>🏢 معلومات متجري</h3>' +
+
+            // معلومات الشركة
+            '<div style="background:linear-gradient(135deg,#C9A94E,#B8953A);border-radius:12px;padding:16px;text-align:center;color:#0D0D0D;margin-bottom:14px;">' +
+                '<div style="font-size:14px;font-weight:700;opacity:0.85;">متجرك الحالي</div>' +
+                '<div style="font-size:22px;font-weight:900;margin-top:4px;">' + window.escapeHtml(companyName) + '</div>' +
+            '</div>' +
+
+            // Store ID
+            '<div style="background:#0D0D0D;border-radius:12px;padding:14px;margin-bottom:12px;border:2px solid #C9A94E;">' +
+                '<div style="color:#A89070;font-size:11px;font-weight:800;margin-bottom:8px;">🔑 كود المتجر (Store ID)</div>' +
+                '<div style="background:#1A1A1A;border-radius:8px;padding:12px;font-family:Courier New,monospace;font-size:12px;color:#C9A94E;word-break:break-all;direction:ltr;text-align:center;font-weight:900;">' +
+                    storeId +
+                '</div>' +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">' +
+                    '<button onclick="copyStoreId()" style="background:#2D8F5E;border:none;color:#fff;padding:10px;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit;font-size:12px;">' +
+                        '📋 نسخ' +
+                    '</button>' +
+                    '<button onclick="shareStoreIdWhatsApp()" style="background:#25D366;border:none;color:#fff;padding:10px;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit;font-size:12px;">' +
+                        '💬 واتساب' +
+                    '</button>' +
+                '</div>' +
+            '</div>' +
+
+            // تحذير
+            '<div style="background:#2D1500;border-radius:10px;padding:12px;margin-bottom:12px;border-right:4px solid #E6A830;">' +
+                '<div style="color:#E6A830;font-size:12px;font-weight:800;margin-bottom:4px;">⚠️ مهم جداً</div>' +
+                '<div style="color:#A89070;font-size:11px;line-height:1.7;">' +
+                    'احفظ الكود ده في مكان آمن. ستحتاجه للدخول إلى بياناتك من أي جهاز آخر.<br>' +
+                    '<strong style="color:#E06060;">تحذير:</strong> لو الكود ده ضاع، هتفقد الوصول لبياناتك.' +
+                '</div>' +
+            '</div>' +
+
+            // إحصائيات
+            '<div style="background:#0D0D0D;border-radius:10px;padding:12px;margin-bottom:12px;">' +
+                '<div style="color:#C9A94E;font-size:12px;font-weight:800;margin-bottom:8px;">📊 بيانات المتجر</div>' +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;">' +
+                    '<div style="color:#A89070;">📦 المنتجات: <strong style="color:#F5E6C8;">' + stats.products + '</strong></div>' +
+                    '<div style="color:#A89070;">🧾 الفواتير: <strong style="color:#F5E6C8;">' + stats.sales + '</strong></div>' +
+                    '<div style="color:#A89070;">👥 العملاء: <strong style="color:#F5E6C8;">' + stats.customers + '</strong></div>' +
+                    '<div style="color:#A89070;">🛒 المشتريات: <strong style="color:#F5E6C8;">' + stats.purchases + '</strong></div>' +
+                '</div>' +
+            '</div>' +
+
+            // أزرار
+            '<div style="display:grid;grid-template-columns:1fr;gap:6px;">' +
+                '<button onclick="showSwitchStoreDialog()" style="background:#4A8AB5;border:none;color:#fff;padding:12px;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit;font-size:13px;">' +
+                    '🔄 الدخول لمتجر آخر' +
+                '</button>' +
+                '<button onclick="closeModal()" style="background:#3D3D3D;border:none;color:#F5E6C8;padding:12px;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit;font-size:13px;">' +
+                    'إغلاق' +
+                '</button>' +
+            '</div>';
+
+        if (typeof window.openModal === 'function') {
+            window.openModal(html);
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 5: نافذة "الدخول لمتجر آخر"
+    // ═══════════════════════════════════════════════════════════
+
+    window.showSwitchStoreDialog = function() {
+        const currentId = getStoreId();
+
+        const html = '<button class="modal-close" onclick="closeModal()">&times;</button>' +
+            '<h3>🔄 الدخول لمتجر آخر</h3>' +
+
+            '<div style="background:#0D0D0D;border-radius:10px;padding:12px;margin-bottom:12px;border-right:4px solid #E6A830;">' +
+                '<div style="color:#E6A830;font-size:11px;font-weight:800;margin-bottom:4px;">⚠️ تنبيه</div>' +
+                '<div style="color:#A89070;font-size:11px;line-height:1.6;">' +
+                    'التطبيق هيشتغل بالبيانات الخاصة بالكود اللي هتدخله.<br>' +
+                    'بيانات المتجر الحالي مش هتتأثر.' +
+                '</div>' +
+            '</div>' +
+
+            '<div class="form-group">' +
+                '<label>🔑 كود المتجر</label>' +
+                '<input type="text" id="newStoreIdInput" placeholder="store_..." ' +
+                    'style="text-align:center;font-family:Courier New,monospace;direction:ltr;font-size:13px;" />' +
+            '</div>' +
+
+            '<div style="background:#0D0D0D;border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;">' +
+                '<div style="color:#A89070;">كودك الحالي:</div>' +
+                '<div style="color:#C9A94E;font-family:Courier New,monospace;word-break:break-all;direction:ltr;font-size:10px;margin-top:4px;">' +
+                    currentId +
+                '</div>' +
+            '</div>' +
+
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
+                '<button onclick="closeModal()" style="background:#3D3D3D;border:none;color:#F5E6C8;padding:12px;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit;font-size:13px;">' +
+                    '❌ إلغاء' +
+                '</button>' +
+                '<button onclick="confirmSwitchStore()" style="background:#4A8AB5;border:none;color:#fff;padding:12px;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit;font-size:13px;">' +
+                    '✅ دخول' +
+                '</button>' +
+            '</div>';
+
+        if (typeof window.openModal === 'function') {
+            window.openModal(html);
+        }
+
+        setTimeout(function() {
+            const input = document.getElementById('newStoreIdInput');
+            if (input) input.focus();
+        }, 200);
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 6: تأكيد تغيير المتجر
+    // ═══════════════════════════════════════════════════════════
+
+    window.confirmSwitchStore = function() {
+        const input = document.getElementById('newStoreIdInput');
+        if (!input) return;
+
+        const newId = input.value.trim();
+        if (!newId) {
+            if (typeof window.showToast === 'function') window.showToast('⚠️ أدخل كود المتجر', 'error');
+            return;
+        }
+
+        if (newId.indexOf('store_') !== 0) {
+            if (typeof window.showToast === 'function') window.showToast('⚠️ الكود لازم يبدأ بـ store_', 'error');
+            return;
+        }
+
+        const currentId = getStoreId();
+        if (newId === currentId) {
+            if (typeof window.showToast === 'function') window.showToast('ℹ️ إنت بالفعل في هذا المتجر', 'info');
+            return;
+        }
+
+        const msg = 'سيتم تحميل بيانات المتجر:\n\n' + newId + '\n\nهل أنت متأكد؟';
+
+        const doSwitch = function(confirmed) {
+            if (!confirmed) return;
+            try {
+                if (typeof window.setStoreId === 'function') {
+                    window.setStoreId(newId);
+                } else {
+                    localStorage.setItem('mizan_store_id_v18', newId);
+                }
+                if (typeof window.showToast === 'function') window.showToast('✅ جاري تحميل البيانات...', 'success');
+                setTimeout(function() { location.reload(); }, 1000);
+            } catch (e) {
+                if (typeof window.showToast === 'function') window.showToast('❌ فشل تغيير المتجر', 'error');
+            }
+        };
+
+        if (typeof window.confirmDialog === 'function') {
+            window.confirmDialog(msg).then(doSwitch);
+        } else {
+            doSwitch(confirm(msg));
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 7: قسم في الإعدادات
+    // ═══════════════════════════════════════════════════════════
+
+    function addTenantSection() {
         const settingsPage = document.getElementById('page-settings');
         if (!settingsPage) return;
-        if (document.getElementById('themeSection')) return;
 
-        const companySection = settingsPage.querySelector('.settings-section');
-        if (!companySection) return;
+        if (document.getElementById('tenantSection')) return;
+
+        const firebaseSection = settingsPage.querySelector('.settings-section:nth-child(2)');
+        if (!firebaseSection) return;
 
         const section = document.createElement('div');
         section.className = 'settings-section';
-        section.id = 'themeSection';
-        section.innerHTML = `
-            <h3>🎨 مظهر التطبيق</h3>
-            <p class="settings-desc">اختر الثيم المناسب لك — يتغير فوراً</p>
-            <div id="themeSelector">${renderThemesList()}</div>
-            <div style="margin-top:14px;padding:10px;background:#0D0D0D;border-radius:10px;border-right:3px solid var(--primary);">
-                <div style="font-size:11px;color:var(--text-muted);line-height:1.7;">
-                    💡 <strong style="color:var(--primary);">ملاحظة:</strong> الثيم بيتحفظ على جهازك. لما تفتح التطبيق تاني، هيتطبق تلقائياً.
-                </div>
-            </div>
-        `;
+        section.id = 'tenantSection';
 
-        companySection.parentNode.insertBefore(section, companySection.nextSibling);
+        section.innerHTML =
+            '<h3>🏢 متجري</h3>' +
+            '<p class="settings-desc">كود المتجر الخاص بك للاحتفاظ بالبيانات والتنقل بين الأجهزة.</p>' +
+            '<div class="settings-info-row">' +
+                '<span>Store ID</span>' +
+                '<span id="tenantStoreId" style="font-family:monospace;font-size:10px;direction:ltr;color:#C9A94E;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
+                    getStoreId() +
+                '</span>' +
+            '</div>' +
+            '<button class="btn btn-primary btn-block" onclick="showTenantInfo()" style="margin-top:10px;">' +
+                '🔑 معلومات المتجر' +
+            '</button>';
+
+        firebaseSection.parentNode.insertBefore(section, firebaseSection);
     }
 
-    function init() {
-        applyTheme(getCurrentTheme());
-        setTimeout(addThemeSection, 2000);
-    }
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 8: التهيئة
+    // ═══════════════════════════════════════════════════════════
 
-    init();
-    setTimeout(addThemeSection, 3000);
-
-    window.Themes = {
-        apply: applyTheme,
-        current: getCurrentTheme,
-        list: THEMES,
-        render: renderThemesList,
-        show: function() {
-            addThemeSection();
-            if (typeof window.navigateTo === 'function') window.navigateTo('settings');
+    function tryInit() {
+        const settingsPage = document.getElementById('page-settings');
+        if (!settingsPage) {
+            setTimeout(tryInit, 500);
+            return;
         }
-    };
+
+        addTenantSection();
+
+        const storeEl = document.getElementById('tenantStoreId');
+        if (storeEl) storeEl.textContent = getStoreId();
+
+        console.log('✅ tenant.js v2.0 جاهز - Store ID:', getStoreId());
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(tryInit, 2000);
+        });
+    } else {
+        setTimeout(tryInit, 2000);
+    }
+
+    setInterval(function() {
+        addTenantSection();
+        const storeEl = document.getElementById('tenantStoreId');
+        if (storeEl) storeEl.textContent = getStoreId();
+    }, 3000);
+
+    window.__tenantLoaded = true;
+    console.log('✅ tenant.js v2.0 جاهز');
 
 })();
