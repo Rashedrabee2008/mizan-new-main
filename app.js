@@ -1,11 +1,9 @@
 // ============================================================
-// الميزان Pro - app.js v34.0 (نسخة التشغيل المستقرة)
+// الميزان Pro - app.js (نسخة التشغيل النهائية - v35.0)
 // ============================================================
 
 (function() {
     'use strict';
-
-    console.log('📱 app.js v34.0 - بدء التشغيل');
 
     window.currentUser = null;
     window.currentSaleItems = [];
@@ -827,6 +825,6 @@
     }
 
     window.__appLoaded = true;
-    console.log('✅ app.js v34.0 كامل جاهز');
+    console.log('✅ app.js v35.0 كامل جاهز');
 
 })();
