@@ -1,12 +1,11 @@
 // ============================================================
-// الميزان Pro - app.js v25.0 (النسخة النهائية)
-// تسجيل الدخول + المستخدمين + الشركة + اللوجو
+// الميزان Pro - app.js v26.0 (إصلاح اللوجو النهائي)
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('📱 app.js v25.0 - بدء التشغيل');
+    console.log('📱 app.js v26.0 - بدء التشغيل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: متغيرات عامة
@@ -29,19 +28,19 @@
     window.companyData = window.companyData || {};
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 2: تطبيق اللوجو والشركة
+    // الجزء 2: تطبيق اللوجو والشركة (تم إصلاحه)
     // ═══════════════════════════════════════════════════════════
 
     window.applyLogoOnLoad = function() {
         const company = window.companyData || {};
         const logoData = company.logo || '';
 
-        // الهيدر
+        // 1. الهيدر
         const headerLogo = document.getElementById('headerLogo');
         const defaultIcon = document.getElementById('headerDefaultIcon');
 
         if (headerLogo && defaultIcon) {
-            if (logoData) {
+            if (logoData && logoData.trim() !== '') {
                 headerLogo.src = logoData;
                 headerLogo.style.display = 'block';
                 defaultIcon.style.display = 'none';
@@ -51,15 +50,15 @@
             }
         }
 
-        // اسم الشركة في الهيدر
+        // 2. اسم الشركة في الهيدر
         const headerCompany = document.getElementById('headerCompanyName');
         if (headerCompany) {
             headerCompany.textContent = company.name || 'الميزان Pro';
         }
 
-        // في كل عنصر data-logo
+        // 3. كل عنصر فيه data-logo
         document.querySelectorAll('[data-logo]').forEach(function(el) {
-            if (logoData) {
+            if (logoData && logoData.trim() !== '') {
                 el.src = logoData;
                 el.style.display = 'block';
             } else {
@@ -67,11 +66,11 @@
             }
         });
 
-        // في صفحة الشركة
+        // 4. صفحة الشركة (المعاينة)
         const preview = document.getElementById('companyLogoPreview');
         const img = document.getElementById('companyLogoImg');
         if (preview && img) {
-            if (logoData) {
+            if (logoData && logoData.trim() !== '') {
                 img.src = logoData;
                 preview.style.display = 'block';
             } else {
@@ -80,7 +79,10 @@
         }
     };
 
-    // ★★★ دالة تحميل بيانات الشركة ★★★
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 3: تحميل بيانات الشركة
+    // ═══════════════════════════════════════════════════════════
+
     window.loadCompanyData = function() {
         try {
             let saved = localStorage.getItem('mizan_companyData');
@@ -131,7 +133,6 @@
             const curEl = document.getElementById('companyCurrency');
             if (curEl) curEl.value = c.currency || 'ج.م';
 
-            // المعاينة
             const preview = document.getElementById('companyLogoPreview');
             const img = document.getElementById('companyLogoImg');
             if (preview && img) {
@@ -148,7 +149,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 3: تسجيل الدخول
+    // الجزء 4: تسجيل الدخول
     // ═══════════════════════════════════════════════════════════
 
     window.populateLoginUsers = function() {
@@ -261,7 +262,6 @@
         if (typeof window.updateUserUI === 'function') window.updateUserUI();
         if (typeof window.showToast === 'function') window.showToast('🔓 مرحباً ' + user.name + '!', 'success');
 
-        // ★★★ تحميل بيانات الشركة واللوجو بعد الدخول ★★★
         window.loadCompanyData();
 
         setTimeout(function() {
@@ -337,7 +337,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: إدارة المستخدمين
+    // الجزء 5: إدارة المستخدمين
     // ═══════════════════════════════════════════════════════════
 
     window.renderUsers = function() {
@@ -500,7 +500,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 5: بيانات الشركة + اللوجو
+    // الجزء 6: بيانات الشركة (رفع اللوجو)
     // ═══════════════════════════════════════════════════════════
 
     window.renderCompany = function() {
@@ -655,7 +655,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 6: الإعدادات
+    // الجزء 7: الإعدادات
     // ═══════════════════════════════════════════════════════════
 
     window.renderSettings = function() {
@@ -681,7 +681,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 7: التصدير / الاستيراد
+    // الجزء 8: التصدير / الاستيراد
     // ═══════════════════════════════════════════════════════════
 
     window.exportData = function() {
@@ -738,7 +738,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 8: المزامنة اليدوية
+    // الجزء 9: المزامنة اليدوية
     // ═══════════════════════════════════════════════════════════
 
     window.manualSync = async function() {
@@ -759,7 +759,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 9: إعادة التصفير
+    // الجزء 10: إعادة التصفير
     // ═══════════════════════════════════════════════════════════
 
     window.confirmFullReset = async function() {
@@ -797,7 +797,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 10: قائمة المزيد
+    // الجزء 11: قائمة المزيد
     // ═══════════════════════════════════════════════════════════
 
     window.toggleMoreMenu = function() {
@@ -807,7 +807,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 11: التهيئة النهائية
+    // الجزء 12: التهيئة النهائية
     // ═══════════════════════════════════════════════════════════
 
     window.init = function() {
@@ -866,6 +866,6 @@
     }
 
     window.__appLoaded = true;
-    console.log('✅ app.js v25.0 كامل جاهز');
+    console.log('✅ app.js v26.0 كامل جاهز');
 
 })();
