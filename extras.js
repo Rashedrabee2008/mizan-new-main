@@ -1,12 +1,16 @@
 // ============================================================
-// الميزان Pro - extras.js v20.0 (نهائي)
-// HR + AI + Notifications + فحص رصيد الخزنة
+// الميزان Pro - extras.js v21.0 (إصلاح شامل)
+// 🔧 HR + AI + Notifications + حماية شاملة
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('✨ extras.js v20.0 - بدء التحميل');
+    console.log('✨ extras.js v21.0 - بدء التحميل');
+
+    // ═══════════════════════════════════════════════════════════
+    // دوال مساعدة للوقت
+    // ═══════════════════════════════════════════════════════════
 
     function timeToMinutes(time24) {
         if (!time24) return null;
@@ -31,6 +35,10 @@
         return String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 1: تبويبات الموظفين
+    // ═══════════════════════════════════════════════════════════
+
     window.showHRTab = function(tab, btn) {
         ['employees', 'attendance', 'salaries'].forEach(function(t) {
             const el = document.getElementById('hrTab' + t.charAt(0).toUpperCase() + t.slice(1));
@@ -49,6 +57,10 @@
         if (tab === 'attendance') window.renderAttendanceList();
         if (tab === 'salaries') window.renderSalariesList();
     };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 2: إدارة الموظفين
+    // ═══════════════════════════════════════════════════════════
 
     window.saveEmployee = function() {
         const id = document.getElementById('empId') ? document.getElementById('empId').value : '';
@@ -237,6 +249,10 @@
         window.openModal(html);
     };
 
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 3: الحضور والانصراف
+    // ═══════════════════════════════════════════════════════════
+
     window.showAttendanceDialog = function(employeeId) {
         const emp = (window.employees || []).find(function(e) { return e.id == employeeId; });
         if (!emp) return;
@@ -379,6 +395,10 @@
 
         c.innerHTML = html;
     };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 4: الرواتب
+    // ═══════════════════════════════════════════════════════════
 
     window.showSalaryDialog = function(employeeId) {
         const emp = (window.employees || []).find(function(e) { return e.id == employeeId; });
@@ -608,6 +628,10 @@
         c.innerHTML = html;
     };
 
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 5: التنبؤ بالمبيعات
+    // ═══════════════════════════════════════════════════════════
+
     window.predictNextWeekSales = function() {
         const salesByDay = {};
         const thirtyDaysAgo = new Date();
@@ -676,6 +700,10 @@
         window.openModal(html);
     };
 
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 6: الإشعارات
+    // ═══════════════════════════════════════════════════════════
+
     window.requestNotificationPermission = async function() {
         if (!('Notification' in window)) {
             window.showToast('⚠️ المتصفح لا يدعم الإشعارات', 'warning');
@@ -720,6 +748,6 @@
     };
 
     window.__extrasLoaded = true;
-    console.log('✅ extras.js v20.0 جاهز');
+    console.log('✅ extras.js v21.0 جاهز');
 
 })();
