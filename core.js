@@ -1,21 +1,22 @@
 // ============================================================
-// الميزان Pro - core.js v19.0 (مُصلَّح)
+// الميزان Pro - core.js v20.0 (إصلاح شامل)
+// 🔧 إضافة حماية + تحسين الأداء + دوال مساعدة محسّنة
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🚀 core.js v19.0 - بدء التحميل');
+    console.log('🚀 core.js v20.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 1: EventBus
+    // الجزء 1: EventBus (محسّن)
     // ═══════════════════════════════════════════════════════════
 
     const _listeners = {};
 
     window.EventBus = {
         on: function(event, callback) {
-            if (typeof callback !== 'function') return;
+            if (typeof callback !== 'function') return function() {};
             if (!_listeners[event]) _listeners[event] = [];
             _listeners[event].push(callback);
             return function unsubscribe() {
@@ -32,7 +33,7 @@
 
         emit: function(event, data) {
             if (!_listeners[event]) return;
-            _listeners[event].forEach(function(cb) {
+            _listeners[event].slice().forEach(function(cb) {
                 try { cb(data); } catch (e) {
                     console.error('❌ خطأ في listener لـ ' + event + ':', e.message);
                 }
@@ -45,6 +46,14 @@
                 callback(data);
             };
             window.EventBus.on(event, wrapper);
+        },
+
+        clear: function(event) {
+            if (event) {
+                delete _listeners[event];
+            } else {
+                Object.keys(_listeners).forEach(function(k) { delete _listeners[k]; });
+            }
         }
     };
 
@@ -452,7 +461,7 @@
     ];
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 10: updateUserUI — النسخة الوحيدة
+    // الجزء 10: updateUserUI
     // ═══════════════════════════════════════════════════════════
 
     window.updateUserUI = function() {
@@ -517,6 +526,6 @@
     };
 
     window.__coreLoaded = true;
-    originalLog.call(console, '✅ core.js v19.0 جاهز');
+    originalLog.call(console, '✅ core.js v20.0 جاهز');
 
 })();
