@@ -1,11 +1,8 @@
 /* ============================================================
-   الميزان Pro - style.css v21.0 (مُصلَّح)
-   مع البحث الذكي + نظام الثيمات
+   الميزان Pro - style.css v22.0 (إصلاح شامل)
+   🔧 بحث ذكي + ثيمات + POS محسّن
    ============================================================ */
 
-/* ═══════════════════════════════════════════════════════════
-   CSS Variables
-   ═══════════════════════════════════════════════════════════ */
 :root {
     --primary: #C9A94E;
     --primary-dark: #B8953A;
@@ -405,7 +402,6 @@ body {
     outline: none; padding: 0; min-width: 0; direction: ltr;
 }
 
-/* صف العميل */
 .pos-customer-row {
     display: grid;
     grid-template-columns: 1fr 46px;
@@ -443,12 +439,10 @@ body {
     flex-shrink: 0;
 }
 
-/* البائع */
 .pos-seller-row { margin-bottom: 12px; }
 .pos-seller-item { display: flex; flex-direction: column; gap: 4px; }
 .pos-seller-item label { font-size: 11px; font-weight: 800; color: var(--text-muted); }
 
-/* نوع الفاتورة */
 .pos-type-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 12px 0; }
 .pos-type-opt {
     display: flex; align-items: center; justify-content: center;
@@ -462,14 +456,12 @@ body {
     border-color: var(--primary); color: var(--primary);
 }
 
-/* العناوين */
 .pos-section-title {
     font-size: 13px; font-weight: 900; color: var(--primary);
     margin: 12px 0 8px; padding-bottom: 6px;
     border-bottom: 1px dashed var(--bg-3);
 }
 
-/* طرق الدفع */
 .pos-payment-grid {
     display: grid; grid-template-columns: 1fr 1fr 1fr;
     gap: 6px; margin-bottom: 10px;
@@ -486,7 +478,6 @@ body {
     border-color: var(--success); color: var(--success);
 }
 
-/* الحقول */
 .pos-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
 .pos-field label { font-size: 11px; font-weight: 800; color: var(--text-muted); }
 .pos-input, .pos-select, .inv-select {
@@ -499,10 +490,6 @@ body {
     outline: none; border-color: var(--primary);
 }
 
-/* ═══════════════════════════════════════════════════════════
-   ⚡ إصلاح صف إضافة الصنف - POS ADD ITEM
-   ═══════════════════════════════════════════════════════════ */
-
 .pos-add-item {
     display: flex !important;
     gap: 6px !important;
@@ -511,7 +498,6 @@ body {
     width: 100% !important;
 }
 
-/* حاوية البحث تأخذ المساحة الأكبر */
 .pos-add-item .smart-search-container {
     flex: 1 1 auto !important;
     min-width: 0 !important;
@@ -519,7 +505,6 @@ body {
     position: relative;
 }
 
-/* حقل الكمية - عرض ثابت */
 .pos-add-item input[type="number"]:not(.smart-search-input) {
     width: 55px !important;
     min-width: 55px !important;
@@ -568,7 +553,6 @@ body {
     font-size: 12px; margin: 0 auto;
 }
 
-/* صناديق الأصناف والإجماليات */
 .pos-items-box {
     background: var(--bg); border-radius: 12px;
     border: 2px solid var(--bg-3); overflow: hidden; margin-bottom: 12px;
@@ -686,7 +670,6 @@ body {
 .report-table-row .blue { color: var(--info); font-weight: 800; }
 .report-table-row .orange { color: var(--warning); font-weight: 800; }
 
-/* إحصائيات مصغّرة */
 .stats-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
 .stat-mini {
     background: var(--bg); border-radius: 10px;
@@ -920,8 +903,7 @@ body {
 .report-buttons-grid .btn span { white-space: nowrap; font-weight: 800; }
 
 /* ═══════════════════════════════════════════════════════════
-   🔍 البحث الذكي (Smart Search) — v2.0
-   ⚠️ مهم جداً: لازم يكون في الآخر عشان يدهس أي ستايل قبله
+   البحث الذكي
    ═══════════════════════════════════════════════════════════ */
 
 .smart-search-container {
@@ -963,7 +945,6 @@ body {
     box-shadow: 0 0 0 3px rgba(201, 169, 78, 0.18);
 }
 
-/* أيقونة البحث */
 .smart-search-container::after {
     content: '🔍';
     position: absolute;
@@ -979,8 +960,6 @@ body {
 .smart-search-container:focus-within::after {
     opacity: 1;
 }
-
-/* ═══ قائمة النتائج ═══ */
 
 .smart-search-results {
     position: absolute;
@@ -1006,8 +985,6 @@ body {
     from { opacity: 0; transform: translateY(-6px); }
     to { opacity: 1; transform: translateY(0); }
 }
-
-/* ═══ عنصر نتيجة ═══ */
 
 .smart-search-item {
     display: flex;
@@ -1072,8 +1049,6 @@ body {
     text-align: right;
 }
 
-/* ═══ حالات فارغة ═══ */
-
 .smart-search-empty {
     padding: 24px 16px;
     text-align: center;
@@ -1099,8 +1074,6 @@ body {
     background: var(--bg);
     border-top: 1px solid var(--border);
 }
-
-/* ═══ scrollbar ═══ */
 
 .smart-search-results::-webkit-scrollbar {
     width: 5px;
@@ -1150,31 +1123,12 @@ body {
         padding: 0 38px 0 10px;
     }
 
-    .smart-search-input::placeholder {
-        font-size: 11px;
-    }
-
-    .smart-search-results {
-        max-height: 240px;
-    }
-
-    .smart-search-item {
-        padding: 10px;
-    }
-
-    .smart-search-icon {
-        width: 32px;
-        height: 32px;
-        font-size: 16px;
-    }
-
-    .smart-search-name {
-        font-size: 12px;
-    }
-
-    .smart-search-sub {
-        font-size: 9px;
-    }
+    .smart-search-input::placeholder { font-size: 11px; }
+    .smart-search-results { max-height: 240px; }
+    .smart-search-item { padding: 10px; }
+    .smart-search-icon { width: 32px; height: 32px; font-size: 16px; }
+    .smart-search-name { font-size: 12px; }
+    .smart-search-sub { font-size: 9px; }
 
     .pos-add-item input[type="number"]:not(.smart-search-input) {
         width: 50px !important;
