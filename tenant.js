@@ -1,12 +1,12 @@
 // ============================================================
-// الميزان Pro - tenant.js v2.0 (مُحسَّن)
-// إدارة Store ID (Multi-Tenant) والتنقل بين المتاجر
+// الميزان Pro - tenant.js v3.0 (إصلاح شامل)
+// 🔧 إدارة Store ID + نسخ + مشاركة + تبديل
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🏢 tenant.js v2.0 - بدء التحميل');
+    console.log('🏢 tenant.js v3.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: الحصول على Store ID
@@ -31,7 +31,6 @@
         }
 
         try {
-            // للموبايل
             const tempInput = document.createElement('textarea');
             tempInput.value = storeId;
             tempInput.style.position = 'fixed';
@@ -44,7 +43,6 @@
 
             if (typeof window.showToast === 'function') window.showToast('✅ تم نسخ Store ID', 'success');
         } catch (e) {
-            // بديل للمتصفحات الحديثة
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(storeId)
                     .then(function() {
@@ -99,13 +97,11 @@
         const html = '<button class="modal-close" onclick="closeModal()">&times;</button>' +
             '<h3>🏢 معلومات متجري</h3>' +
 
-            // معلومات الشركة
             '<div style="background:linear-gradient(135deg,#C9A94E,#B8953A);border-radius:12px;padding:16px;text-align:center;color:#0D0D0D;margin-bottom:14px;">' +
                 '<div style="font-size:14px;font-weight:700;opacity:0.85;">متجرك الحالي</div>' +
                 '<div style="font-size:22px;font-weight:900;margin-top:4px;">' + window.escapeHtml(companyName) + '</div>' +
             '</div>' +
 
-            // Store ID
             '<div style="background:#0D0D0D;border-radius:12px;padding:14px;margin-bottom:12px;border:2px solid #C9A94E;">' +
                 '<div style="color:#A89070;font-size:11px;font-weight:800;margin-bottom:8px;">🔑 كود المتجر (Store ID)</div>' +
                 '<div style="background:#1A1A1A;border-radius:8px;padding:12px;font-family:Courier New,monospace;font-size:12px;color:#C9A94E;word-break:break-all;direction:ltr;text-align:center;font-weight:900;">' +
@@ -121,7 +117,6 @@
                 '</div>' +
             '</div>' +
 
-            // تحذير
             '<div style="background:#2D1500;border-radius:10px;padding:12px;margin-bottom:12px;border-right:4px solid #E6A830;">' +
                 '<div style="color:#E6A830;font-size:12px;font-weight:800;margin-bottom:4px;">⚠️ مهم جداً</div>' +
                 '<div style="color:#A89070;font-size:11px;line-height:1.7;">' +
@@ -130,7 +125,6 @@
                 '</div>' +
             '</div>' +
 
-            // إحصائيات
             '<div style="background:#0D0D0D;border-radius:10px;padding:12px;margin-bottom:12px;">' +
                 '<div style="color:#C9A94E;font-size:12px;font-weight:800;margin-bottom:8px;">📊 بيانات المتجر</div>' +
                 '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;">' +
@@ -141,7 +135,6 @@
                 '</div>' +
             '</div>' +
 
-            // أزرار
             '<div style="display:grid;grid-template-columns:1fr;gap:6px;">' +
                 '<button onclick="showSwitchStoreDialog()" style="background:#4A8AB5;border:none;color:#fff;padding:12px;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit;font-size:13px;">' +
                     '🔄 الدخول لمتجر آخر' +
@@ -304,7 +297,7 @@
         const storeEl = document.getElementById('tenantStoreId');
         if (storeEl) storeEl.textContent = getStoreId();
 
-        console.log('✅ tenant.js v2.0 جاهز - Store ID:', getStoreId());
+        console.log('✅ tenant.js v3.0 جاهز - Store ID:', getStoreId());
     }
 
     if (document.readyState === 'loading') {
@@ -322,6 +315,6 @@
     }, 3000);
 
     window.__tenantLoaded = true;
-    console.log('✅ tenant.js v2.0 جاهز');
+    console.log('✅ tenant.js v3.0 جاهز');
 
 })();
