@@ -3,8 +3,8 @@
 // 🔧 Service Worker محسّن + Cache ديناميكي
 // ============================================================
 
-const CACHE_NAME = 'mizan-pro-v3.0.0';
-const RUNTIME_CACHE = 'mizan-runtime-v3.0.0';
+const CACHE_NAME = 'mizan-pro-v5.0.0';
+const RUNTIME_CACHE = 'mizan-runtime-v5.0.0';
 
 const CORE_FILES = [
     './',
