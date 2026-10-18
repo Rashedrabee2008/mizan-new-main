@@ -188,7 +188,6 @@
         <div id="page-cashier" class="page-container">
             <div class="page-content">
 
-                <!-- شريط الأدوات -->
                 <div class="pos-toolbar">
                     <div class="pos-invoice-num">
                         🧾 فاتورة <span class="pos-num" id="invNumberDisplay">#1</span>
@@ -205,7 +204,6 @@
                     </div>
                 </div>
 
-                <!-- التاريخ والوقت -->
                 <div class="pos-meta-row">
                     <div class="pos-meta-item">
                         <span class="pos-meta-icon">📅</span>
@@ -219,7 +217,6 @@
                     </div>
                 </div>
 
-                <!-- العميل -->
                 <div class="pos-customer-row">
                     <div class="pos-customer-info">
                         <div class="pos-customer-label">👤 العميل</div>
@@ -238,7 +235,6 @@
                     <div class="pos-customer-icon">👤</div>
                 </div>
 
-                <!-- البائع -->
                 <div class="pos-seller-row">
                     <div class="pos-seller-item">
                         <label>🧑‍💼 البائع</label>
@@ -248,7 +244,6 @@
                     </div>
                 </div>
 
-                <!-- نوع الفاتورة -->
                 <div class="pos-type-switch">
                     <label class="pos-type-opt">
                         <input type="radio" name="saleInvoiceType" value="simple" checked />
@@ -260,7 +255,6 @@
                     </label>
                 </div>
 
-                <!-- طريقة الدفع -->
                 <div class="pos-section-title">💳 طريقة الدفع</div>
                 <div class="pos-payment-grid">
                     <label class="pos-pay-opt">
@@ -289,19 +283,16 @@
                     </label>
                 </div>
 
-                <!-- الخزنة -->
                 <div class="pos-field">
                     <label>💰 الخزنة</label>
                     <select id="saleCashBox" class="pos-select"></select>
                 </div>
 
-                <!-- المستودع -->
                 <div class="pos-field">
                     <label>🏭 المستودع</label>
                     <select id="saleWarehouse" class="pos-select"></select>
                 </div>
 
-                <!-- إضافة صنف -->
                 <div class="pos-section-title">📦 إضافة صنف</div>
                 <div class="pos-add-item">
                     <button class="pos-btn-add" onclick="addSaleItem()" title="إضافة">
@@ -322,7 +313,6 @@
                     <input type="number" id="salePrice" placeholder="سعر" step="0.01" min="0" />
                 </div>
 
-                <!-- الأصناف -->
                 <div class="pos-items-box">
                     <div class="pos-items-header">
                         <span>🛒 الأصناف</span>
@@ -331,7 +321,6 @@
                     <div id="saleItemsContainer"></div>
                 </div>
 
-                <!-- الإجماليات -->
                 <div class="pos-totals-box" id="saleTotalBox" style="display:none;">
                     <div class="pos-totals-grid">
                         <div class="pos-total-stat">
@@ -352,7 +341,6 @@
                         </div>
                     </div>
 
-                    <!-- الخصم -->
                     <div class="pos-discount-grid">
                         <div class="pos-field">
                             <label>💰 خصم</label>
@@ -367,7 +355,6 @@
                         </div>
                     </div>
 
-                    <!-- خصم المستوى -->
                     <div class="pos-discount-grid">
                         <div class="pos-field">
                             <label>⭐ خصم المستوى</label>
@@ -382,7 +369,6 @@
                         </div>
                     </div>
 
-                    <!-- الشحن -->
                     <div class="pos-delivery-row">
                         <div class="pos-delivery-item">
                             <label>🚚 اسم المندوب</label>
@@ -394,7 +380,6 @@
                         </div>
                     </div>
 
-                    <!-- الإجمالي النهائي -->
                     <div class="pos-grand-total">
                         <span>💰 الإجمالي النهائي</span>
                         <strong id="saleSubtotal">0.00</strong>
@@ -409,7 +394,6 @@
             <div class="page-content">
                 <h2><i class="fas fa-box"></i> المخزون</h2>
 
-                <!-- إضافة منتج -->
                 <div class="form-card">
                     <h3 id="productFormTitle">➕ إضافة منتج جديد</h3>
                     <input type="hidden" id="productId" />
@@ -453,7 +437,6 @@
                     </div>
                 </div>
 
-                <!-- قائمة المنتجات -->
                 <div class="search-box">
                     <input type="text" id="inventorySearch" placeholder="🔍 ابحث عن منتج..." oninput="renderProducts()" />
                 </div>
@@ -481,7 +464,6 @@
                     </div>
                 </div>
 
-                <!-- المورد -->
                 <div class="pos-customer-row">
                     <div class="pos-customer-info">
                         <div class="pos-customer-label">🚚 المورد</div>
@@ -500,7 +482,6 @@
                     <div class="pos-customer-icon" style="background:linear-gradient(135deg,#4A8AB5,#3A7AA5);">🚚</div>
                 </div>
 
-                <!-- طريقة الدفع -->
                 <div class="pos-field">
                     <label>💳 طريقة الدفع</label>
                     <select id="purPayment" class="pos-select">
@@ -509,19 +490,16 @@
                     </select>
                 </div>
 
-                <!-- الخزنة -->
                 <div class="pos-field">
                     <label>💰 الخزنة</label>
                     <select id="purCashBox" class="pos-select"></select>
                 </div>
 
-                <!-- المستودع -->
                 <div class="pos-field">
                     <label>🏭 المستودع</label>
                     <select id="purWarehouse" class="pos-select"></select>
                 </div>
 
-                <!-- إضافة صنف -->
                 <div class="pos-section-title">📦 إضافة صنف</div>
                 <div class="pos-add-item">
                     <button class="pos-btn-add" onclick="addPurItem()" title="إضافة">
@@ -542,7 +520,6 @@
                     <input type="number" id="purPrice" placeholder="سعر" step="0.01" min="0" />
                 </div>
 
-                <!-- الأصناف -->
                 <div class="pos-items-box">
                     <div class="pos-items-header">
                         <span>🛒 الأصناف</span>
@@ -551,7 +528,6 @@
                     <div id="purItemsContainer"></div>
                 </div>
 
-                <!-- الإجماليات -->
                 <div class="pos-totals-box" id="purTotalBox" style="display:none;">
                     <div class="pos-totals-grid">
                         <div class="pos-total-stat">
@@ -569,7 +545,6 @@
                     </div>
                 </div>
 
-                <!-- ملاحظات -->
                 <div class="pos-field">
                     <label>📝 ملاحظات</label>
                     <input type="text" id="purNotes" class="pos-input" placeholder="ملاحظات..." />
@@ -692,7 +667,6 @@
         <div id="page-cash-boxes" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-money-bill-wave"></i> الخزائن</h2>
-                <!-- ⚡ ده الـ div اللي بيعرض الخزائن -->
                 <div id="cashBoxesList"></div>
             </div>
         </div>
@@ -773,7 +747,6 @@
                     <button class="filter-chip" onclick="filterTreasury('manual', this)">✋ يدوي</button>
                 </div>
 
-                <!-- إضافة حركة -->
                 <div class="form-card">
                     <h3>✋ إضافة حركة يدوية</h3>
                     <div class="form-row">
@@ -818,7 +791,6 @@
                     <button class="tab-btn" onclick="switchPayTab('pay', this)">💸 سداد</button>
                 </div>
 
-                <!-- تبويب التحصيل -->
                 <div id="payTabCollect">
                     <div class="form-card">
                         <h3>💰 تحصيل من عميل</h3>
@@ -867,7 +839,6 @@
                     </div>
                 </div>
 
-                <!-- تبويب السداد -->
                 <div id="payTabPay" style="display:none;">
                     <div class="form-card">
                         <h3>💸 سداد لمورد</h3>
@@ -916,7 +887,6 @@
                     </div>
                 </div>
 
-                <!-- إحصائيات -->
                 <div class="stats-mini">
                     <div class="stat-mini">
                         <div class="num" style="color:#2D8F5E;" id="payTotalCollected">0.00</div>
@@ -1115,7 +1085,6 @@
                     <button class="tab-btn" onclick="showERPTab('currencies', this)">💱 العملات</button>
                 </div>
 
-                <!-- المستودعات -->
                 <div id="erpTabWarehouses">
                     <div class="form-card">
                         <h3 id="warehouseFormTitle">➕ إضافة مستودع جديد</h3>
@@ -1157,7 +1126,6 @@
                     <div id="warehouseList"></div>
                 </div>
 
-                <!-- الفروع -->
                 <div id="erpTabBranches" style="display:none;">
                     <div class="form-card">
                         <h3>➕ إضافة فرع جديد</h3>
@@ -1191,7 +1159,6 @@
                     <div id="branchList"></div>
                 </div>
 
-                <!-- العملات -->
                 <div id="erpTabCurrencies" style="display:none;">
                     <div id="currencyList"></div>
                 </div>
@@ -1212,7 +1179,6 @@
                     <button class="tab-btn" onclick="showWarehouseTab('reports', this)">📈 تقارير</button>
                 </div>
 
-                <!-- إضافة صنف عام -->
                 <div class="pos-add-item" style="margin-bottom:12px;">
                     <button class="pos-btn-add" onclick="addVoucherItemFromGlobal()">
                         <i class="fas fa-plus"></i>
@@ -1224,7 +1190,6 @@
                     <input type="number" id="whVoucherPrice" placeholder="سعر" step="0.01" />
                 </div>
 
-                <!-- أصناف الإذن -->
                 <div class="pos-items-box">
                     <div class="pos-items-header">
                         <span>📦 أصناف الإذن</span>
@@ -1233,7 +1198,6 @@
                     <div id="whVoucherItemsContainer"></div>
                 </div>
 
-                <!-- الإجماليات -->
                 <div class="pos-totals-box" id="whVoucherTotalsBox" style="display:none;">
                     <div class="pos-totals-grid">
                         <div class="pos-total-stat">
@@ -1251,7 +1215,6 @@
                     </div>
                 </div>
 
-                <!-- إذن إضافة -->
                 <div id="whTabReceipts">
                     <div class="form-card">
                         <h3>📥 إذن إضافة</h3>
@@ -1288,7 +1251,6 @@
                     <div id="whReceiptsList"></div>
                 </div>
 
-                <!-- إذن صرف -->
                 <div id="whTabIssues" style="display:none;">
                     <div class="form-card">
                         <h3>📤 إذن صرف</h3>
@@ -1325,7 +1287,6 @@
                     <div id="whIssuesList"></div>
                 </div>
 
-                <!-- تحويل -->
                 <div id="whTabTransfers" style="display:none;">
                     <div class="form-card">
                         <h3>🔄 تحويل بين المستودعات</h3>
@@ -1358,7 +1319,6 @@
                     <div id="whTransfersList"></div>
                 </div>
 
-                <!-- تسوية -->
                 <div id="whTabAdjustments" style="display:none;">
                     <div class="form-card">
                         <h3>⚖️ تسوية جرد</h3>
@@ -1385,7 +1345,6 @@
                     <div id="whAdjustmentsList"></div>
                 </div>
 
-                <!-- أول المدة -->
                 <div id="whTabOpening" style="display:none;">
                     <div class="form-card">
                         <h3>📊 رصيد أول المدة</h3>
@@ -1412,7 +1371,6 @@
                     <div id="obList"></div>
                 </div>
 
-                <!-- تقارير -->
                 <div id="whTabReports" style="display:none;">
                     <div id="whReportsList"></div>
                 </div>
@@ -1431,7 +1389,6 @@
                     <button class="tab-btn" onclick="showHRTab('salaries', this)">💰 الرواتب</button>
                 </div>
 
-                <!-- الموظفين -->
                 <div id="hrTabEmployees">
                     <div class="form-card">
                         <h3 id="empFormTitle">➕ إضافة موظف جديد</h3>
@@ -1495,12 +1452,10 @@
                     <div id="empList"></div>
                 </div>
 
-                <!-- الحضور -->
                 <div id="hrTabAttendance" style="display:none;">
                     <div id="attendanceList"></div>
                 </div>
 
-                <!-- الرواتب -->
                 <div id="hrTabSalaries" style="display:none;">
                     <div id="salariesList"></div>
                 </div>
@@ -1744,7 +1699,6 @@
             <div class="page-content">
                 <h2><i class="fas fa-cog"></i> الإعدادات</h2>
 
-                <!-- إدارة الإعلانات -->
                 <div class="settings-section">
                     <h3>📢 إدارة الإعلانات</h3>
                     <p class="settings-desc">اكتب الإعلانات أو الملاحظات اللي هتظهر في الشريط العلوي للموظفين.</p>
@@ -1761,7 +1715,6 @@
                         <label>الرابط (اختياري)</label>
                         <input type="text" id="newAdLink" placeholder="https://..." />
                     </div>
-                    
 
                     <button class="btn btn-success btn-block" onclick="addNewAd()" style="margin-bottom:10px;">
                         <i class="fas fa-plus"></i> إضافة إعلان
@@ -1783,7 +1736,6 @@
                     </div>
                 </div>
 
-                <!-- بيانات الشركة -->
                 <div class="settings-section">
                     <h3>🏢 بيانات الشركة</h3>
                     <p class="settings-desc">لإدارة بيانات الشركة واللوجو، اذهب إلى صفحة "بيانات الشركة".</p>
@@ -1792,7 +1744,6 @@
                     </button>
                 </div>
 
-                <!-- السحابة -->
                 <div class="settings-section">
                     <h3>☁️ السحابة (Firebase)</h3>
                     <div class="settings-info-row">
@@ -1808,7 +1759,6 @@
                     </button>
                 </div>
 
-                <!-- النسخ الاحتياطي -->
                 <div class="settings-section">
                     <h3>💾 النسخ الاحتياطي</h3>
                     <button class="btn btn-success btn-block" onclick="exportData()">
@@ -1820,7 +1770,6 @@
                     </button>
                 </div>
 
-                <!-- الصلاحيات -->
                 <div class="settings-section">
                     <h3>🔐 صلاحياتي</h3>
                     <p class="settings-desc">اعرف إيه الصفحات والأذونات المتاحة لدورك</p>
@@ -1829,7 +1778,6 @@
                     </button>
                 </div>
 
-                <!-- عن التطبيق -->
                 <div class="settings-section">
                     <h3>ℹ️ عن التطبيق</h3>
                     <div class="settings-info-row"><span>الإصدار</span><span>20.0.0 Pro</span></div>
@@ -1839,7 +1787,6 @@
                     <div class="settings-info-row"><span>الموردين</span><span id="setSuppliersCount">0</span></div>
                 </div>
 
-                <!-- تسجيل الخروج -->
                 <div class="settings-section">
                     <h3>🚪 تسجيل الخروج</h3>
                     <button class="btn btn-warning btn-block" onclick="lockApp()">
@@ -1847,7 +1794,6 @@
                     </button>
                 </div>
 
-                <!-- منطقة الخطر -->
                 <div class="settings-section danger">
                     <h3>⚠️ منطقة الخطر</h3>
                     <button class="btn btn-danger btn-block" onclick="confirmFullReset()">
@@ -1958,6 +1904,35 @@
 
     <div id="modalOverlay" class="modal-overlay"></div>
     <div id="toast" class="toast"></div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         ⚡ السكربت الحامي للـ Store ID — يجب أن يعمل قبل data.js
+         ═══════════════════════════════════════════════════════════ -->
+    <script>
+    (function() {
+        'use strict';
+        var KEY = 'mizan_store_id_v18';
+        try {
+            var existing = localStorage.getItem(KEY);
+            var session = sessionStorage.getItem(KEY);
+
+            if (!existing && session) {
+                localStorage.setItem(KEY, session);
+                console.log('🔄 تم استعادة Store ID من sessionStorage:', session);
+            } else if (!existing && !session) {
+                var newId = 'store_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+                localStorage.setItem(KEY, newId);
+                sessionStorage.setItem(KEY, newId);
+                console.warn('🆕 تم توليد Store ID جديد:', newId);
+                console.warn('⚠️ احفظ هذا الكود — ستحتاجه لاستعادة بياناتك!');
+            } else {
+                sessionStorage.setItem(KEY, existing);
+            }
+        } catch (e) {
+            console.error('❌ فشل تهيئة Store ID:', e);
+        }
+    })();
+    </script>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
