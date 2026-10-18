@@ -83,11 +83,8 @@
             line-height: 1.7;
         }
 
-        .subtitle strong {
-            color: #C9A94E;
-        }
+        .subtitle strong { color: #C9A94E; }
 
-        /* Steps Section */
         .steps {
             background: #0D0D0D;
             border-radius: 16px;
@@ -114,9 +111,7 @@
             align-items: flex-start;
         }
 
-        .step:last-child {
-            margin-bottom: 0;
-        }
+        .step:last-child { margin-bottom: 0; }
 
         .step-num {
             width: 32px;
@@ -140,11 +135,8 @@
             padding-top: 5px;
         }
 
-        .step-text strong {
-            color: #C9A94E;
-        }
+        .step-text strong { color: #C9A94E; }
 
-        /* Code Box */
         .code-box {
             background: linear-gradient(135deg, #1A1500, #0D0D0D);
             border: 2px solid #C9A94E;
@@ -196,16 +188,9 @@
             transition: all 0.2s;
         }
 
-        .copy-btn:hover {
-            transform: translateY(-2px);
-        }
+        .copy-btn:hover { transform: translateY(-2px); }
+        .copy-btn.copied { background: linear-gradient(135deg, #C9A94E, #B8953A); color: #0D0D0D; }
 
-        .copy-btn.copied {
-            background: linear-gradient(135deg, #C9A94E, #B8953A);
-            color: #0D0D0D;
-        }
-
-        /* Warning */
         .warning {
             background: linear-gradient(135deg, #2D0D0D, #1A0000);
             border-right: 4px solid #E06060;
@@ -218,24 +203,10 @@
             align-items: flex-start;
         }
 
-        .warning-icon {
-            font-size: 22px;
-            flex-shrink: 0;
-        }
+        .warning-icon { font-size: 22px; flex-shrink: 0; }
+        .warning-text { flex: 1; font-size: 13px; line-height: 1.7; color: #F5E6C8; }
+        .warning-text strong { color: #E06060; font-weight: 900; }
 
-        .warning-text {
-            flex: 1;
-            font-size: 13px;
-            line-height: 1.7;
-            color: #F5E6C8;
-        }
-
-        .warning-text strong {
-            color: #E06060;
-            font-weight: 900;
-        }
-
-        /* Action Buttons */
         .actions {
             display: flex;
             flex-direction: column;
@@ -281,12 +252,6 @@
             box-shadow: 0 12px 32px rgba(37, 211, 102, 0.4);
         }
 
-        .btn-secondary {
-            background: #2D2D2D;
-            color: #F5E6C8;
-        }
-
-        /* Tips */
         .tips {
             background: #0D0D0D;
             border-radius: 14px;
@@ -314,17 +279,9 @@
             gap: 8px;
         }
 
-        .tip:last-child {
-            margin-bottom: 0;
-        }
+        .tip:last-child { margin-bottom: 0; }
+        .tip-icon { color: #C9A94E; font-weight: 900; flex-shrink: 0; }
 
-        .tip-icon {
-            color: #C9A94E;
-            font-weight: 900;
-            flex-shrink: 0;
-        }
-
-        /* Footer */
         .footer {
             margin-top: 32px;
             padding-top: 24px;
@@ -335,35 +292,14 @@
             line-height: 1.7;
         }
 
-        .footer strong {
-            color: #C9A94E;
-        }
+        .footer strong { color: #C9A94E; }
 
-        /* Responsive */
         @media (max-width: 480px) {
-            .container {
-                padding: 28px 20px;
-                border-radius: 18px;
-            }
-
-            h1 {
-                font-size: 26px;
-            }
-
-            .success-icon {
-                width: 84px;
-                height: 84px;
-                font-size: 44px;
-            }
-
-            .code-value {
-                font-size: 16px;
-                letter-spacing: 1px;
-            }
-
-            .step-text {
-                font-size: 13px;
-            }
+            .container { padding: 28px 20px; border-radius: 18px; }
+            h1 { font-size: 26px; }
+            .success-icon { width: 84px; height: 84px; font-size: 44px; }
+            .code-value { font-size: 16px; letter-spacing: 1px; }
+            .step-text { font-size: 13px; }
         }
     </style>
 </head>
@@ -371,19 +307,16 @@
 
     <div class="container">
         
-        <!-- Success Icon -->
         <div class="success-icon">
             <i class="fas fa-check"></i>
         </div>
 
-        <!-- Title -->
         <h1>🎉 تم تفعيل حسابك!</h1>
         <p class="subtitle">
             أهلاً بيك في <strong>الميزان Pro</strong><br>
             ابدأ رحلة الاحتراف في إدارة متجرك
         </p>
 
-        <!-- Steps -->
         <div class="steps">
             <div class="steps-title">
                 <i class="fas fa-list-ol"></i>
@@ -400,37 +333,28 @@
             <div class="step">
                 <div class="step-num">2</div>
                 <div class="step-text">
-                    اكتب <strong>كود التفعيل</strong> اللي وصلك على واتساب
+                    ادخل باسم <strong>"المدير"</strong> وكلمة المرور <strong>123456</strong>
                 </div>
             </div>
 
             <div class="step">
                 <div class="step-num">3</div>
                 <div class="step-text">
-                    ادخل باسم <strong>"المدير"</strong> وكلمة المرور <strong>123456</strong>
+                    ابدأ سجّل منتجاتك وعملائك
                 </div>
             </div>
 
             <div class="step">
                 <div class="step-num">4</div>
                 <div class="step-text">
-                    ابدأ سجّل منتجاتك وعملائك
-                </div>
-            </div>
-
-            <div class="step">
-                <div class="step-num">5</div>
-                <div class="step-text">
                     احفظ كود التفعيل في مكان آمن
                 </div>
             </div>
         </div>
 
-        <!-- Code Box -->
         <div class="code-box">
             <div class="code-label">🔑 كود التفعيل الخاص بك</div>
             <div class="code-value" id="activationCodeDisplay">
-                <!-- يتم تعبئته تلقائياً من URL -->
                 MIZAN-XXXX-XXXX
             </div>
             <button class="copy-btn" id="copyCodeBtn" onclick="copyActivationCode()">
@@ -439,7 +363,6 @@
             </button>
         </div>
 
-        <!-- Warning -->
         <div class="warning">
             <div class="warning-icon">⚠️</div>
             <div class="warning-text">
@@ -447,8 +370,7 @@
             </div>
         </div>
 
-        <!-- Actions -->
-                <div class="actions">
+        <div class="actions">
             <a href="app.html" class="btn btn-primary" id="openAppBtn">
                 <i class="fas fa-rocket"></i>
                 افتح التطبيق الآن
@@ -462,7 +384,6 @@
             </a>
         </div>
 
-        <!-- Tips -->
         <div class="tips">
             <div class="tips-title">
                 <i class="fas fa-lightbulb"></i>
@@ -490,7 +411,6 @@
             </div>
         </div>
 
-        <!-- Footer -->
         <div class="footer">
             <strong>⚖️ الميزان Pro</strong> — نظام محاسبة احترافي<br>
             © 2026 — جميع الحقوق محفوظة
@@ -500,26 +420,43 @@
 
     <script>
         // ═══════════════════════════════════════════════════════════
-        // الحصول على كود التفعيل من URL
+        // 🔧 الحصول على كود التفعيل من URL وحفظه
         // ═══════════════════════════════════════════════════════════
 
         (function() {
             'use strict';
 
-            // مثال: thanks.html?code=MIZAN-2026-0001
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get('code') || urlParams.get('activation') || '';
 
             const codeDisplay = document.getElementById('activationCodeDisplay');
+            const openAppBtn = document.getElementById('openAppBtn');
 
-            if (code) {
+            if (code && code.indexOf('MIZAN-') === 0) {
                 codeDisplay.textContent = code;
-                // حفظه في localStorage عشان التطبيق يستخدمه
+                
+                // 🔧 حفظ الكود في localStorage ليستخدمه app.js
                 try {
                     localStorage.setItem('mizan_pending_activation', code);
-                } catch (e) {}
+                    
+                    // 🔧 حفظ التفعيل مباشرة أيضاً
+                    const storeId = localStorage.getItem('mizan_store_id_v18') || '';
+                    localStorage.setItem('mizan_activation_v1', JSON.stringify({
+                        code: code,
+                        storeId: storeId,
+                        activatedAt: new Date().toISOString()
+                    }));
+                    
+                    console.log('✅ تم حفظ كود التفعيل:', code);
+                } catch (e) {
+                    console.error('❌ فشل حفظ الكود:', e);
+                }
+
+                // 🔧 تعديل رابط app.html لتضمين الكود احتياطياً
+                if (openAppBtn) {
+                    openAppBtn.href = 'app.html?code=' + encodeURIComponent(code);
+                }
             } else {
-                // لو مفيش كود، نعرض رسالة
                 codeDisplay.textContent = 'MIZAN-XXXX-XXXX';
                 codeDisplay.style.color = '#A89070';
                 codeDisplay.style.fontSize = '14px';
@@ -538,7 +475,6 @@
                 }
 
                 try {
-                    // الطريقة 1: execCommand
                     const tempInput = document.createElement('textarea');
                     tempInput.value = codeText;
                     tempInput.style.position = 'fixed';
@@ -551,7 +487,6 @@
 
                     showCopySuccess();
                 } catch (e) {
-                    // الطريقة 2: clipboard API
                     if (navigator.clipboard && navigator.clipboard.writeText) {
                         navigator.clipboard.writeText(codeText)
                             .then(showCopySuccess)
@@ -566,8 +501,6 @@
 
             function showCopySuccess() {
                 const btn = document.getElementById('copyCodeBtn');
-                const btnText = document.getElementById('copyBtnText');
-
                 btn.classList.add('copied');
                 btn.innerHTML = '<i class="fas fa-check"></i><span>تم النسخ!</span>';
 
@@ -603,12 +536,7 @@
                 }, 2500);
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // حفظ الكود في التطبيق تلقائياً
-            // ═══════════════════════════════════════════════════════════
-
-                       // ✅ التطبيق مفعّل بالفعل — مفيش حاجة نحفظها
-            console.log('✅ العميل مفعّل — جاهز للانتقال للتطبيق');
+            console.log('✅ thanks.html جاهز — الكود:', code || 'غير موجود');
 
         })();
     </script>
