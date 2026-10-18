@@ -1,7 +1,6 @@
 // ============================================================
-// الميزان Pro - data.js v4.0 (الحل النهائي للبيانات)
+// الميزان Pro - data.js v5.0 (كامل ومُصلَّح)
 // ============================================================
-
 (function() {
     'use strict';
 
@@ -18,17 +17,14 @@
     window.firebaseReady = false;
 
     window.SYNC_KEYS = [
-        'products', 'sales', 'purchases', 'expenses',
-        'cashBoxes', 'customers', 'suppliers', 'users',
-        'treasury', 'journalEntries', 'returns',
-        'payments', 'warehouses', 'branches', 'companyData',
-        'accounts', 'coupons', 'employees', 'attendance',
-        'salaries', 'leaves', 'warehouseReceipts', 'warehouseIssues',
+        'products', 'sales', 'purchases', 'expenses', 'cashBoxes', 'customers', 
+        'suppliers', 'users', 'treasury', 'journalEntries', 'returns', 'payments', 
+        'warehouses', 'branches', 'companyData', 'accounts', 'coupons', 'employees', 
+        'attendance', 'salaries', 'leaves', 'warehouseReceipts', 'warehouseIssues', 
         'warehouseTransfers', 'warehouseAdjustments', 'openingBalances'
     ];
 
     const STORE_KEY = 'mizan_store_id_v18';
-
     window.getStoreId = function() {
         try {
             let storeId = localStorage.getItem(STORE_KEY);
@@ -42,19 +38,9 @@
             }
             sessionStorage.setItem(STORE_KEY, storeId);
             return storeId;
-        } catch (e) {
-            return 'store_default';
-        }
+        } catch (e) { return 'store_default'; }
     };
-
-    window.setStoreId = function(storeId) {
-        try {
-            localStorage.setItem(STORE_KEY, storeId);
-            sessionStorage.setItem(STORE_KEY, storeId);
-            return true;
-        } catch (e) { return false; }
-    };
-
+    window.setStoreId = function(id) { localStorage.setItem(STORE_KEY, id); sessionStorage.setItem(STORE_KEY, id); };
     window.getStorePath = function() { return 'stores/' + window.getStoreId(); };
 
     window.products = [];
@@ -76,13 +62,11 @@
     window.employees = [];
     window.attendance = [];
     window.salaries = [];
-    window.leaves = [];
     window.warehouseReceipts = [];
     window.warehouseIssues = [];
     window.warehouseTransfers = [];
     window.warehouseAdjustments = [];
     window.openingBalances = [];
-    window.currencies = window.DEFAULT_CURRENCIES || [];
 
     window.companyData = {
         name: 'الميزان', tradeName: '', phone: '', phone2: '', email: '', website: '',
@@ -106,7 +90,7 @@
         },
         add: function(key, item) {
             const arr = window[key] || [];
-            if (!item.id) item.id = window.generateId();
+            if (!item.id) item.id = window.generateId ? window.generateId() : Date.now().toString();
             if (!item.createdAt) item.createdAt = new Date().toISOString();
             arr.push(item);
             window.DataStore.set(key, arr);
@@ -114,8 +98,7 @@
         },
         remove: function(key, id) {
             const arr = window[key] || [];
-            const filtered = arr.filter(function(i) { return String(i.id) !== String(id); });
-            window.DataStore.set(key, filtered);
+            window.DataStore.set(key, arr.filter(i => String(i.id) !== String(id)));
         },
         loadAll: function() {
             window.SYNC_KEYS.forEach(function(key) {
@@ -130,9 +113,7 @@
             });
         },
         clearAll: function() {
-            window.SYNC_KEYS.forEach(function(key) {
-                try { localStorage.removeItem(STORAGE_PREFIX + key); } catch (e) {}
-            });
+            window.SYNC_KEYS.forEach(key => { try { localStorage.removeItem(STORAGE_PREFIX + key); } catch(e){} });
         }
     };
 
@@ -149,9 +130,7 @@
         },
         push: function(key, data) {
             if (!window.CloudSync.isReady()) return;
-            try {
-                firebase.database().ref(window.getStorePath() + '/' + key).set(data);
-            } catch (e) {}
+            try { firebase.database().ref(window.getStorePath() + '/' + key).set(data); } catch (e) {}
         },
         pullAll: async function() {
             if (!window.CloudSync.isReady()) return;
@@ -184,62 +163,23 @@
         }
     };
 
-    // ═══════════════════════════════════════════════════════════
-    // ⚡ إصلاح جذري: دالة حفظ اللوجو
-    // ═══════════════════════════════════════════════════════════
-    
-    window.saveCompanyData = function() {
-        const getVal = function(id) {
-            const el = document.getElementById(id);
-            return el ? el.value.trim() : '';
-        };
-
-        const currentLogo = (window.companyData || {}).logo || '';
-        const newName = getVal('companyName') || 'الميزان';
-
-        window.companyData = {
-            name: newName,
-            tradeName: getVal('companyTradeName'),
-            phone: getVal('companyPhone'),
-            phone2: getVal('companyPhone2'),
-            email: getVal('companyEmail'),
-            website: getVal('companyWebsite'),
-            address: getVal('companyAddress'),
-            city: getVal('companyCity'),
-            country: getVal('companyCountry') || 'مصر',
-            tax: getVal('companyTax'),
-            commercial: getVal('companyCommercial'),
-            taxCard: getVal('companyTaxCard'),
-            nationalId: getVal('companyNationalId'),
-            footer: getVal('companyFooter') || 'شكراً لتعاملكم معنا 🌟',
-            primaryColor: getVal('companyPrimaryColor') || '#C9A94E',
-            currency: getVal('companyCurrency') || 'ج.م',
-            logo: currentLogo
-        };
-
-        // 1. الحفظ في الذاكرة المحلية
-        window.DataStore.set('companyData', window.companyData);
-        
-        // 2. الحفظ القوي في localStorage
-        try { localStorage.setItem('mizan_companyData', JSON.stringify(window.companyData)); } catch(e) {}
-
-        // 3. تحديث الواجهة
-        if (typeof window.applyLogoOnLoad === 'function') window.applyLogoOnLoad();
-        
-        // 4. تحديث الاسم في الهيدر
-        const headerCompany = document.getElementById('headerCompanyName');
-        if (headerCompany) headerCompany.textContent = newName;
-
-        // 5. رفع للسحابة فوراً
-        if (window.CloudSync && window.CloudSync.isReady()) {
-            firebase.database().ref(window.getStorePath() + '/companyData').set(window.companyData);
+    window.seedInitialData = function() {
+        if (!window.users || window.users.length === 0) {
+            window.users = [{ id: 'user_admin', name: 'المدير', password: '123456', role: 'admin', active: true }];
+            try { localStorage.setItem(STORAGE_PREFIX + 'users', JSON.stringify(window.users)); } catch (e) {}
         }
-
-        if (typeof window.showToast === 'function') {
-            window.showToast('✅ تم حفظ بيانات الشركة بنجاح', 'success');
+        if (!window.cashBoxes || window.cashBoxes.length === 0) {
+            window.cashBoxes = [
+                { id: 1, name: 'نقدي', type: 'cash', icon: '💵', isDefault: true, active: true, openingBalance: 0 },
+                { id: 2, name: 'فودافون كاش', type: 'wallet', icon: '📱', active: true, openingBalance: 0 }
+            ];
+            try { localStorage.setItem(STORAGE_PREFIX + 'cashBoxes', JSON.stringify(window.cashBoxes)); } catch (e) {}
+        }
+        if (!window.warehouses || window.warehouses.length === 0) {
+            window.warehouses = [{ id: 1, name: 'المستودع الرئيسي', type: 'main', active: true }];
+            try { localStorage.setItem(STORAGE_PREFIX + 'warehouses', JSON.stringify(window.warehouses)); } catch (e) {}
         }
     };
 
-    window.addEventListener('online', function() {});
     window.DataStore.loadAll();
 })();
