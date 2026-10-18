@@ -1,12 +1,13 @@
+
 // ============================================================
-// الميزان Pro - permissions.js v2.0 (مُصلَّح)
-// نظام الصلاحيات - متكامل مع core.js
+// الميزان Pro - permissions.js v3.0 (إصلاح شامل)
+// 🔧 نظام صلاحيات متكامل + حماية من التعارض
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🔐 permissions.js v2.0 - بدء التحميل');
+    console.log('🔐 permissions.js v3.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: تعريف الأدوار والصلاحيات
@@ -112,7 +113,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 2: دوال مساعدة (لا تكرر core.js)
+    // الجزء 2: دوال مساعدة
     // ═══════════════════════════════════════════════════════════
 
     function getCurrentRole() {
@@ -126,7 +127,6 @@
         return window.PERMISSIONS[role] || window.PERMISSIONS.viewer;
     }
 
-    // ⚡ canAccessPage — الدالة الوحيدة الفريدة هنا
     window.canAccessPage = function(pageName) {
         const perms = getPermissions();
         if (!perms) return false;
@@ -145,7 +145,6 @@
         const perms = getPermissions();
         if (!perms) return;
 
-        // إخفاء عناصر التنقل السفلي
         document.querySelectorAll('.nav-item').forEach(function(item) {
             const page = item.dataset.page;
             if (!page || page === 'more') return;
@@ -153,7 +152,6 @@
             item.style.display = window.canAccessPage(page) ? '' : 'none';
         });
 
-        // إخفاء أزرار قائمة "المزيد"
         document.querySelectorAll('#moreMenu .more-item').forEach(function(item) {
             const onclick = item.getAttribute('onclick') || '';
             const match = onclick.match(/navigateTo\('([^']+)'\)/);
@@ -165,7 +163,6 @@
             }
         });
 
-        // إخفاء أزرار الصلاحيات الخاصة
         const hiddenButtons = [
             { check: 'canManageUsers', selector: '[onclick*="navigateTo(\'users\')"]' },
             { check: 'canChangeSettings', selector: '[onclick*="navigateTo(\'settings\')"]' },
@@ -181,7 +178,6 @@
             });
         });
 
-        // منع الحذف
         if (perms.canDelete !== true) {
             document.body.classList.add('no-delete-permission');
         } else {
@@ -246,7 +242,7 @@
             '<h3>🔐 صلاحياتك</h3>' +
             '<div style="background:linear-gradient(135deg,' + roleData.color + ',' + roleData.color + 'CC);border-radius:12px;padding:20px;text-align:center;color:#0D0D0D;margin-bottom:16px;">' +
                 '<div style="font-size:48px;margin-bottom:8px;">' + roleData.icon + '</div>' +
-                '<div style="font-size:20px;font-weight:900;">' + (window.currentUser.name || '') + '</div>' +
+                '<div style="font-size:20px;font-weight:900;">' + window.escapeHtml(window.currentUser.name || '') + '</div>' +
                 '<div style="font-size:14px;margin-top:4px;font-weight:700;">' + roleData.name + '</div>' +
             '</div>' +
             '<div style="background:#0D0D0D;border-radius:10px;padding:14px;margin-bottom:14px;">' +
@@ -272,7 +268,6 @@
             return;
         }
 
-        // منع الـ hook المزدوج
         if (window.navigateTo.__permissionHooked) return;
 
         const originalNavigate = window.navigateTo;
@@ -298,7 +293,7 @@
     hookNavigateTo();
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 6: دوال require (تستخدم core.js)
+    // الجزء 6: دوال require
     // ═══════════════════════════════════════════════════════════
 
     window.requireDelete = function(actionName) {
@@ -363,6 +358,6 @@
     }
 
     window.__permissionsLoaded = true;
-    console.log('✅ permissions.js v2.0 جاهز');
+    console.log('✅ permissions.js v3.0 جاهز');
 
 })();
