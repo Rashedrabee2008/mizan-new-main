@@ -1,11 +1,9 @@
 // ============================================================
-// الميزان Pro - app.js v31.0 (نسخة نظيفة وخالية من الأخطاء)
+// الميزان Pro - app.js v32.0 (حفظ اللوجو والاسم باحترافية)
 // ============================================================
 
 (function() {
     'use strict';
-
-    console.log('📱 app.js v31.0 - بدء التشغيل');
 
     window.currentUser = null;
     window.currentSaleItems = [];
@@ -493,7 +491,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 5: بيانات الشركة واللوجو
+    // الجزء 5: بيانات الشركة واللوجو (الحفظ القوي)
     // ═══════════════════════════════════════════════════════════
 
     window.renderCompany = function() {
@@ -521,7 +519,7 @@
 
         if (!file.type.match('image.*')) {
             if (typeof window.showToast === 'function') {
-                window.showToast('⚠️ الرجاء اختيار صورة (JPG أو PNG)', 'error');
+                window.showToast('⚠️ الرجاء اختيار صورة', 'error');
             } else {
                 alert('⚠️ الرجاء اختيار صورة');
             }
@@ -538,7 +536,7 @@
             try {
                 localStorage.setItem('mizan_companyData', JSON.stringify(window.companyData));
             } catch (err) {
-                alert('⚠️ فشل الحفظ: الصورة كبيرة جداً');
+                if (typeof window.showToast === 'function') window.showToast('⚠️ فشل الحفظ: الصورة كبيرة جداً', 'error');
                 return;
             }
 
@@ -557,8 +555,6 @@
 
             if (typeof window.showToast === 'function') {
                 window.showToast('✅ تم رفع الشعار', 'success');
-            } else {
-                alert('✅ تم رفع الشعار');
             }
 
             event.target.value = '';
@@ -626,7 +622,12 @@
             updatedAt: new Date().toISOString()
         };
 
-        localStorage.setItem('mizan_companyData', JSON.stringify(window.companyData));
+        try {
+            localStorage.setItem('mizan_companyData', JSON.stringify(window.companyData));
+        } catch(e) {
+            if (typeof window.showToast === 'function') window.showToast('⚠️ فشل الحفظ', 'error');
+            return;
+        }
 
         if (window.DataStore && window.DataStore.set) {
             window.DataStore.set('companyData', window.companyData);
@@ -781,8 +782,6 @@
     };
 
     window.init = function() {
-        console.log('🚀 بدء تهيئة التطبيق...');
-
         if (typeof window.seedInitialData === 'function') window.seedInitialData();
 
         if (window.DataStore && window.DataStore.loadAll) window.DataStore.loadAll();
@@ -818,24 +817,19 @@
         }
 
         setTimeout(window.populateLoginUsers, 500);
-
+        
         setTimeout(function() {
             if (typeof window.initCloudSync === 'function') window.initCloudSync();
         }, 2000);
 
         if (window.EventBus) window.EventBus.emit('app:initialized');
-        console.log('✅ التطبيق جاهز');
     };
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            window.init();
-        });
+        document.addEventListener('DOMContentLoaded', function() { window.init(); });
     } else {
         window.init();
     }
 
     window.__appLoaded = true;
-    console.log('✅ app.js v31.0 كامل جاهز');
-
 })();
