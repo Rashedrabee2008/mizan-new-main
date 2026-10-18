@@ -1,11 +1,12 @@
 // ============================================================
-// الميزان Pro - activation.js v5.1 (مُصلَّح)
+// الميزان Pro - activation.js v6.0 (حل جذري للتفعيل)
+// 🔧 التعديلات: تدفق تفعيل متزامن + حماية من التعارض مع app.js
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🔐 activation.js v5.1 - بدء التحميل');
+    console.log('🔐 activation.js v6.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: الإعدادات
@@ -25,23 +26,23 @@
     const CACHED_CODES_KEY = 'mizan_cached_codes';
     const ACTIVATION_PATH = 'activations';
 
+    // 🔧 علامة عامة تُبلّغ app.js بنتيجة التفعيل
+    window.__activationPassed = undefined;
+    window.__activationChecked = false;
+
     // ═══════════════════════════════════════════════════════════
     // الجزء 2: تهيئة Firebase
     // ═══════════════════════════════════════════════════════════
 
     function ensureFirebaseInitialized() {
-        if (typeof firebase === 'undefined') {
-            return false;
-        }
+        if (typeof firebase === 'undefined') return false;
 
         try {
             if (!firebase.apps || firebase.apps.length === 0) {
-                // ⚡ استخدم إعدادات data.js لو موجودة، وإلا نستخدم الـ fallback
                 const config = window.FIREBASE_CONFIG || FIREBASE_CONFIG_FALLBACK;
                 firebase.initializeApp(config);
                 console.log('✅ Firebase تم تهيئته من activation.js');
             }
-
             window.firebaseReady = true;
             return true;
         } catch (e) {
@@ -64,6 +65,14 @@
     // الجزء 3: التحقق من التفعيل
     // ═══════════════════════════════════════════════════════════
 
+    function getCurrentStoreId() {
+        if (typeof window.getStoreId === 'function') {
+            return window.getStoreId();
+        }
+        return localStorage.getItem('mizan_store_id_v18') || '';
+    }
+
+    // 🔧 نسخة محسّنة: لا ترفض التفعيل بسبب تغيّر storeId
     function isActivated() {
         try {
             const data = localStorage.getItem(ACTIVATION_KEY);
@@ -72,20 +81,16 @@
             const parsed = JSON.parse(data);
             if (!parsed.code && !parsed.storeId) return false;
 
+            // ✅ لا ترفض بسبب تغيّر storeId — فقط سجّل تحذيراً
             const currentStoreId = getCurrentStoreId();
-            if (parsed.storeId && parsed.storeId !== currentStoreId) return false;
+            if (parsed.storeId && parsed.storeId !== currentStoreId) {
+                console.warn('⚠️ storeId تغيّر — التفعيل لا يزال صالحاً');
+            }
 
             return true;
         } catch (e) {
             return false;
         }
-    }
-
-    function getCurrentStoreId() {
-        if (typeof window.getStoreId === 'function') {
-            return window.getStoreId();
-        }
-        return localStorage.getItem('mizan_store_id_v18') || '';
     }
 
     function saveActivation(code) {
@@ -277,8 +282,16 @@
     function showActivationScreen() {
         const loginContainer = document.getElementById('loginContainer');
         const appContent = document.getElementById('appContent');
-        if (loginContainer) loginContainer.style.display = 'none';
+
+        // 🔧 إخفاء قوي لكلا الشاشتين
+        if (loginContainer) {
+            loginContainer.style.display = 'none';
+            loginContainer.classList.add('hidden');
+        }
         if (appContent) appContent.style.display = 'none';
+
+        // 🔧 علامة على body لمنع app.js من إظهار شاشة الدخول
+        document.body.setAttribute('data-activation-screen', 'true');
 
         let activationScreen = document.getElementById('activationScreen');
         if (!activationScreen) {
@@ -347,6 +360,15 @@
             setTimeout(function() { input.focus(); }, 300);
         }
         if (errorEl) errorEl.classList.remove('show');
+    }
+
+    // 🔧 دالة لإخفاء شاشة التفعيل عند النجاح
+    function hideActivationScreen() {
+        const activationScreen = document.getElementById('activationScreen');
+        if (activationScreen) {
+            activationScreen.style.display = 'none';
+        }
+        document.body.removeAttribute('data-activation-screen');
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -477,6 +499,8 @@
             window.showToast('✅ جاري تحميل بيانات متجرك...', 'success');
         }
 
+        // 🔧 أخفِ شاشة التفعيل قبل إعادة التحميل
+        hideActivationScreen();
         setTimeout(function() { location.reload(); }, 1200);
     }
 
@@ -532,8 +556,12 @@
             return;
         }
 
+        // 🔧 التحقق من نجاح التسجيل — لكن لا نمنع التفعيل لو فشل (offline)
         if (!result.fromCache) {
-            await registerCodeUsage(code);
+            const registered = await registerCodeUsage(code);
+            if (!registered) {
+                console.warn('⚠️ فشل تسجيل الاستخدام سحابياً — سيتم الحفظ محلياً');
+            }
         }
 
         saveActivation(code);
@@ -545,9 +573,14 @@
             window.showToast('✅ تم تفعيل التطبيق بنجاح', 'success');
         }
 
+        // 🔧 أخفِ شاشة التفعيل وأبلغ النظام
+        hideActivationScreen();
+        window.__activationPassed = true;
+        if (window.EventBus) window.EventBus.emit('activation:passed');
+
         setTimeout(function() {
-            const code = input.value.trim().toUpperCase();
-            window.location.href = 'thanks.html?code=' + encodeURIComponent(code);
+            const finalCode = input.value.trim().toUpperCase();
+            window.location.href = 'thanks.html?code=' + encodeURIComponent(finalCode);
         }, 1200);
     }
 
@@ -564,17 +597,41 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 13: فحص التفعيل عند البدء
+    // الجزء 13: فحص التفعيل عند البدء (مُعاد هيكلته)
     // ═══════════════════════════════════════════════════════════
 
     function checkActivation() {
+        // 🔧 حالة 1: التطبيق مفعّل مسبقاً
         if (isActivated()) {
             console.log('✅ التطبيق مفعّل');
+            hideActivationScreen();
+            window.__activationPassed = true;
+            window.__activationChecked = true;
+            if (window.EventBus) window.EventBus.emit('activation:passed');
             return true;
         }
 
+        // 🔧 حالة 2: تحقق من وجود كود معلّق من thanks.html
+        try {
+            const pendingCode = localStorage.getItem('mizan_pending_activation');
+            if (pendingCode && pendingCode.indexOf('MIZAN-') === 0) {
+                console.log('🔐 كود معلّق من thanks.html — تطبيقه تلقائياً:', pendingCode);
+                saveActivation(pendingCode);
+                localStorage.removeItem('mizan_pending_activation');
+                hideActivationScreen();
+                window.__activationPassed = true;
+                window.__activationChecked = true;
+                if (window.EventBus) window.EventBus.emit('activation:passed');
+                return true;
+            }
+        } catch (e) {}
+
+        // 🔧 حالة 3: التطبيق غير مفعّل
         console.log('🔐 عرض شاشة التفعيل');
+        window.__activationPassed = false;
+        window.__activationChecked = true;
         showActivationScreen();
+        if (window.EventBus) window.EventBus.emit('activation:failed');
         return false;
     }
 
@@ -618,18 +675,18 @@
         verifyStore: verifyExistingStore,
         linkStore: linkToExistingStore,
         show: showActivationScreen,
+        hide: hideActivationScreen,
         showExisting: showExistingStoreDialog,
         initFirebase: ensureFirebaseInitialized
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 16: التحميل
+    // الجزء 16: التحميل — 🔧 فوري وليس بعد 1500ms
     // ═══════════════════════════════════════════════════════════
 
     function init() {
-        setTimeout(function() {
-            checkActivation();
-        }, 1500);
+        // 🔧 فحص فوري — لا ننتظر
+        checkActivation();
     }
 
     if (document.readyState === 'loading') {
@@ -638,7 +695,15 @@
         init();
     }
 
+    // 🔧 فحص احتياطي بعد 2 ثانية (في حال تغيّر localStorage من تاب آخر)
+    setTimeout(function() {
+        if (window.__activationPassed === false && isActivated()) {
+            console.log('🔄 التفعيل تم من تاب آخر — إعادة التحميل');
+            location.reload();
+        }
+    }, 2000);
+
     window.__activationLoaded = true;
-    console.log('✅ activation.js v5.1 جاهز');
+    console.log('✅ activation.js v6.0 جاهز');
 
 })();
