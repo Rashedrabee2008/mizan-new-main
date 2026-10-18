@@ -2209,61 +2209,59 @@
         return;
     }
 
-    // ⚡ جلب بيانات الشركة واللوجو من الذاكرة
-    const company = window.companyData || {};
-    const logoHtml = company.logo 
-        ? '<img src="' + company.logo + '" style="max-width:150px;max-height:150px;display:block;margin:0 auto 10px auto;object-fit:contain;" />' 
-        : '<div style="font-size:40px;margin-bottom:10px;">⚖️</div>';
+    // ⚡ قراءة اللوجو من الذاكرة القوية (IndexedDB)
+    const request = indexedDB.open('MizanDB', 1);
+    request.onsuccess = function(e) {
+        const db = e.target.result;
+        const transaction = db.transaction('settings', 'readonly');
+        const store = transaction.objectStore('settings');
+        const getReq = store.get('companyLogo');
+        
+        getReq.onsuccess = function() {
+            const logoData = getReq.result || '';
+            const company = window.companyData || {};
+            const companyName = company.name || 'الميزان Pro';
+            
+            const logoHtml = logoData 
+                ? '<img src="' + logoData + '" style="max-width:150px;max-height:150px;display:block;margin:0 auto 10px auto;object-fit:contain;" />' 
+                : '<div style="font-size:40px;margin-bottom:10px;">⚖️</div>';
 
-    const companyName = company.name || 'الميزان Pro';
-    const companyPhone = company.phone ? '📞 ' + company.phone : '';
-    const companyAddress = company.address ? '📍 ' + company.address : '';
+            const reportNames = {
+                'daily': 'تقرير يومي', 'monthly': 'تقرير شهري', 'yearly': 'تقرير سنوي',
+                'sellers': 'تقرير البائعين', 'products': 'تقرير المنتجات', 'customers': 'تقرير العملاء'
+            };
 
-    const reportNames = {
-        'daily': 'تقرير يومي',
-        'monthly': 'تقرير شهري',
-        'yearly': 'تقرير سنوي',
-        'sellers': 'تقرير البائعين',
-        'products': 'تقرير المنتجات',
-        'customers': 'تقرير العملاء'
+            w.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">' +
+                '<title>' + (reportNames[window.currentReport] || 'تقرير') + '</title>' +
+                '<style>body{font-family:Arial;padding:20px;background:#fff;color:#000;}' +
+                '.header{text-align:center;margin-bottom:20px;border-bottom:3px solid #C9A94E;padding-bottom:15px;}' +
+                '.header h1{color:#C9A94E;margin:5px 0;font-size:28px;font-weight:900;}' +
+                '.header p{color:#555;font-size:12px;margin:3px 0;}' +
+                'table{width:100%;border-collapse:collapse;margin-top:20px;}' +
+                'th{background:#C9A94E;color:#fff;padding:10px;text-align:right;font-size:13px;}' +
+                'td{padding:8px;border-bottom:1px solid #ddd;font-size:13px;}' +
+                '.report-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}' +
+                '.report-stat{background:#f9f9f9;padding:12px;border-radius:8px;text-align:center;border-right:4px solid #C9A94E;}' +
+                '.report-stat .num{font-size:20px;font-weight:900;color:#C9A94E;}' +
+                '.report-stat .lbl{font-size:12px;color:#666;}' +
+                '.report-table-header,.report-table-row{display:grid;gap:6px;padding:8px;border-bottom:1px solid #ddd;}' +
+                '.report-table-header{background:#C9A94E;color:#fff;font-weight:900;font-size:12px;}' +
+                '.footer{text-align:center;margin-top:30px;padding-top:20px;border-top:2px dashed #ddd;font-size:12px;color:#666;}' +
+                '</style></head><body>' +
+                '<div class="header">' + logoHtml +
+                    '<h1>' + window.escapeHtml(companyName) + '</h1>' +
+                    (company.phone ? '<p>📞 ' + window.escapeHtml(company.phone) + '</p>' : '') +
+                    (company.address ? '<p>📍 ' + window.escapeHtml(company.address) + '</p>' : '') +
+                    '<p style="margin-top:10px;font-weight:bold;color:#C9A94E;">' + (reportNames[window.currentReport] || '') + ' - ' + window.getTodayDate() + '</p>' +
+                '</div>' +
+                container.innerHTML +
+                '<div class="footer">' + window.escapeHtml(company.footer || 'شكراً لتعاملكم معنا 🌟') + '</div>' +
+                '<script>window.onload=function(){setTimeout(function(){window.print();},500);};<\/script>' +
+                '</body></html>');
+
+            w.document.close();
+        };
     };
-
-    w.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">' +
-        '<title>' + (reportNames[window.currentReport] || 'تقرير') + '</title>' +
-        '<style>body{font-family:Arial;padding:20px;background:#fff;color:#000;}' +
-        '.header{text-align:center;margin-bottom:20px;border-bottom:3px solid #C9A94E;padding-bottom:15px;}' +
-        '.header h1{color:#C9A94E;margin:5px 0;font-size:28px;font-weight:900;}' +
-        '.header p{color:#555;font-size:12px;margin:3px 0;}' +
-        'table{width:100%;border-collapse:collapse;margin-top:20px;}' +
-        'th{background:#C9A94E;color:#fff;padding:10px;text-align:right;font-size:13px;}' +
-        'td{padding:8px;border-bottom:1px solid #ddd;font-size:13px;}' +
-        '.report-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}' +
-        '.report-stat{background:#f9f9f9;padding:12px;border-radius:8px;text-align:center;border-right:4px solid #C9A94E;}' +
-        '.report-stat .num{font-size:20px;font-weight:900;color:#C9A94E;}' +
-        '.report-stat .lbl{font-size:12px;color:#666;}' +
-        '.report-table-header,.report-table-row{display:grid;gap:6px;padding:8px;border-bottom:1px solid #ddd;}' +
-        '.report-table-header{background:#C9A94E;color:#fff;font-weight:900;font-size:12px;}' +
-        '.footer{text-align:center;margin-top:30px;padding-top:20px;border-top:2px dashed #ddd;font-size:12px;color:#666;}' +
-        '</style></head><body>' +
-        
-        // ⚡ الهيدر باللوجو والاسم الجديد
-        '<div class="header">' +
-            logoHtml +
-            '<h1>' + window.escapeHtml(companyName) + '</h1>' +
-            '<p>' + companyPhone + '</p>' +
-            '<p>' + companyAddress + '</p>' +
-            '<p style="margin-top:10px;font-weight:bold;color:#C9A94E;">' + (reportNames[window.currentReport] || '') + ' - ' + window.getTodayDate() + '</p>' +
-        '</div>' +
-        
-        container.innerHTML +
-        
-        '<div class="footer">' +
-            window.escapeHtml(company.footer || 'شكراً لتعاملكم معنا 🌟') +
-        '</div>' +
-        '<script>window.onload=function(){setTimeout(function(){window.print();},500);};<\/script>' +
-        '</body></html>');
-
-    w.document.close();
 };
 
     // ⚡ تصدير Excel
