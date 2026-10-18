@@ -51,7 +51,13 @@
         const headerCompany = document.getElementById('headerCompanyName');
         if (headerCompany) {
             headerCompany.textContent = companyName;
-        }
+            // ⚡ إجبار اللوجو إنه يظهر في الهيدر فوراً
+const headerLogo = document.getElementById('headerLogo');
+const defaultIcon = document.getElementById('headerDefaultIcon');
+if (currentLogo && currentLogo.trim() !== '') {
+    if(headerLogo) { headerLogo.src = currentLogo; headerLogo.style.display = 'block'; }
+    if(defaultIcon) { defaultIcon.style.display = 'none'; }
+}
 
         // 3. اللوجو في أي مكان تاني
         document.querySelectorAll('[data-logo]').forEach(function(el) {
