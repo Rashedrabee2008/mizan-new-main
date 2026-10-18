@@ -1,11 +1,9 @@
 // ============================================================
-// الميزان Pro - themes.js v2.0 (معدل عشان ميمسحش اللوجو)
+// الميزان Pro - themes.js v2.0 (نسخة مستقرة)
 // ============================================================
 
 (function() {
     'use strict';
-
-    console.log('🎨 themes.js v2.0 - بدء التحميل');
 
     const THEMES = {
         'gold': {
@@ -141,8 +139,5 @@
             if (typeof window.navigateTo === 'function') window.navigateTo('settings');
         }
     };
-
-    window.__themesLoaded = true;
-    console.log('✅ themes.js v2.0 جاهز');
 
 })();
