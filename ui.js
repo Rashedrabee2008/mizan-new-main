@@ -1,12 +1,12 @@
 // ============================================================
-// الميزان Pro - ui.js v19.0 (مُصلَّح)
-// التنقل + Modal + Toast + القوائم + تحديث الواجهات
+// الميزان Pro - ui.js v20.0 (إصلاح شامل)
+// 🔧 navigateTo محسّنة + حماية من التعارض + تحديثات تلقائية
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🎨 ui.js v19.0 - بدء التحميل');
+    console.log('🎨 ui.js v20.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: Toast
@@ -56,7 +56,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 3: التنقل — النسخة الوحيدة (محسّنة)
+    // الجزء 3: التنقل (محسّن)
     // ═══════════════════════════════════════════════════════════
 
     const PAGE_REFRESHERS = {
@@ -65,8 +65,7 @@
         'inventory':    ['renderProducts', 'populateSaleProducts', 'populatePurProducts'],
         'cashier':      ['populateSaleProducts', 'populateSaleCustomers',
                          'populateCashBoxDropdowns', 'populateWarehouseField',
-                         'renderCashier', 'updateSaleTotals', 'updateSalePrice',
-                         'updateInvoiceHeader'],
+                         'renderCashier', 'updateSaleTotals', 'updateInvoiceHeader'],
         'purchases':    ['populatePurProducts', 'populatePurSuppliers',
                          'populateCashBoxDropdowns', 'populateWarehouseField',
                          'renderPurItems', 'updatePurTotals',
@@ -83,7 +82,7 @@
                          'populateCashBoxDropdowns', 'populateWarehouseField',
                          'updateReturnsStats', 'renderReturns'],
         'accounts':     ['renderAccounts', 'renderJournalEntries', 'updateAccountsStats'],
-        'erp':          ['renderWarehouses', 'renderBranches'],  // ✅ شيلنا renderCurrencies
+        'erp':          ['renderWarehouses', 'renderBranches'],
         'warehouses':   ['populateWarehouseDropdowns',
                          'renderWarehouseReceipts', 'renderWarehouseIssues',
                          'renderWarehouseTransfers', 'renderWarehouseAdjustments',
@@ -95,7 +94,7 @@
     };
 
     window.navigateTo = function(page) {
-        // ⚡ فحص الصلاحية
+        // فحص الصلاحية
         if (window.currentUser && typeof window.canAccessPage === 'function') {
             if (!window.canAccessPage(page)) {
                 if (typeof window.showToast === 'function') {
@@ -105,21 +104,17 @@
             }
         }
 
-        // إخفاء كل الصفحات
         document.querySelectorAll('.page-container').forEach(function(el) {
             el.classList.remove('active');
         });
 
-        // إظهار الصفحة المطلوبة
         const target = document.getElementById('page-' + page);
         if (target) target.classList.add('active');
 
-        // تفعيل زر التنقل
         document.querySelectorAll('.nav-item').forEach(function(el) {
             el.classList.toggle('active', el.dataset.page === page);
         });
 
-        // استدعاء دوال التحديث
         const refreshers = PAGE_REFRESHERS[page] || [];
         refreshers.forEach(function(fn) {
             if (typeof window[fn] === 'function') {
@@ -129,7 +124,6 @@
             }
         });
 
-        // إغلاق قائمة المزيد
         const moreMenu = document.getElementById('moreMenu');
         if (moreMenu && moreMenu.style.display !== 'none') {
             moreMenu.style.display = 'none';
@@ -226,11 +220,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 7: updateUserUI — ⚡ محذوفة (موجودة في core.js)
-    // ═══════════════════════════════════════════════════════════
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 8: ربط الأحداث
+    // الجزء 7: ربط الأحداث
     // ═══════════════════════════════════════════════════════════
 
     window.EventBus.on('data:changed', function(evt) {
@@ -271,7 +261,7 @@
     });
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 9: أدوات إضافية
+    // الجزء 8: أدوات إضافية
     // ═══════════════════════════════════════════════════════════
 
     window.setButtonLoading = function(btn, isLoading, loadingText) {
@@ -305,7 +295,7 @@
             box.innerHTML =
                 '<div style="font-size:52px;margin-bottom:12px;">⚠️</div>' +
                 '<h3 style="color:#E06060;margin-bottom:14px;">تأكيد</h3>' +
-                '<p style="color:#F5E6C8;margin-bottom:20px;line-height:1.7;white-space:pre-line;">' + message + '</p>' +
+                '<p style="color:#F5E6C8;margin-bottom:20px;line-height:1.7;white-space:pre-line;">' + window.escapeHtml(message) + '</p>' +
                 '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
                     '<button class="btn btn-secondary" id="confirmNo">❌ إلغاء</button>' +
                     '<button class="btn btn-danger" id="confirmYes">✅ نعم</button>' +
@@ -340,8 +330,8 @@
             box.style.maxWidth = '420px';
             box.innerHTML =
                 '<button class="modal-close" onclick="document.getElementById(\'modalOverlay\').classList.remove(\'show\')">&times;</button>' +
-                '<h3>' + message + '</h3>' +
-                '<input type="text" id="promptInput" value="' + (defaultValue || '') + '" style="width:100%;padding:11px;border-radius:10px;border:2px solid #3D3D3D;background:#0D0D0D;color:#F5E6C8;font-family:inherit;font-size:15px;box-sizing:border-box;margin-bottom:12px;" />' +
+                '<h3>' + window.escapeHtml(message) + '</h3>' +
+                '<input type="text" id="promptInput" value="' + window.escapeHtml(defaultValue || '') + '" style="width:100%;padding:11px;border-radius:10px;border:2px solid #3D3D3D;background:#0D0D0D;color:#F5E6C8;font-family:inherit;font-size:15px;box-sizing:border-box;margin-bottom:12px;" />' +
                 '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
                     '<button class="btn btn-secondary" id="promptNo">إلغاء</button>' +
                     '<button class="btn btn-primary" id="promptYes">موافق</button>' +
@@ -370,11 +360,213 @@
         });
     };
 
-    window.__uiLoaded = true;
-    console.log('✅ ui.js v19.0 جاهز');
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 9: عرض الخزائن
+    // ═══════════════════════════════════════════════════════════
+
+    window.renderCashBoxes = function() {
+        const container = document.getElementById('cashBoxesList');
+        if (!container) {
+            console.warn('⚠️ cashBoxesList مش موجود في الصفحة');
+            return;
+        }
+
+        const boxes = window.cashBoxes || [];
+
+        if (boxes.length === 0) {
+            container.innerHTML = '<div class="empty-state">' +
+                '<i class="fas fa-money-bill-wave"></i>' +
+                '<span>لا توجد خزائن</span>' +
+                '<p style="font-size:11px;color:#5D5D5D;margin-top:8px;">أضف خزنة جديدة من الإعدادات</p>' +
+            '</div>';
+            return;
+        }
+
+        let totalBalance = 0;
+        boxes.forEach(function(box) {
+            totalBalance += window.Balance.cashBox(box.id);
+        });
+
+        let html = '<div class="cash-boxes-summary">' +
+            '<div class="summary-item">' +
+                '<div class="summary-label">💰 إجمالي الخزائن</div>' +
+                '<div class="summary-value">' + window.formatMoney(totalBalance) + '</div>' +
+            '</div>' +
+            '<div class="summary-item">' +
+                '<div class="summary-label">📊 عدد الخزائن</div>' +
+                '<div class="summary-value">' + boxes.length + '</div>' +
+            '</div>' +
+        '</div>';
+
+        boxes.forEach(function(box) {
+            if (box.active === false) return;
+
+            const balance = window.Balance.cashBox(box.id);
+            const isNegative = balance < 0;
+            const icon = box.icon || (box.type === 'cash' ? '💵' : box.type === 'wallet' ? '📱' : box.type === 'bank' ? '🏦' : '💰');
+            const typeName = box.type === 'cash' ? 'نقدي' : box.type === 'wallet' ? 'محفظة إلكترونية' : box.type === 'bank' ? 'بنك' : 'أخرى';
+
+            html += '<div class="cash-box-card' + (box.isDefault ? ' default' : '') + '" style="margin-bottom:12px;">' +
+                '<div class="cash-box-header">' +
+                    '<div class="cash-box-icon">' + icon + '</div>' +
+                    '<div class="cash-box-info">' +
+                        '<div class="cash-box-name">' + window.escapeHtml(box.name) +
+                            (box.isDefault ? ' ⭐' : '') +
+                        '</div>' +
+                        '<div class="cash-box-type">' + typeName + '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="cash-box-balance">' +
+                    '<div class="balance-label">💰 الرصيد الحالي</div>' +
+                    '<div class="balance-value' + (isNegative ? ' negative' : '') + '">' +
+                        window.formatMoney(balance) + ' ج.م' +
+                    '</div>' +
+                '</div>' +
+                '<div class="cash-box-actions">' +
+                    '<button class="btn btn-info btn-sm" onclick="showCashBoxHistory(\'' + box.id + '\')" style="flex:1;">' +
+                        '<i class="fas fa-history"></i> الحركات' +
+                    '</button>' +
+                    '<button class="btn btn-success btn-sm" onclick="showAddCashBoxTransaction(\'' + box.id + '\')" style="flex:1;">' +
+                        '<i class="fas fa-plus"></i> إضافة' +
+                    '</button>' +
+                '</div>' +
+            '</div>';
+        });
+
+        container.innerHTML = html;
+    };
+
+    window.showCashBoxHistory = function(boxId) {
+        const box = (window.cashBoxes || []).find(function(b) { return String(b.id) === String(boxId); });
+        if (!box) return;
+
+        const transactions = (window.treasury || []).filter(function(t) {
+            return String(t.cashBoxId) === String(boxId);
+        }).sort(function(a, b) {
+            return (b.createdAt || '').localeCompare(a.createdAt || '');
+        }).slice(0, 50);
+
+        const balance = window.Balance.cashBox(boxId);
+        const icon = box.icon || '💰';
+
+        let html = '<button class="modal-close" onclick="closeModal()">&times;</button>' +
+            '<h3>' + icon + ' حركات ' + window.escapeHtml(box.name) + '</h3>' +
+            '<div style="background:linear-gradient(135deg,#C9A94E,#B8953A);border-radius:10px;padding:14px;text-align:center;color:#0D0D0D;margin-bottom:12px;">' +
+                '<div style="font-size:11px;">الرصيد الحالي</div>' +
+                '<div style="font-size:24px;font-weight:900;font-family:monospace;">' + window.formatMoney(balance) + ' ج.م</div>' +
+            '</div>';
+
+        if (transactions.length === 0) {
+            html += '<div class="empty-state"><i class="fas fa-history"></i><span>لا توجد حركات</span></div>';
+        } else {
+            html += '<div style="max-height:400px;overflow-y:auto;">';
+            transactions.forEach(function(t) {
+                const isDep = t.type === 'deposit';
+                const color = isDep ? '#2D8F5E' : '#E06060';
+                const icons = {
+                    'sale': '💰', 'purchase': '🛒', 'expense': '💸',
+                    'collect': '💵', 'pay': '💳', 'manual': '✋',
+                    'return': '🔄', 'salary': '👤'
+                };
+                const refIcon = icons[t.refType] || '📋';
+
+                html += '<div style="background:#0D0D0D;border-radius:8px;padding:10px;margin-bottom:6px;border-right:3px solid ' + color + ';">' +
+                    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
+                        '<span style="color:#F5E6C8;font-size:12px;">' + refIcon + ' ' + window.escapeHtml(t.note || '') + '</span>' +
+                        '<span style="color:' + color + ';font-weight:900;font-size:13px;font-family:monospace;">' +
+                            (isDep ? '+' : '-') + window.formatMoney(t.amount) +
+                        '</span>' +
+                    '</div>' +
+                    '<div style="color:#A89070;font-size:10px;">📅 ' + (t.date || '') + ' • 🕐 ' + (t.time || '') + '</div>' +
+                '</div>';
+            });
+            html += '</div>';
+        }
+
+        html += '<button class="btn btn-secondary btn-block" onclick="closeModal()" style="margin-top:12px;">إغلاق</button>';
+        window.openModal(html);
+    };
+
+    window.showAddCashBoxTransaction = function(boxId) {
+        const box = (window.cashBoxes || []).find(function(b) { return String(b.id) === String(boxId); });
+        if (!box) return;
+
+        const icon = box.icon || '💰';
+
+        const html = '<button class="modal-close" onclick="closeModal()">&times;</button>' +
+            '<h3>' + icon + ' إضافة حركة - ' + window.escapeHtml(box.name) + '</h3>' +
+            '<div class="form-group">' +
+                '<label>النوع</label>' +
+                '<select id="cbTransType" class="pos-select">' +
+                    '<option value="deposit">💚 إيداع</option>' +
+                    '<option value="withdraw">❤️ سحب</option>' +
+                '</select>' +
+            '</div>' +
+            '<div class="form-group">' +
+                '<label>المبلغ *</label>' +
+                '<input type="number" id="cbTransAmount" step="0.01" min="0" placeholder="0.00" />' +
+            '</div>' +
+            '<div class="form-group">' +
+                '<label>البيان *</label>' +
+                '<input type="text" id="cbTransNote" placeholder="البيان..." />' +
+            '</div>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
+                '<button class="btn btn-success" onclick="saveCashBoxTransaction(\'' + boxId + '\')">' +
+                    '<i class="fas fa-check"></i> حفظ' +
+                '</button>' +
+                '<button class="btn btn-secondary" onclick="closeModal()">إلغاء</button>' +
+            '</div>';
+
+        window.openModal(html);
+    };
+
+    window.saveCashBoxTransaction = function(boxId) {
+        const type = document.getElementById('cbTransType') ? document.getElementById('cbTransType').value : 'deposit';
+        const amount = parseFloat(document.getElementById('cbTransAmount') ? document.getElementById('cbTransAmount').value : 0) || 0;
+        const note = document.getElementById('cbTransNote') ? document.getElementById('cbTransNote').value.trim() : '';
+
+        if (amount <= 0) {
+            window.showToast('⚠️ أدخل مبلغ صحيح', 'error');
+            return;
+        }
+        if (!note) {
+            window.showToast('⚠️ أدخل البيان', 'error');
+            return;
+        }
+
+        const box = (window.cashBoxes || []).find(function(b) { return String(b.id) === String(boxId); });
+
+        if (type === 'withdraw') {
+            const balance = window.Balance.cashBox(boxId);
+            if (balance < amount) {
+                window.showToast('⚠️ رصيد الخزنة غير كافٍ (المتاح: ' + window.formatMoney(balance) + ' ج.م)', 'error');
+                return;
+            }
+        }
+
+        window.DataStore.add('treasury', {
+            id: window.generateId('tr_'),
+            type: type,
+            amount: amount,
+            note: note,
+            cashBoxId: boxId,
+            cashBoxName: box ? box.name : '',
+            refType: 'manual',
+            refId: null,
+            date: window.getTodayDate(),
+            time: window.getNowTime()
+        });
+
+        window.showToast('✅ تم تسجيل الحركة', 'success');
+        window.closeModal();
+
+        setTimeout(function() {
+            window.renderCashBoxes();
+        }, 300);
+    };
 
     // ═══════════════════════════════════════════════════════════
-    // ربط الصلاحيات
+    // الجزء 10: ربط الصلاحيات
     // ═══════════════════════════════════════════════════════════
 
     if (window.EventBus) {
@@ -391,7 +583,10 @@
         });
     }
 
-    // تحديث قائمة الإعلانات
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 11: تحديث قائمة الإعلانات
+    // ═══════════════════════════════════════════════════════════
+
     document.addEventListener('click', function(e) {
         if (e.target.closest('.nav-item[data-page="settings"]') ||
             e.target.closest('button[onclick*="settings"]') ||
@@ -410,221 +605,8 @@
             window.renderAdsList();
         }
     });
-// ═══════════════════════════════════════════════════════════
-// عرض الخزائن (renderCashBoxes) - جديدة
-// ═══════════════════════════════════════════════════════════
 
-window.renderCashBoxes = function() {
-    const container = document.getElementById('cashBoxesList');
-    if (!container) {
-        console.warn('⚠️ cashBoxesList مش موجود في الصفحة');
-        return;
-    }
+    window.__uiLoaded = true;
+    console.log('✅ ui.js v20.0 جاهز');
 
-    const boxes = window.cashBoxes || [];
-
-    if (boxes.length === 0) {
-        container.innerHTML = '<div class="empty-state">' +
-            '<i class="fas fa-money-bill-wave"></i>' +
-            '<span>لا توجد خزائن</span>' +
-            '<p style="font-size:11px;color:#5D5D5D;margin-top:8px;">أضف خزنة جديدة من الإعدادات</p>' +
-        '</div>';
-        return;
-    }
-
-    // حساب الإجمالي
-    let totalBalance = 0;
-    boxes.forEach(function(box) {
-        totalBalance += window.Balance.cashBox(box.id);
-    });
-
-    // بطاقة الإجمالي
-    let html = '<div class="cash-boxes-summary">' +
-        '<div class="summary-item">' +
-            '<div class="summary-label">💰 إجمالي الخزائن</div>' +
-            '<div class="summary-value">' + window.formatMoney(totalBalance) + '</div>' +
-        '</div>' +
-        '<div class="summary-item">' +
-            '<div class="summary-label">📊 عدد الخزائن</div>' +
-            '<div class="summary-value">' + boxes.length + '</div>' +
-        '</div>' +
-    '</div>';
-
-    // كل خزنة
-    boxes.forEach(function(box) {
-        if (box.active === false) return;
-
-        const balance = window.Balance.cashBox(box.id);
-        const isNegative = balance < 0;
-        const icon = box.icon || (box.type === 'cash' ? '💵' : box.type === 'wallet' ? '📱' : box.type === 'bank' ? '🏦' : '💰');
-        const typeName = box.type === 'cash' ? 'نقدي' : box.type === 'wallet' ? 'محفظة إلكترونية' : box.type === 'bank' ? 'بنك' : 'أخرى';
-
-        html += '<div class="cash-box-card' + (box.isDefault ? ' default' : '') + '" style="margin-bottom:12px;">' +
-            '<div class="cash-box-header">' +
-                '<div class="cash-box-icon">' + icon + '</div>' +
-                '<div class="cash-box-info">' +
-                    '<div class="cash-box-name">' + window.escapeHtml(box.name) +
-                        (box.isDefault ? ' ⭐' : '') +
-                    '</div>' +
-                    '<div class="cash-box-type">' + typeName + '</div>' +
-                '</div>' +
-            '</div>' +
-            '<div class="cash-box-balance">' +
-                '<div class="balance-label">💰 الرصيد الحالي</div>' +
-                '<div class="balance-value' + (isNegative ? ' negative' : '') + '">' +
-                    window.formatMoney(balance) + ' ج.م' +
-                '</div>' +
-            '</div>' +
-            '<div class="cash-box-actions">' +
-                '<button class="btn btn-info btn-sm" onclick="showCashBoxHistory(\'' + box.id + '\')" style="flex:1;">' +
-                    '<i class="fas fa-history"></i> الحركات' +
-                '</button>' +
-                '<button class="btn btn-success btn-sm" onclick="showAddCashBoxTransaction(\'' + box.id + '\')" style="flex:1;">' +
-                    '<i class="fas fa-plus"></i> إضافة' +
-                '</button>' +
-            '</div>' +
-        '</div>';
-    });
-
-    container.innerHTML = html;
-};
-
-// ═══════════════════════════════════════════════════════════
-// عرض حركات خزنة معينة
-// ═══════════════════════════════════════════════════════════
-
-window.showCashBoxHistory = function(boxId) {
-    const box = (window.cashBoxes || []).find(function(b) { return String(b.id) === String(boxId); });
-    if (!box) return;
-
-    const transactions = (window.treasury || []).filter(function(t) {
-        return String(t.cashBoxId) === String(boxId);
-    }).sort(function(a, b) {
-        return (b.createdAt || '').localeCompare(a.createdAt || '');
-    }).slice(0, 50);
-
-    const balance = window.Balance.cashBox(boxId);
-    const icon = box.icon || '💰';
-
-    let html = '<button class="modal-close" onclick="closeModal()">&times;</button>' +
-        '<h3>' + icon + ' حركات ' + window.escapeHtml(box.name) + '</h3>' +
-        '<div style="background:linear-gradient(135deg,#C9A94E,#B8953A);border-radius:10px;padding:14px;text-align:center;color:#0D0D0D;margin-bottom:12px;">' +
-            '<div style="font-size:11px;">الرصيد الحالي</div>' +
-            '<div style="font-size:24px;font-weight:900;font-family:monospace;">' + window.formatMoney(balance) + ' ج.م</div>' +
-        '</div>';
-
-    if (transactions.length === 0) {
-        html += '<div class="empty-state"><i class="fas fa-history"></i><span>لا توجد حركات</span></div>';
-    } else {
-        html += '<div style="max-height:400px;overflow-y:auto;">';
-        transactions.forEach(function(t) {
-            const isDep = t.type === 'deposit';
-            const color = isDep ? '#2D8F5E' : '#E06060';
-            const icons = {
-                'sale': '💰', 'purchase': '🛒', 'expense': '💸',
-                'collect': '💵', 'pay': '💳', 'manual': '✋',
-                'return': '🔄', 'salary': '👤'
-            };
-            const refIcon = icons[t.refType] || '📋';
-
-            html += '<div style="background:#0D0D0D;border-radius:8px;padding:10px;margin-bottom:6px;border-right:3px solid ' + color + ';">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
-                    '<span style="color:#F5E6C8;font-size:12px;">' + refIcon + ' ' + window.escapeHtml(t.note || '') + '</span>' +
-                    '<span style="color:' + color + ';font-weight:900;font-size:13px;font-family:monospace;">' +
-                        (isDep ? '+' : '-') + window.formatMoney(t.amount) +
-                    '</span>' +
-                '</div>' +
-                '<div style="color:#A89070;font-size:10px;">📅 ' + (t.date || '') + ' • 🕐 ' + (t.time || '') + '</div>' +
-            '</div>';
-        });
-        html += '</div>';
-    }
-
-    html += '<button class="btn btn-secondary btn-block" onclick="closeModal()" style="margin-top:12px;">إغلاق</button>';
-    window.openModal(html);
-};
-
-// ═══════════════════════════════════════════════════════════
-// نافذة إضافة حركة لخزنة
-// ═══════════════════════════════════════════════════════════
-
-window.showAddCashBoxTransaction = function(boxId) {
-    const box = (window.cashBoxes || []).find(function(b) { return String(b.id) === String(boxId); });
-    if (!box) return;
-
-    const icon = box.icon || '💰';
-
-    const html = '<button class="modal-close" onclick="closeModal()">&times;</button>' +
-        '<h3>' + icon + ' إضافة حركة - ' + window.escapeHtml(box.name) + '</h3>' +
-        '<div class="form-group">' +
-            '<label>النوع</label>' +
-            '<select id="cbTransType" class="pos-select">' +
-                '<option value="deposit">💚 إيداع</option>' +
-                '<option value="withdraw">❤️ سحب</option>' +
-            '</select>' +
-        '</div>' +
-        '<div class="form-group">' +
-            '<label>المبلغ *</label>' +
-            '<input type="number" id="cbTransAmount" step="0.01" min="0" placeholder="0.00" />' +
-        '</div>' +
-        '<div class="form-group">' +
-            '<label>البيان *</label>' +
-            '<input type="text" id="cbTransNote" placeholder="البيان..." />' +
-        '</div>' +
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
-            '<button class="btn btn-success" onclick="saveCashBoxTransaction(\'' + boxId + '\')">' +
-                '<i class="fas fa-check"></i> حفظ' +
-            '</button>' +
-            '<button class="btn btn-secondary" onclick="closeModal()">إلغاء</button>' +
-        '</div>';
-
-    window.openModal(html);
-};
-
-window.saveCashBoxTransaction = function(boxId) {
-    const type = document.getElementById('cbTransType') ? document.getElementById('cbTransType').value : 'deposit';
-    const amount = parseFloat(document.getElementById('cbTransAmount') ? document.getElementById('cbTransAmount').value : 0) || 0;
-    const note = document.getElementById('cbTransNote') ? document.getElementById('cbTransNote').value.trim() : '';
-
-    if (amount <= 0) {
-        window.showToast('⚠️ أدخل مبلغ صحيح', 'error');
-        return;
-    }
-    if (!note) {
-        window.showToast('⚠️ أدخل البيان', 'error');
-        return;
-    }
-
-    const box = (window.cashBoxes || []).find(function(b) { return String(b.id) === String(boxId); });
-
-    // فحص الرصيد لو سحب
-    if (type === 'withdraw') {
-        const balance = window.Balance.cashBox(boxId);
-        if (balance < amount) {
-            window.showToast('⚠️ رصيد الخزنة غير كافٍ (المتاح: ' + window.formatMoney(balance) + ' ج.م)', 'error');
-            return;
-        }
-    }
-
-    window.DataStore.add('treasury', {
-        id: window.generateId('tr_'),
-        type: type,
-        amount: amount,
-        note: note,
-        cashBoxId: boxId,
-        cashBoxName: box ? box.name : '',
-        refType: 'manual',
-        refId: null,
-        date: window.getTodayDate(),
-        time: window.getNowTime()
-    });
-
-    window.showToast('✅ تم تسجيل الحركة', 'success');
-    window.closeModal();
-
-    setTimeout(function() {
-        window.renderCashBoxes();
-    }, 300);
-};
-    
 })();
