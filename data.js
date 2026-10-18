@@ -1,12 +1,12 @@
 // ============================================================
-// الميزان Pro - data.js v2.1 (مُصلَّح)
-// طبقة البيانات + Firebase Sync + Multi-Tenant
+// الميزان Pro - data.js v3.0 (إصلاح شامل)
+// 🔧 Store ID ثابت + مزامنة محسّنة + حماية البيانات
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('💾 data.js v2.1 - بدء التحميل');
+    console.log('💾 data.js v3.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
     // الجزء 1: Firebase Config
@@ -41,7 +41,7 @@
     ];
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 3: Store ID
+    // الجزء 3: Store ID — 🔧 نسخة محصّنة
     // ═══════════════════════════════════════════════════════════
 
     const STORE_KEY = 'mizan_store_id_v18';
@@ -49,19 +49,38 @@
     window.getStoreId = function() {
         try {
             let storeId = localStorage.getItem(STORE_KEY);
+            
+            // 🔧 استعادة من sessionStorage إذا فُقد localStorage
             if (!storeId) {
-                storeId = 'store_' + window.generateId();
-                localStorage.setItem(STORE_KEY, storeId);
+                storeId = sessionStorage.getItem(STORE_KEY);
+                if (storeId) {
+                    console.warn('🔄 استعادة Store ID من sessionStorage:', storeId);
+                    localStorage.setItem(STORE_KEY, storeId);
+                }
             }
+            
+            // 🔧 توليد جديد فقط لو لم يوجد إطلاقاً
+            if (!storeId) {
+                storeId = 'store_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+                localStorage.setItem(STORE_KEY, storeId);
+                console.warn('🆕 تم توليد Store ID جديد:', storeId);
+                console.warn('⚠️ احفظ هذا الكود — ستحتاجه لاستعادة بياناتك!');
+            }
+            
+            // 🔧 نسخة احتياطية دائمة في sessionStorage
+            sessionStorage.setItem(STORE_KEY, storeId);
+            
             return storeId;
         } catch (e) {
-            return 'store_default';
+            console.error('❌ خطأ في getStoreId:', e);
+            return 'store_default_' + Date.now();
         }
     };
 
     window.setStoreId = function(storeId) {
         try {
             localStorage.setItem(STORE_KEY, storeId);
+            sessionStorage.setItem(STORE_KEY, storeId);
             return true;
         } catch (e) {
             return false;
@@ -227,7 +246,7 @@
             const data = {};
             window.SYNC_KEYS.forEach(function(key) { data[key] = window[key]; });
             return {
-                version: '2.1',
+                version: '3.0',
                 storeId: window.getStoreId(),
                 exportDate: new Date().toISOString(),
                 data: data
@@ -877,6 +896,6 @@
     window.seedInitialData();
 
     window.__dataLoaded = true;
-    console.log('✅ data.js v2.1 جاهز');
+    console.log('✅ data.js v3.0 جاهز');
 
 })();
