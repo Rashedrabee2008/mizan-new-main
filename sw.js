@@ -1,14 +1,10 @@
 // ============================================================
-// الميزان Pro - sw.js v1.0
-// Service Worker — PWA Offline Support
+// الميزان Pro - sw.js v2.0 (إصلاح شامل)
+// 🔧 Service Worker محسّن + Cache ديناميكي
 // ============================================================
 
-const CACHE_NAME = 'mizan-pro-v2.0.0';
-const RUNTIME_CACHE = 'mizan-runtime-v2.0.0';
-
-// ═══════════════════════════════════════════════════════════
-// الملفات الأساسية
-// ═══════════════════════════════════════════════════════════
+const CACHE_NAME = 'mizan-pro-v3.0.0';
+const RUNTIME_CACHE = 'mizan-runtime-v3.0.0';
 
 const CORE_FILES = [
     './',
@@ -31,14 +27,14 @@ const CORE_FILES = [
     './dashboard.js',
     './extras.js',
     './warehouses.js',
+    './sharabar.js',
 
-    // مكتبات خارجية
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
     'https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap'
 ];
 
 // ═══════════════════════════════════════════════════════════
-// Install — تخزين الملفات
+// Install
 // ═══════════════════════════════════════════════════════════
 
 self.addEventListener('install', function(event) {
@@ -63,7 +59,7 @@ self.addEventListener('install', function(event) {
 });
 
 // ═══════════════════════════════════════════════════════════
-// Activate — تنظيف النسخ القديمة
+// Activate
 // ═══════════════════════════════════════════════════════════
 
 self.addEventListener('activate', function(event) {
@@ -87,26 +83,23 @@ self.addEventListener('activate', function(event) {
 });
 
 // ═══════════════════════════════════════════════════════════
-// Fetch — اعتراض الطلبات
+// Fetch
 // ═══════════════════════════════════════════════════════════
 
 self.addEventListener('fetch', function(event) {
     const url = event.request.url;
     const method = event.request.method;
 
-    // تجاهل Firebase
     if (url.includes('firebase') ||
         url.includes('googleapis.com/identitytoolkit') ||
         url.includes('gstatic.com/firebasejs')) {
         return;
     }
 
-    // تجاهل الطلبات غير GET
     if (method !== 'GET') {
         return;
     }
 
-    // CDN → Cache First
     if (url.includes('cdnjs.cloudflare.com') ||
         url.includes('fonts.googleapis.com') ||
         url.includes('fonts.gstatic.com')) {
@@ -126,7 +119,6 @@ self.addEventListener('fetch', function(event) {
         return;
     }
 
-    // الملفات المحلية → Network First مع fallback للـ Cache
     event.respondWith(
         fetch(event.request)
             .then(function(response) {
@@ -142,7 +134,6 @@ self.addEventListener('fetch', function(event) {
                 return caches.match(event.request).then(function(response) {
                     if (response) return response;
 
-                    // لو التنقل، رجّع index.html
                     if (event.request.mode === 'navigate') {
                         return caches.match('./index.html');
                     }
@@ -208,7 +199,7 @@ async function notifyClientsToSync() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// Push Notifications (اختياري)
+// Push Notifications
 // ═══════════════════════════════════════════════════════════
 
 self.addEventListener('push', function(event) {
@@ -233,4 +224,4 @@ self.addEventListener('notificationclick', function(event) {
     );
 });
 
-console.log('✅ SW: جاهز');
+console.log('✅ SW v2.0: جاهز');
