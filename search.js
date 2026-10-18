@@ -1,12 +1,12 @@
 // ============================================================
-// الميزان Pro - search.js v6.0 (نهائي)
-// بحث ذكي + تحديث السعر تلقائياً
+// الميزان Pro - search.js v7.0 (إصلاح شامل)
+// 🔧 بحث ذكي + تحديث السعر تلقائياً + حماية
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🔍 search.js v6.0 - بدء التحميل');
+    console.log('🔍 search.js v7.0 - بدء التحميل');
 
     const SEARCH_CONFIG = {
         'customers': {
@@ -119,7 +119,6 @@
         return parts.join(' • ');
     }
 
-    // ⚡⚡⚡ الدالة المُصلَّحة - تحديث السعر بعد الاختيار
     function setSelectValue(selectEl, value, id) {
         if (!selectEl) return;
 
@@ -167,10 +166,8 @@
             selectEl.dispatchEvent(evt);
         }
 
-        // ⚡⚡⚡ الحل: تحديث السعر فوراً
         const targetId = selectEl.id;
 
-        // للبيع والمرتجعات: سعر البيع
         if (targetId === 'saleProduct' || targetId === 'retProduct') {
             const priceInput = document.getElementById(targetId === 'saleProduct' ? 'salePrice' : 'retPrice');
             if (priceInput) {
@@ -183,7 +180,6 @@
             }
         }
 
-        // للمشتريات: سعر الشراء
         if (targetId === 'purProduct') {
             const priceInput = document.getElementById('purPrice');
             if (priceInput) {
@@ -196,14 +192,12 @@
             }
         }
 
-        // للعميل: تحديث المديونية
         if (targetId === 'collectCustomer') {
             setTimeout(function() {
                 if (typeof window.updateCollectInfo === 'function') window.updateCollectInfo();
             }, 50);
         }
 
-        // للمورد: تحديث المديونية
         if (targetId === 'paySupplier') {
             setTimeout(function() {
                 if (typeof window.updatePayInfo === 'function') window.updatePayInfo();
@@ -424,6 +418,6 @@
     }, 2000);
 
     window.__searchLoaded = true;
-    console.log('✅ search.js v6.0 جاهز');
+    console.log('✅ search.js v7.0 جاهز');
 
 })();
