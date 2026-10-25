@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 تشخيص الميزان</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
+        body { background: #0D0D0D; color: #F5E6C8; padding: 12px; min-height: 100vh; }
+        h1 { color: #C9A94E; font-size: 20px; margin-bottom: 12px; text-align: center; }
+        .card { background: #1C1C1C; border-radius: 12px; padding: 14px; margin-bottom: 10px; border-right: 4px solid #C9A94E; }
+        .card.ok { border-right-color: #2D8F5E; }
+        .card.fail { border-right-color: #E06060; }
+        .card.warn { border-right-color: #E6A830; }
+        .card h3 { font-size: 14px; margin-bottom: 8px; }
+        .card p { font-size: 12px; color: #A89070; line-height: 1.7; word-break: break-all; }
+        .status { font-size: 16px; font-weight: 900; margin-left: 6px; }
+        .ok .status { color: #2D8F5E; }
+        .fail .status { color: #E06060; }
+        .warn .status { color: #E6A830; }
+        .error-box { background: #2A0D0D; border: 1px solid #E06060; border-radius: 8px; padding: 10px; margin-bottom: 8px; font-size: 11px; color: #FCA5A5; word-break: break-all; max-height: 150px; overflow-y: auto; }
+        .btn { display: block; width: 100%; padding: 14px; background: linear-gradient(135deg, #2D8F5E, #1A7A4A); color: #fff; border: none; border-radius: 10px; font-family: inherit; font-size: 15px; font-weight: 900; cursor: pointer; margin-bottom: 10px; }
+        .btn-red { background: linear-gradient(135deg, #E06060, #C04040); }
+        .btn-gold { background: linear-gradient(135deg, #C9A94E, #B8953A); color: #0D0D0D; }
+        .btn-info { background: linear-gradient(135deg, #4A8AB5, #3A7AA5); }
+        #summary { background: linear-gradient(135deg, #C9A94E, #B8953A); border-radius: 12px; padding: 16px; text-align: center; color: #0D0D0D; margin-bottom: 12px; }
+        #summary h2 { font-size: 18px; margin-bottom: 6px; }
+        #summary p { font-size: 13px; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <h1>🔍 صفحة تشخيص الميزان Pro</h1>
+
+    <!-- الملخص -->
+    <div id="summary">
+        <h2>⏳ جاري الفحص...</h2>
+        <p>من فضلك استنى شوية</p>
+    </div>
+
+    <!-- الأزرار -->
+    <button class="btn" onclick="location.reload()">🔄 إعادة الفحص</button>
+    <button class="btn btn-info" onclick="location.href='app.html'">📱 فتح التطبيق</button>
+    <button class="btn btn-gold" onclick="copyReport()">📋 نسخ التقرير كامل</button>
+    <button class="btn btn-red" onclick="clearAndReload()">🗑️ مسح البيانات وإعادة الفحص</button>
+
+    <!-- النتائج -->
+    <div id="results"></div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════
+        // جمع الأخطاء
+        // ═══════════════════════════════════════════════════════
+
+        const errors = [];
+        const logs = [];
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        console.error = function() {
+            errors.push('❌ ' + Array.from(arguments).join(' '));
+            originalError.apply(console, arguments);
+        };
+
+        console.warn = function() {
+            logs.push('⚠️ ' + Array.from(arguments).join(' '));
+            originalWarn.apply(console, arguments);
+        };
+
+        window.addEventListener('error', function(e) {
+            errors.push('💥 ' + (e.message || 'خطأ') + ' في ' + (e.filename || 'ملف') + ' السطر ' + (e.lineno || '؟'));
+        });
+
+        window.addEventListener('unhandledrejection', function(e) {
+            errors.push('💥 Promise rejected: ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason)));
+        });
+
+        // ═══════════════════════════════════════════════════════
+        // فحص الملفات
+        // ═══════════════════════════════════════════════════════
+
+        const filesToCheck = [
+            'core.js', 'data.js', 'ui.js', 'app.js', 'pos.js',
+            'search.js', 'tenant.js', 'themes.js', 'permissions.js',
+            'inventory.js', 'accounting.js', 'dashboard.js', 'extras.js',
+            'warehouses.js', 'sharabar.js', 'activation.js'
+        ];
+
+        const globalsToCheck = [
+            { name: 'EventBus', check: 'window.EventBus' },
+            { name: 'DataStore', check: 'window.DataStore' },
+            { name: 'CloudSync', check: 'window.CloudSync' },
+            { name: 'showToast', check: 'typeof window.showToast' },
+            { name: 'openModal', check: 'typeof window.openModal' },
+            { name: 'navigateTo', check: 'typeof window.navigateTo' },
+            { name: 'checkLogin', check: 'typeof window.checkLogin' },
+            { name: 'saveProduct', check: 'typeof window.saveProduct' },
+            { name: 'saveSale', check: 'typeof window.saveSale' },
+            { name: 'renderAccounts', check: 'typeof window.renderAccounts' },
+            { name: 'updateDashboard', check: 'typeof window.updateDashboard' },
+            { name: '__coreLoaded', check: 'window.__coreLoaded' },
+            { name: '__dataLoaded', check: 'window.__dataLoaded' },
+            { name: '__appLoaded', check: 'window.__appLoaded' }
+        ];
+
+        const htmlElementsToCheck = [
+            'loginContainer', 'appContent', 'page-dashboard', 'page-inventory',
+            'page-cashier', 'page-accounts', 'page-reports', 'page-settings'
+        ];
+
+        // ═══════════════════════════════════════════════════════
+        // العرض
+        // ═══════════════════════════════════════════════════════
+
+        function renderResults() {
+            const results = document.getElementById('results');
+            let html = '';
+
+            // 1. البيانات الأساسية
+            html += '<div class="card ok">' +
+                '<h3><span class="status">✅</span> فحص بدء التشغيل</h3>' +
+                '<p>الصفحة اشتغلت، جاري فحص الملفات...</p>' +
+                '</div>';
+
+            // 2. الملفات
+            let filesHtml = '';
+            let filesOk = 0;
+            filesToCheck.forEach(function(file) {
+                filesHtml += '📄 ' + file + '<br>';
+                filesOk++;
+            });
+            html += '<div class="card ok">' +
+                '<h3><span class="status">✅</span> الملفات (' + filesOk + '/' + filesToCheck.length + ')</h3>' +
+                '<p>' + filesHtml + '</p>' +
+                '</div>';
+
+            // 3. المتغيرات العامة
+            let globalsHtml = '';
+            let globalsOk = 0;
+            let globalsFail = 0;
+            globalsToCheck.forEach(function(g) {
+                let ok = false;
+                try {
+                    ok = eval(g.check) !== undefined && eval(g.check) !== 'undefined' && eval(g.check) !== false;
+                } catch (e) { ok = false; }
+
+                if (ok) {
+                    globalsHtml += '<div style="color:#2D8F5E;">✅ ' + g.name + '</div>';
+                    globalsOk++;
+                } else {
+                    globalsHtml += '<div style="color:#E06060;">❌ ' + g.name + ' — غير معرّف</div>';
+                    globalsFail++;
+                }
+            });
+            html += '<div class="card ' + (globalsFail === 0 ? 'ok' : 'fail') + '">' +
+                '<h3><span class="status">' + (globalsFail === 0 ? '✅' : '❌') + '</span> المتغيرات العامة (' + globalsOk + '/' + globalsToCheck.length + ')</h3>' +
+                '<p style="font-size:13px;line-height:2;">' + globalsHtml + '</p>' +
+                '</div>';
+
+            // 4. عناصر HTML
+            let htmlHtml = '';
+            let htmlOk = 0;
+            let htmlFail = 0;
+            htmlElementsToCheck.forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) {
+                    htmlHtml += '<div style="color:#2D8F5E;">✅ ' + id + '</div>';
+                    htmlOk++;
+                } else {
+                    htmlHtml += '<div style="color:#E06060;">❌ ' + id + ' — غير موجود</div>';
+                    htmlFail++;
+                }
+            });
+            html += '<div class="card ' + (htmlFail === 0 ? 'ok' : 'fail') + '">' +
+                '<h3><span class="status">' + (htmlFail === 0 ? '✅' : '❌') + '</span> عناصر HTML (' + htmlOk + '/' + htmlElementsToCheck.length + ')</h3>' +
+                '<p style="font-size:13px;line-height:2;">' + htmlHtml + '</p>' +
+                '</div>';
+
+            // 5. البيانات
+            const dataChecks = [
+                { name: 'المستخدمين', count: (window.users || []).length, min: 1 },
+                { name: 'الخزائن', count: (window.cashBoxes || []).length, min: 1 },
+                { name: 'الحسابات', count: (window.accounts || []).length, min: 10 },
+                { name: 'المستودعات', count: (window.warehouses || []).length, min: 1 }
+            ];
+
+            let dataHtml = '';
+            let dataFail = 0;
+            dataChecks.forEach(function(d) {
+                const ok = d.count >= d.min;
+                if (!ok) dataFail++;
+                dataHtml += '<div style="color:' + (ok ? '#2D8F5E' : '#E06060') + ';">' +
+                    (ok ? '✅' : '❌') + ' ' + d.name + ': ' + d.count + ' (متوقع: ' + d.min + '+)' +
+                    '</div>';
+            });
+            html += '<div class="card ' + (dataFail === 0 ? 'ok' : 'fail') + '">' +
+                '<h3><span class="status">' + (dataFail === 0 ? '✅' : '❌') + '</span> البيانات الأساسية</h3>' +
+                '<p style="font-size:13px;line-height:2;">' + dataHtml + '</p>' +
+                '</div>';
+
+            // 6. Firebase
+            let fbHtml = '';
+            let fbOk = false;
+            try {
+                fbOk = typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0;
+            } catch (e) { fbOk = false; }
+
+            fbHtml = fbOk
+                ? '<div style="color:#2D8F5E;">✅ Firebase متصل</div>'
+                : '<div style="color:#E6A830;">⚠️ Firebase غير متصل (ممكن يكون بيتحمل)</div>';
+
+            html += '<div class="card ' + (fbOk ? 'ok' : 'warn') + '">' +
+                '<h3><span class="status">' + (fbOk ? '✅' : '⚠️') + '</span> Firebase</h3>' +
+                '<p style="font-size:13px;">' + fbHtml + '</p>' +
+                '</div>';
+
+            // 7. الأخطاء
+            if (errors.length === 0) {
+                html += '<div class="card ok">' +
+                    '<h3><span class="status">✅</span> لا توجد أخطاء</h3>' +
+                    '<p>التطبيق شغال تمام</p>' +
+                    '</div>';
+            } else {
+                let errHtml = '';
+                errors.forEach(function(err, i) {
+                    errHtml += '<div class="error-box">' + (i + 1) + '. ' + err + '</div>';
+                });
+                html += '<div class="card fail">' +
+                    '<h3><span class="status">❌</span> الأخطاء (' + errors.length + ')</h3>' +
+                    errHtml +
+                    '</div>';
+            }
+
+            // 8. التحذيرات
+            if (logs.length > 0) {
+                let logHtml = '';
+                logs.forEach(function(log) {
+                    logHtml += '<div style="color:#E6A830;font-size:11px;margin-bottom:4px;">' + log + '</div>';
+                });
+                html += '<div class="card warn">' +
+                    '<h3><span class="status">⚠️</span> تحذيرات (' + logs.length + ')</h3>' +
+                    logHtml +
+                    '</div>';
+            }
+
+            results.innerHTML = html;
+
+            // الملخص
+            const summary = document.getElementById('summary');
+            if (errors.length === 0) {
+                summary.style.background = 'linear-gradient(135deg, #2D8F5E, #1A7A4A)';
+                summary.style.color = '#fff';
+                summary.innerHTML = '<h2>✅ كل حاجة تمام</h2><p>التطبيق جاهز للعمل</p>';
+            } else {
+                summary.style.background = 'linear-gradient(135deg, #E06060, #C04040)';
+                summary.style.color = '#fff';
+                summary.innerHTML = '<h2>❌ فيه ' + errors.length + ' خطأ</h2><p>راجع التفاصيل تحت</p>';
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // نسخ التقرير
+        // ═══════════════════════════════════════════════════════
+
+        window.copyReport = function() {
+            let report = '🔍 تقرير تشخيص الميزان Pro\n';
+            report += '═══════════════════════\n\n';
+
+            report += '📅 التاريخ: ' + new Date().toLocaleString('ar-EG') + '\n\n';
+
+            report += '❌ الأخطاء (' + errors.length + '):\n';
+            if (errors.length === 0) {
+                report += 'لا توجد أخطاء\n';
+            } else {
+                errors.forEach(function(err, i) {
+                    report += (i + 1) + '. ' + err + '\n';
+                });
+            }
+
+            report += '\n⚠️ التحذيرات (' + logs.length + '):\n';
+            if (logs.length === 0) {
+                report += 'لا توجد تحذيرات\n';
+            } else {
+                logs.forEach(function(log, i) {
+                    report += (i + 1) + '. ' + log + '\n';
+                });
+            }
+
+            report += '\n✅ المتغيرات المحمّلة:\n';
+            globalsToCheck.forEach(function(g) {
+                let ok = false;
+                try { ok = eval(g.check) !== undefined; } catch (e) {}
+                report += (ok ? '✅ ' : '❌ ') + g.name + '\n';
+            });
+
+            report += '\n📊 البيانات:\n';
+            report += 'المستخدمين: ' + (window.users || []).length + '\n';
+            report += 'الخزائن: ' + (window.cashBoxes || []).length + '\n';
+            report += 'الحسابات: ' + (window.accounts || []).length + '\n';
+            report += 'المستودعات: ' + (window.warehouses || []).length + '\n';
+
+            report += '\n📱 معلومات الجهاز:\n';
+            report += 'User Agent: ' + navigator.userAgent + '\n';
+            report += 'اللغة: ' + navigator.language + '\n';
+            report += 'أونلاين: ' + (navigator.onLine ? 'نعم' : 'لا') + '\n';
+
+            // نسخ
+            const textarea = document.createElement('textarea');
+            textarea.value = report;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            textarea.setSelectionRange(0, 99999);
+
+            try {
+                document.execCommand('copy');
+                alert('✅ تم نسخ التقرير!\n\nالصقه في واتساب وابعتهولي');
+            } catch (e) {
+                // بديل
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(report).then(function() {
+                        alert('✅ تم نسخ التقرير!');
+                    }).catch(function() {
+                        alert('⚠️ فشل النسخ، اعمله يدوي');
+                    });
+                }
+            }
+
+            document.body.removeChild(textarea);
+        };
+
+        // ═══════════════════════════════════════════════════════
+        // مسح البيانات وإعادة التحميل
+        // ═══════════════════════════════════════════════════════
+
+        window.clearAndReload = function() {
+            if (!confirm('⚠️ هيتم مسح كل البيانات المحلية!\n\nهل أنت متأكد؟')) return;
+
+            try {
+                Object.keys(localStorage).forEach(function(key) {
+                    if (key.indexOf('mizan_') === 0 || key.indexOf('companyData') === 0) {
+                        localStorage.removeItem(key);
+                    }
+                });
+                alert('✅ تم المسح — جاري إعادة التحميل');
+                location.reload();
+            } catch (e) {
+                alert('❌ فشل المسح: ' + e.message);
+            }
+        };
+
+        // ═══════════════════════════════════════════════════════
+        // تحميل الملفات وفحصها
+        // ═══════════════════════════════════════════════════════
+
+        async function loadScript(src) {
+            return new Promise(function(resolve) {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = function() { resolve(true); };
+                script.onerror = function() {
+                    errors.push('❌ فشل تحميل الملف: ' + src);
+                    resolve(false);
+                };
+                document.head.appendChild(script);
+            });
+        }
+
+        async function runDiagnostic() {
+            console.log('🔍 بدء الفحص...');
+
+            // 1. حمّل Firebase SDK أولاً
+            await loadScript('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
+            await loadScript('https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js');
+
+            // 2. حمّل الملفات بالترتيب
+            const filesInOrder = [
+                'core.js',
+                'data.js',
+                'ui.js',
+                'app.js',
+                'pos.js',
+                'search.js',
+                'tenant.js',
+                'themes.js',
+                'permissions.js',
+                'inventory.js',
+                'accounting.js',
+                'dashboard.js',
+                'extras.js',
+                'warehouses.js',
+                'sharabar.js',
+                'activation.js'
+            ];
+
+            for (let i = 0; i < filesInOrder.length; i++) {
+                console.log('⏳ تحميل ' + filesInOrder[i]);
+                await loadScript(filesInOrder[i]);
+                await new Promise(function(r) { setTimeout(r, 100); });
+            }
+
+            // 3. انتظر شوية عشان الملفات تكمل
+            await new Promise(function(r) { setTimeout(r, 1000); });
+
+            // 4. اعرض النتائج
+            renderResults();
+
+            console.log('✅ انتهى الفحص');
+        }
+
+        // ابدأ الفحص
+        setTimeout(runDiagnostic, 500);
+
+    </script>
+
+</body>
+</html>
