@@ -1,16 +1,11 @@
 // ============================================================
-// الميزان Pro - data.js v2.1 (مصحح)
-// طبقة البيانات + Firebase Sync + Multi-Tenant
+// الميزان Pro - data.js v2.2 (إصلاح شامل)
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('💾 data.js v2.1 - بدء التحميل');
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 1: Firebase Config
-    // ═══════════════════════════════════════════════════════════
+    console.log('💾 data.js v2.2 - بدء التحميل');
 
     window.FIREBASE_CONFIG = {
         apiKey: "AIzaSyB3cnrETONbcrH1d_94w3TzeUEQIF0MSXw",
@@ -24,10 +19,6 @@
 
     window.firebaseReady = false;
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 2: المفاتيح المتزامنة
-    // ═══════════════════════════════════════════════════════════
-
     window.SYNC_KEYS = [
         'products', 'sales', 'purchases', 'expenses',
         'cashBoxes', 'customers', 'suppliers', 'users',
@@ -39,10 +30,6 @@
         'warehouseTransfers', 'warehouseAdjustments',
         'openingBalances'
     ];
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 3: Store ID
-    // ═══════════════════════════════════════════════════════════
 
     const STORE_KEY = 'mizan_store_id_v18';
 
@@ -65,18 +52,12 @@
         try {
             localStorage.setItem(STORE_KEY, storeId);
             return true;
-        } catch (e) {
-            return false;
-        }
+        } catch (e) { return false; }
     };
 
     window.getStorePath = function() {
         return 'stores/' + window.getStoreId();
     };
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 4: المتغيرات العامة
-    // ═══════════════════════════════════════════════════════════
 
     window.products = [];
     window.sales = [];
@@ -105,28 +86,12 @@
     window.openingBalances = [];
 
     window.companyData = {
-        name: 'الميزان',
-        tradeName: '',
-        phone: '',
-        phone2: '',
-        email: '',
-        website: '',
-        address: '',
-        city: '',
-        country: 'مصر',
-        tax: '',
-        commercial: '',
-        taxCard: '',
-        nationalId: '',
-        footer: 'شكراً لتعاملكم معنا 🌟',
-        primaryColor: '#C9A94E',
-        currency: 'ج.م',
-        logo: ''
+        name: 'الميزان', tradeName: '', phone: '', phone2: '',
+        email: '', website: '', address: '', city: '', country: 'مصر',
+        tax: '', commercial: '', taxCard: '', nationalId: '',
+        footer: 'شكراً لتعاملكم معنا 🌟', primaryColor: '#C9A94E',
+        currency: 'ج.م', logo: ''
     };
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 5: DataStore
-    // ═══════════════════════════════════════════════════════════
 
     const STORAGE_PREFIX = 'mizan_v18_';
 
@@ -137,7 +102,6 @@
 
         set: function(key, data) {
             window[key] = data;
-
             try {
                 localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(data));
             } catch (e) {
@@ -151,16 +115,11 @@
                 } catch (err) {}
             }
 
-            // ✅ حماية: CloudSync قد لا يكون معرّفاً بعد
             try {
-                if (window.CloudSync &&
-                    typeof window.CloudSync.isReady === 'function' &&
-                    window.CloudSync.isReady()) {
+                if (window.CloudSync && typeof window.CloudSync.isReady === 'function' && window.CloudSync.isReady()) {
                     window.CloudSync.push(key, data);
                 }
-            } catch (err) {
-                // تجاهل بصمت
-            }
+            } catch (err) {}
 
             return true;
         },
@@ -169,8 +128,7 @@
             const arr = window[key] || [];
             if (!item.id) {
                 item.id = (typeof window.generateId === 'function')
-                    ? window.generateId()
-                    : 'id_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+                    ? window.generateId() : 'id_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
             }
             if (!item.createdAt) item.createdAt = new Date().toISOString();
             arr.push(item);
@@ -183,7 +141,6 @@
             const arr = window[key] || [];
             const idx = arr.findIndex(function(item) { return String(item.id) === String(id); });
             if (idx === -1) return null;
-
             arr[idx] = Object.assign({}, arr[idx], updates);
             arr[idx].updatedAt = new Date().toISOString();
             window.DataStore.set(key, arr);
@@ -226,9 +183,7 @@
                             window.companyData = Object.assign({}, window.companyData, parsed);
                         }
                     }
-                } catch (e) {
-                    console.warn('⚠️ فشل تحميل ' + key);
-                }
+                } catch (e) {}
             });
         },
 
@@ -247,23 +202,14 @@
 
         clearAll: function() {
             window.SYNC_KEYS.forEach(function(key) {
-                try {
-                    localStorage.removeItem(STORAGE_PREFIX + key);
-                } catch (e) {}
+                try { localStorage.removeItem(STORAGE_PREFIX + key); } catch (e) {}
             });
         },
 
         export: function() {
             const data = {};
-            window.SYNC_KEYS.forEach(function(key) {
-                data[key] = window[key];
-            });
-            return {
-                version: '2.1',
-                storeId: window.getStoreId(),
-                exportDate: new Date().toISOString(),
-                data: data
-            };
+            window.SYNC_KEYS.forEach(function(key) { data[key] = window[key]; });
+            return { version: '2.2', storeId: window.getStoreId(), exportDate: new Date().toISOString(), data: data };
         },
 
         import: function(json) {
@@ -271,9 +217,7 @@
             Object.keys(json.data).forEach(function(key) {
                 if (window.SYNC_KEYS.indexOf(key) > -1) {
                     window[key] = json.data[key];
-                    try {
-                        localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(json.data[key]));
-                    } catch (e) {}
+                    try { localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(json.data[key])); } catch (e) {}
                 }
             });
             window.DataStore.saveAll();
@@ -281,10 +225,6 @@
             return true;
         }
     };
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 6: CloudSync
-    // ═══════════════════════════════════════════════════════════
 
     let firebaseListeners = [];
     let autoSyncTimer = null;
@@ -294,40 +234,23 @@
     window.CloudSync = {
         isReady: function() {
             try {
-                return typeof firebase !== 'undefined' &&
-                       firebase.apps &&
-                       firebase.apps.length > 0 &&
-                       window.firebaseReady === true;
-            } catch (e) {
-                return false;
-            }
+                return typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0 && window.firebaseReady === true;
+            } catch (e) { return false; }
         },
 
         init: function() {
             try {
-                if (typeof firebase === 'undefined') {
-                    console.warn('⚠️ Firebase SDK غير محمّل');
-                    return false;
-                }
-
+                if (typeof firebase === 'undefined') return false;
                 if (!firebase.apps || firebase.apps.length === 0) {
                     firebase.initializeApp(window.FIREBASE_CONFIG);
                 }
-
                 window.firebaseReady = true;
-                console.log('✅ Firebase جاهز');
-
                 window.CloudSync.setupConnectionMonitor();
                 window.CloudSync.startRealtime();
                 window.CloudSync.startAutoPush();
-
-                setTimeout(function() {
-                    window.CloudSync.pullAll(true);
-                }, 1000);
-
+                setTimeout(function() { window.CloudSync.pullAll(true); }, 1000);
                 return true;
             } catch (e) {
-                console.error('❌ Firebase init:', e.message);
                 window.firebaseReady = false;
                 return false;
             }
@@ -350,16 +273,11 @@
 
         push: function(key, data) {
             if (!window.CloudSync.isReady()) return;
-
             if (uploadTimers[key]) clearTimeout(uploadTimers[key]);
-
             uploadTimers[key] = setTimeout(function() {
                 try {
                     const path = window.getStorePath() + '/' + key;
-                    firebase.database().ref(path).set(data)
-                        .catch(function(e) {
-                            console.warn('⚠️ فشل رفع ' + key);
-                        });
+                    firebase.database().ref(path).set(data).catch(function() {});
                 } catch (e) {}
             }, 800);
         },
@@ -367,10 +285,8 @@
         pushAll: async function(silent) {
             if (!window.CloudSync.isReady()) return 0;
             if (syncInProgress) return 0;
-
             syncInProgress = true;
             let uploaded = 0;
-
             for (let i = 0; i < window.SYNC_KEYS.length; i++) {
                 const key = window.SYNC_KEYS[i];
                 try {
@@ -378,19 +294,15 @@
                     if (!data) continue;
                     if (Array.isArray(data) && data.length === 0) continue;
                     if (key === 'companyData' && (!data || Object.keys(data).length === 0)) continue;
-
                     const path = window.getStorePath() + '/' + key;
                     await firebase.database().ref(path).set(data);
                     uploaded++;
                 } catch (e) {}
             }
-
             syncInProgress = false;
-
             if (!silent && typeof window.showToast === 'function') {
                 window.showToast('☁️ تم رفع ' + uploaded + ' عنصر', 'success');
             }
-
             return uploaded;
         },
 
@@ -402,15 +314,12 @@
                 const data = snap.val();
                 if (!data) return null;
                 return Array.isArray(data) ? data : Object.values(data);
-            } catch (e) {
-                return null;
-            }
+            } catch (e) { return null; }
         },
 
         pullAll: async function(silent) {
             if (!window.CloudSync.isReady()) return 0;
             let pulled = 0;
-
             for (let i = 0; i < window.SYNC_KEYS.length; i++) {
                 const key = window.SYNC_KEYS[i];
                 try {
@@ -419,60 +328,40 @@
                         const localArr = window[key] || [];
                         if (arr.length >= localArr.length) {
                             window[key] = arr;
-                            try {
-                                localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(arr));
-                            } catch (e) {}
+                            try { localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(arr)); } catch (e) {}
                             pulled++;
                         }
                     }
                 } catch (e) {}
             }
-
-            if (pulled > 0 && typeof window.refreshAllUI === 'function') {
-                window.refreshAllUI();
-            }
-
+            if (pulled > 0 && typeof window.refreshAllUI === 'function') window.refreshAllUI();
             if (!silent && typeof window.showToast === 'function') {
                 window.showToast('📥 تم سحب ' + pulled + ' عنصر', 'success');
             }
-
             return pulled;
         },
 
         startRealtime: function() {
             if (!window.CloudSync.isReady()) return;
-
-            firebaseListeners.forEach(function(ref) {
-                try { ref.off(); } catch (e) {}
-            });
+            firebaseListeners.forEach(function(ref) { try { ref.off(); } catch (e) {} });
             firebaseListeners = [];
-
             window.SYNC_KEYS.forEach(function(key) {
                 try {
                     const path = window.getStorePath() + '/' + key;
                     const ref = firebase.database().ref(path);
-
                     ref.on('value', function(snap) {
                         const data = snap.val();
                         if (!data) return;
-
                         const arr = Array.isArray(data) ? data : Object.values(data);
                         if (arr.length === 0) return;
-
                         const currentStr = JSON.stringify(window[key] || []);
                         const newStr = JSON.stringify(arr);
-
                         if (currentStr !== newStr) {
                             window[key] = arr;
-                            try {
-                                localStorage.setItem(STORAGE_PREFIX + key, newStr);
-                            } catch (e) {}
-                            if (window.EventBus) {
-                                window.EventBus.emit('data:' + key + ':changed', arr);
-                            }
+                            try { localStorage.setItem(STORAGE_PREFIX + key, newStr); } catch (e) {}
+                            if (window.EventBus) window.EventBus.emit('data:' + key + ':changed', arr);
                         }
                     });
-
                     firebaseListeners.push(ref);
                 } catch (e) {}
             });
@@ -481,17 +370,13 @@
         startAutoPush: function() {
             if (autoSyncTimer) clearInterval(autoSyncTimer);
             autoSyncTimer = setInterval(function() {
-                if (window.CloudSync.isReady() && window.currentUser) {
-                    window.CloudSync.pushAll(true);
-                }
+                if (window.CloudSync.isReady() && window.currentUser) window.CloudSync.pushAll(true);
             }, 30000);
         },
 
         forcePushAll: async function() {
             if (!window.CloudSync.isReady()) {
-                if (typeof window.showToast === 'function') {
-                    window.showToast('⚠️ Firebase غير متصل', 'error');
-                }
+                if (typeof window.showToast === 'function') window.showToast('⚠️ Firebase غير متصل', 'error');
                 return 0;
             }
             syncInProgress = false;
@@ -499,19 +384,14 @@
         },
 
         stop: function() {
-            firebaseListeners.forEach(function(ref) {
-                try { ref.off(); } catch (e) {}
-            });
+            firebaseListeners.forEach(function(ref) { try { ref.off(); } catch (e) {} });
             firebaseListeners = [];
-            if (autoSyncTimer) {
-                clearInterval(autoSyncTimer);
-                autoSyncTimer = null;
-            }
+            if (autoSyncTimer) { clearInterval(autoSyncTimer); autoSyncTimer = null; }
         }
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 7: البيانات الأولية
+    // البيانات الأولية (تشتغل فوراً)
     // ═══════════════════════════════════════════════════════════
 
     window.seedInitialData = function() {
@@ -526,9 +406,7 @@
                 { id: 4, name: 'علي',   password: '123456', role: 'seller',  active: true, storeId: sid },
                 { id: 5, name: 'زائر',  password: '123456', role: 'viewer',  active: true, storeId: sid }
             ];
-            try {
-                localStorage.setItem(STORAGE_PREFIX + 'users', JSON.stringify(window.users));
-            } catch (e) {}
+            try { localStorage.setItem(STORAGE_PREFIX + 'users', JSON.stringify(window.users)); } catch (e) {}
             changed = true;
         }
 
@@ -539,9 +417,7 @@
                 { id: 3, name: 'انستاباي', type: 'wallet', icon: '💳', active: true, openingBalance: 0 },
                 { id: 4, name: 'بنك', type: 'bank', icon: '🏦', active: true, openingBalance: 0 }
             ];
-            try {
-                localStorage.setItem(STORAGE_PREFIX + 'cashBoxes', JSON.stringify(window.cashBoxes));
-            } catch (e) {}
+            try { localStorage.setItem(STORAGE_PREFIX + 'cashBoxes', JSON.stringify(window.cashBoxes)); } catch (e) {}
             changed = true;
         }
 
@@ -549,9 +425,7 @@
             window.warehouses = [
                 { id: 1, name: 'المستودع الرئيسي', type: 'main', location: 'المقر الرئيسي', manager: 'المدير', active: true }
             ];
-            try {
-                localStorage.setItem(STORAGE_PREFIX + 'warehouses', JSON.stringify(window.warehouses));
-            } catch (e) {}
+            try { localStorage.setItem(STORAGE_PREFIX + 'warehouses', JSON.stringify(window.warehouses)); } catch (e) {}
             changed = true;
         }
 
@@ -583,24 +457,17 @@
                 { id: 57, code: '5700', name: 'الصيانة', type: 'expense', parent: 50, level: 1 },
                 { id: 58, code: '5800', name: 'مصروفات أخرى', type: 'expense', parent: 50, level: 1 }
             ];
-            try {
-                localStorage.setItem(STORAGE_PREFIX + 'accounts', JSON.stringify(window.accounts));
-            } catch (e) {}
+            try { localStorage.setItem(STORAGE_PREFIX + 'accounts', JSON.stringify(window.accounts)); } catch (e) {}
             changed = true;
         }
 
         if (changed) console.log('✅ تم إنشاء البيانات الأولية');
     };
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 8: Balance API
-    // ═══════════════════════════════════════════════════════════
-
     window.Balance = {
         cashBox: function(boxId) {
             const box = (window.cashBoxes || []).find(function(b) { return String(b.id) === String(boxId); });
             if (!box) return 0;
-
             let balance = parseFloat(box.openingBalance) || 0;
             (window.treasury || []).forEach(function(t) {
                 if (String(t.cashBoxId) === String(boxId)) {
@@ -613,17 +480,12 @@
         },
 
         totalCash: function() {
-            return (window.cashBoxes || []).reduce(function(sum, box) {
-                return sum + window.Balance.cashBox(box.id);
-            }, 0);
+            return (window.cashBoxes || []).reduce(function(sum, box) { return sum + window.Balance.cashBox(box.id); }, 0);
         },
 
         customer: function(customerName) {
             if (!customerName || customerName === 'عميل نقدي') return 0;
-            return (window.sales || [])
-                .filter(function(s) {
-                    return s.customer === customerName && s.paymentMethod === 'credit';
-                })
+            return (window.sales || []).filter(function(s) { return s.customer === customerName && s.paymentMethod === 'credit'; })
                 .reduce(function(sum, s) {
                     const remaining = s.remainingAmount !== undefined ? s.remainingAmount : (s.total || 0);
                     return sum + (parseFloat(remaining) || 0);
@@ -632,10 +494,7 @@
 
         supplier: function(supplierName) {
             if (!supplierName) return 0;
-            return (window.purchases || [])
-                .filter(function(p) {
-                    return p.supplierName === supplierName && p.payment === 'credit';
-                })
+            return (window.purchases || []).filter(function(p) { return p.supplierName === supplierName && p.payment === 'credit'; })
                 .reduce(function(sum, p) {
                     const remaining = p.remainingAmount !== undefined ? p.remainingAmount : (p.total || 0);
                     return sum + (parseFloat(remaining) || 0);
@@ -644,9 +503,7 @@
 
         inventory: function() {
             return (window.products || []).reduce(function(sum, p) {
-                const qty = parseFloat(p.qty) || 0;
-                const buy = parseFloat(p.buy) || 0;
-                return sum + (qty * buy);
+                return sum + ((parseFloat(p.qty) || 0) * (parseFloat(p.buy) || 0));
             }, 0);
         },
 
@@ -663,11 +520,8 @@
         },
 
         accountType: function(type) {
-            return (window.accounts || [])
-                .filter(function(a) { return a.type === type; })
-                .reduce(function(sum, acc) {
-                    return sum + window.Balance.account(acc.id);
-                }, 0);
+            return (window.accounts || []).filter(function(a) { return a.type === type; })
+                .reduce(function(sum, acc) { return sum + window.Balance.account(acc.id); }, 0);
         },
 
         customerPoints: function(customerName) {
@@ -683,10 +537,8 @@
         },
 
         customerLevel: function(customerName) {
-            const total = (window.sales || [])
-                .filter(function(s) { return s.customer === customerName; })
+            const total = (window.sales || []).filter(function(s) { return s.customer === customerName; })
                 .reduce(function(sum, s) { return sum + (s.total || 0); }, 0);
-
             const levels = (window.LOYALTY_CONFIG && window.LOYALTY_CONFIG.LEVELS) || [];
             for (let i = levels.length - 1; i >= 0; i--) {
                 if (total >= levels[i].min) return levels[i];
@@ -695,40 +547,25 @@
         }
     };
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 9: Accounting
-    // ═══════════════════════════════════════════════════════════
-
     window.Accounting = {
         createEntry: function(date, description, lines, reference) {
             if (!lines || lines.length < 2) return null;
-
             let totalDebit = 0, totalCredit = 0;
             lines.forEach(function(line) {
                 totalDebit += parseFloat(line.debit) || 0;
                 totalCredit += parseFloat(line.credit) || 0;
             });
-
-            if (Math.abs(totalDebit - totalCredit) > 0.01) {
-                console.warn('⚠️ القيد غير متوازن');
-                return null;
-            }
+            if (Math.abs(totalDebit - totalCredit) > 0.01) return null;
 
             const entry = {
-                id: (typeof window.generateId === 'function')
-                    ? window.generateId('je_')
-                    : 'je_' + Date.now(),
+                id: (typeof window.generateId === 'function') ? window.generateId('je_') : 'je_' + Date.now(),
                 number: (window.journalEntries || []).length + 1,
                 date: date || window.getTodayDate(),
-                description: description,
-                lines: lines,
-                reference: reference || '',
-                totalDebit: totalDebit,
-                totalCredit: totalCredit,
+                description: description, lines: lines, reference: reference || '',
+                totalDebit: totalDebit, totalCredit: totalCredit,
                 createdAt: new Date().toISOString(),
                 createdBy: window.currentUser ? window.currentUser.name : 'system'
             };
-
             window.DataStore.add('journalEntries', entry);
             if (window.EventBus) window.EventBus.emit('accounting:entry:created', entry);
             return entry;
@@ -744,19 +581,16 @@
             const customerAcc = window.Accounting.findByCode('1200');
             const cogsAcc = window.Accounting.findByCode('5100');
             const inventoryAcc = window.Accounting.findByCode('1300');
-
             if (!salesAcc) return;
 
             if (isCash && cashAcc) {
-                window.Accounting.createEntry(invoice.date,
-                    'فاتورة بيع نقدية #' + invoice.number,
+                window.Accounting.createEntry(invoice.date, 'فاتورة بيع نقدية #' + invoice.number,
                     [
                         { accountId: cashAcc.id, debit: invoice.total, credit: 0 },
                         { accountId: salesAcc.id, debit: 0, credit: invoice.total }
                     ], 'INV-' + invoice.number);
             } else if (customerAcc) {
-                window.Accounting.createEntry(invoice.date,
-                    'فاتورة بيع آجل #' + invoice.number,
+                window.Accounting.createEntry(invoice.date, 'فاتورة بيع آجل #' + invoice.number,
                     [
                         { accountId: customerAcc.id, debit: invoice.total, credit: 0 },
                         { accountId: salesAcc.id, debit: 0, credit: invoice.total }
@@ -764,8 +598,7 @@
             }
 
             if (invoice.cogs > 0 && cogsAcc && inventoryAcc) {
-                window.Accounting.createEntry(invoice.date,
-                    'تكلفة مبيعات #' + invoice.number,
+                window.Accounting.createEntry(invoice.date, 'تكلفة مبيعات #' + invoice.number,
                     [
                         { accountId: cogsAcc.id, debit: invoice.cogs, credit: 0 },
                         { accountId: inventoryAcc.id, debit: 0, credit: invoice.cogs }
@@ -780,15 +613,13 @@
             if (!purchaseAcc) return;
 
             if (isCash && cashAcc) {
-                window.Accounting.createEntry(invoice.date,
-                    'فاتورة شراء نقدية #' + invoice.number,
+                window.Accounting.createEntry(invoice.date, 'فاتورة شراء نقدية #' + invoice.number,
                     [
                         { accountId: purchaseAcc.id, debit: invoice.total, credit: 0 },
                         { accountId: cashAcc.id, debit: 0, credit: invoice.total }
                     ], 'PUR-' + invoice.number);
             } else if (supplierAcc) {
-                window.Accounting.createEntry(invoice.date,
-                    'فاتورة شراء آجل #' + invoice.number,
+                window.Accounting.createEntry(invoice.date, 'فاتورة شراء آجل #' + invoice.number,
                     [
                         { accountId: purchaseAcc.id, debit: invoice.total, credit: 0 },
                         { accountId: supplierAcc.id, debit: 0, credit: invoice.total }
@@ -800,9 +631,7 @@
             const expenseAcc = window.Accounting.findByCode('5800');
             const cashAcc = window.Accounting.findByCode('1110');
             if (!expenseAcc || !cashAcc) return;
-
-            window.Accounting.createEntry(expense.date,
-                'مصروف: ' + expense.note,
+            window.Accounting.createEntry(expense.date, 'مصروف: ' + expense.note,
                 [
                     { accountId: expenseAcc.id, debit: expense.amount, credit: 0 },
                     { accountId: cashAcc.id, debit: 0, credit: expense.amount }
@@ -813,9 +642,7 @@
             const cashAcc = window.Accounting.findByCode('1110');
             const customerAcc = window.Accounting.findByCode('1200');
             if (!cashAcc || !customerAcc) return;
-
-            window.Accounting.createEntry(payment.date,
-                'تحصيل من ' + payment.party,
+            window.Accounting.createEntry(payment.date, 'تحصيل من ' + payment.party,
                 [
                     { accountId: cashAcc.id, debit: payment.amount, credit: 0 },
                     { accountId: customerAcc.id, debit: 0, credit: payment.amount }
@@ -826,9 +653,7 @@
             const supplierAcc = window.Accounting.findByCode('2110');
             const cashAcc = window.Accounting.findByCode('1110');
             if (!supplierAcc || !cashAcc) return;
-
-            window.Accounting.createEntry(payment.date,
-                'سداد لـ ' + payment.party,
+            window.Accounting.createEntry(payment.date, 'سداد لـ ' + payment.party,
                 [
                     { accountId: supplierAcc.id, debit: payment.amount, credit: 0 },
                     { accountId: cashAcc.id, debit: 0, credit: payment.amount }
@@ -836,16 +661,10 @@
         },
 
         removeByReference: function(reference) {
-            const filtered = (window.journalEntries || []).filter(function(e) {
-                return e.reference !== reference;
-            });
+            const filtered = (window.journalEntries || []).filter(function(e) { return e.reference !== reference; });
             window.DataStore.set('journalEntries', filtered);
         }
     };
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 10: مراقبة الاتصال
-    // ═══════════════════════════════════════════════════════════
 
     window.addEventListener('online', function() {
         if (window.CloudSync && window.CloudSync.isReady()) {
@@ -853,24 +672,17 @@
         }
     });
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 11: التهيئة
-    // ═══════════════════════════════════════════════════════════
-
     try {
         window.DataStore.loadAll();
         console.log('✅ تم تحميل البيانات من localStorage');
-    } catch (e) {
-        console.error('❌ فشل تحميل البيانات:', e);
-    }
+    } catch (e) { console.error('❌ فشل تحميل البيانات:', e); }
 
     try {
         window.seedInitialData();
-    } catch (e) {
-        console.error('❌ فشل تهيئة البيانات الأولية:', e);
-    }
+        console.log('✅ تم إنشاء البيانات الأولية');
+    } catch (e) { console.error('❌ فشل تهيئة البيانات الأولية:', e); }
 
     window.__dataLoaded = true;
-    console.log('✅ data.js v2.1 جاهز');
+    console.log('✅ data.js v2.2 جاهز');
 
 })();
