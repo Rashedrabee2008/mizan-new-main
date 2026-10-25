@@ -673,6 +673,28 @@
         window.init();
     }
 
+    
+// ═══════════════════════════════════════════════════════════
+// 🚑 دالة إنقاذ للتقارير (عشان تطفي الخطأ الأحمر)
+// ═══════════════════════════════════════════════════════════
+window.switchReport = function(type, btn) {
+    window.currentReport = type;
+    document.querySelectorAll('#page-reports .report-tab').forEach(function(b) {
+        b.classList.remove('active');
+    });
+    if (btn) btn.classList.add('active');
+    
+    if (typeof window.renderReport === 'function') {
+        window.renderReport(type);
+    } else {
+        const container = document.getElementById('reportContent');
+        if (container) {
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:#C9A94E;">⏳ جاري تحميل التقارير... (تأكد من رفع ملف pos.js بشكل صحيح)</div>';
+        }
+    }
+};
+// ═══════════════════════════════════════════════════════════
+
     window.__appLoaded = true;
     console.log('✅ app.js v23.2 كامل جاهز');
 
