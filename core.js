@@ -1,22 +1,22 @@
 // ============================================================
-// الميزان Pro - core.js v20.0 (إصلاح شامل)
-// 🔧 إضافة حماية + تحسين الأداء + دوال مساعدة محسّنة
+// الميزان Pro - core.js v18.1 (مصحح)
+// الأساسيات: أدوات + أمان + تشفير + جلسات + EventBus
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🚀 core.js v20.0 - بدء التحميل');
+    console.log('🚀 core.js v18.1 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 1: EventBus (محسّن)
+    // الجزء 1: EventBus
     // ═══════════════════════════════════════════════════════════
 
     const _listeners = {};
 
     window.EventBus = {
         on: function(event, callback) {
-            if (typeof callback !== 'function') return function() {};
+            if (typeof callback !== 'function') return;
             if (!_listeners[event]) _listeners[event] = [];
             _listeners[event].push(callback);
             return function unsubscribe() {
@@ -33,8 +33,10 @@
 
         emit: function(event, data) {
             if (!_listeners[event]) return;
-            _listeners[event].slice().forEach(function(cb) {
-                try { cb(data); } catch (e) {
+            _listeners[event].forEach(function(cb) {
+                try {
+                    cb(data);
+                } catch (e) {
                     console.error('❌ خطأ في listener لـ ' + event + ':', e.message);
                 }
             });
@@ -46,19 +48,11 @@
                 callback(data);
             };
             window.EventBus.on(event, wrapper);
-        },
-
-        clear: function(event) {
-            if (event) {
-                delete _listeners[event];
-            } else {
-                Object.keys(_listeners).forEach(function(k) { delete _listeners[k]; });
-            }
         }
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 2: الأدوات الأساسية
+    // الجزء 2: الأدوات
     // ═══════════════════════════════════════════════════════════
 
     window.$ = function(id) { return document.getElementById(id); };
@@ -157,7 +151,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 3: الأدوار والصلاحيات
+    // الجزء 3: الأدوار
     // ═══════════════════════════════════════════════════════════
 
     window.ROLES = {
@@ -184,14 +178,8 @@
         return permissions.indexOf(permission) > -1;
     };
 
-    window.isAdmin = function() {
-        return window.currentUser && window.currentUser.role === 'admin';
-    };
-
-    window.canAdd = function() {
-        return window.hasPermission('add') || window.hasPermission('add_sale');
-    };
-
+    window.isAdmin = function() { return window.currentUser && window.currentUser.role === 'admin'; };
+    window.canAdd = function() { return window.hasPermission('add') || window.hasPermission('add_sale'); };
     window.canEdit = function() { return window.hasPermission('edit'); };
     window.canDelete = function() { return window.hasPermission('delete'); };
     window.canManageUsers = function() { return window.hasPermission('manage_users'); };
@@ -276,9 +264,7 @@
 
     window.saveSession = function(user) {
         const session = {
-            userId: user.id,
-            userName: user.name,
-            role: user.role,
+            userId: user.id, userName: user.name, role: user.role,
             storeId: user.storeId,
             createdAt: Date.now(),
             expiresAt: Date.now() + SESSION_TIMEOUT
@@ -286,26 +272,20 @@
         try {
             localStorage.setItem(SESSION_KEY, JSON.stringify(session));
             return true;
-        } catch (e) {
-            return false;
-        }
+        } catch (e) { return false; }
     };
 
     window.getSession = function() {
         try {
             const data = localStorage.getItem(SESSION_KEY);
             if (!data) return null;
-
             const session = JSON.parse(data);
             if (session.expiresAt < Date.now()) {
                 window.clearSession();
                 return null;
             }
-
             return session;
-        } catch (e) {
-            return null;
-        }
+        } catch (e) { return null; }
     };
 
     window.clearSession = function() {
@@ -319,9 +299,7 @@
         try {
             localStorage.setItem(SESSION_KEY, JSON.stringify(session));
             return true;
-        } catch (e) {
-            return false;
-        }
+        } catch (e) { return false; }
     };
 
     // ═══════════════════════════════════════════════════════════
@@ -345,11 +323,9 @@
         const attempts = window.getLoginAttempts();
         attempts.count = (attempts.count || 0) + 1;
         attempts.lastAttempt = Date.now();
-
         if (attempts.count >= MAX_LOGIN_ATTEMPTS) {
             attempts.lockedUntil = Date.now() + LOCKOUT_TIME;
         }
-
         try {
             localStorage.setItem('mizan_login_attempts_v18', JSON.stringify(attempts));
         } catch (e) {}
@@ -420,7 +396,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 9: الثوابت
+    // الجزء 9: ثوابت
     // ═══════════════════════════════════════════════════════════
 
     window.VAT_SETTINGS = { defaultVAT: 14 };
@@ -460,72 +436,7 @@
         { code: 'AED', name: 'درهم إماراتي', symbol: 'د.إ', rate: 13.60, isDefault: false }
     ];
 
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 10: updateUserUI
-    // ═══════════════════════════════════════════════════════════
-
-    window.updateUserUI = function() {
-        if (!window.currentUser) return;
-
-        const roleInfo = window.ROLES[window.currentUser.role] || { icon: '❓', name: 'مستخدم' };
-
-        const el = document.getElementById('currentUserName');
-        if (el) {
-            el.textContent = roleInfo.icon + ' ' + window.currentUser.name;
-        }
-
-        const headerCompany = document.getElementById('headerCompanyName');
-        if (headerCompany && window.companyData && window.companyData.name) {
-            headerCompany.textContent = window.companyData.name;
-        }
-
-        const roleDisplay = document.getElementById('userRoleDisplay');
-        if (roleDisplay) {
-            roleDisplay.textContent = roleInfo.icon + ' ' + roleInfo.name;
-        }
-    };
-
-    // ═══════════════════════════════════════════════════════════
-    // الجزء 11: Console Filter
-    // ═══════════════════════════════════════════════════════════
-
-    const BLOCKED_KEYWORDS = [
-        'manifest', 'favicon', 'apple-touch-icon',
-        'failed to load resource', 'net::err', 'devtools',
-        'sockjs', 'websocket'
-    ];
-
-    const filterEnabled = localStorage.getItem('mizan_console_filter_v18') !== 'off';
-    const originalLog = console.log.bind(console);
-    const originalWarn = console.warn.bind(console);
-    const originalError = console.error.bind(console);
-
-    function shouldFilter(args) {
-        const msg = Array.from(args).join(' ').toLowerCase();
-        return BLOCKED_KEYWORDS.some(function(k) {
-            return msg.indexOf(k.toLowerCase()) > -1;
-        });
-    }
-
-    if (filterEnabled) {
-        console.log = function() {
-            if (!shouldFilter(arguments)) originalLog.apply(console, arguments);
-        };
-        console.warn = function() {
-            if (!shouldFilter(arguments)) originalWarn.apply(console, arguments);
-        };
-        console.error = function() {
-            if (!shouldFilter(arguments)) originalError.apply(console, arguments);
-        };
-    }
-
-    window.toggleConsoleFilter = function() {
-        const current = localStorage.getItem('mizan_console_filter_v18') !== 'off';
-        localStorage.setItem('mizan_console_filter_v18', current ? 'off' : 'on');
-        location.reload();
-    };
-
     window.__coreLoaded = true;
-    originalLog.call(console, '✅ core.js v20.0 جاهز');
+    console.log('✅ core.js v18.1 جاهز');
 
 })();
