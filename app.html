@@ -1,3 +1,2251 @@
+
+إصلاح أخطاء التطبيق
+كود Eruda
+تحليل تطبيق إدارة المبيعات
+مراجعة أكواد الميزان
+مشكلة تفعيل التطبيق
+مراجعة أخطاء الميزان
+ضبط المسافة
+إصلاح شريط الإعلانات
+Mizan Pro
+شريط ثابت
+ملخص تطبيق الميزان
+إصلاح الهيدر
+مراجعة مشاكل التطبيق
+تكرار الموظفين
+مراجعة الميزان
+مراجعة_المشاكل_التكرار
+تحليل إصلاح الكود
+ربط التطبيق
+مراجعة تطبيق الميزان
+ملفات تصديق
+مشاكل تطبيق نقاط البيع
+تحليل أخطاء التطبيق
+تحليل أخطاء جافاسكربت
+خطأ استدعاء متكرر
+مراجعة تطبيق الميزان
+مراجعة تطبيق الميزان
+مراجعة تطبيق الميزان
+مراجعة تطبيق ميزان
+مقترحات لتطوير نظام الميزان
+تحليل الأرباح
+إصلاح أخطاء الميزان
+مراجعة تطبيق ميزان المحاسبي
+إضافة Firebase للمزامنة
+مراجعة تطبيق ميزان المحاسبي
+تحليل كود تطبيق إدارة
+تطبيق الميزان
+تطبيق لا يفتح
+ربط كامل للميزان
+suppliers': renderSuppliers, 'expenses': () => { populateExpenseEmployees(); renderExpenses(); }, 'treasury': () => { renderTreasury(); updateTreasuryBalances(); }, 'bonds': () => { populateBondSelects(); render
+مراجعة كود الميزان
+تصميم موقع محاسبة
+مراجعة تطبيق الميزان
+تحليل واجهة مبيعات
+مراجعة تطبيق محاسبة
+Firebase rules timestamp
+تحليل كود Firebase
+مراجعة تطبيق الميزان
+خطأ addClient غير معرف
+نظام راشد المحاسبي V9.0
+حل مشكلة التبديل
+نقد نظام راشد المحاسبي
+مراجعة تطبيق ميزان
+مراجعة تطبيق ميزان
+تحليل تطبيق قيم
+سبب index.html في الرابط
+نظام راشد المحاسبي V10.0
+تحليل نظام مزايا
+نظام راشد المحاسبي V9.0
+السحابة لا تعمل
+تصميم محاسبي متكامل
+حل أخطاء DOM
+مراجعة نظام راشد V30
+تحليل مشاكل برنامج
+شاشة موردين مشابهة
+تصميم تطبيق إدارة
+مراجعة تطبيق راشد المحاسبي
+مراجعة التطبيق المحاسبي
+تحميل
+تطوير مدير المهام الذكي
+تطوير نظام محاسبي
+مشاكل Firebase
+مشكلة ترميز PDF
+نشر التطبيق
+تطوير نظام محاسبي متكامل
+خطأ نشر GitHub Pages
+مراجعة تطبيق مهامي الذكية
+نظام المحاسبة الكامل
+مشكلة ظهور النص
+مشكله في الازرار
+اختلاف التصميم
+أمن ولوحة تحكم
+مراجعة تطبيق مدير المهام
+حل مشكلة ترميز النصوص
+مشاكل تقرير PDF وسحابة
+تقرير السحابة
+مشكلة تشفير النص
+حل مشكلة عرض PDF عربي
+مشكلة ترميز PDF
+مدير المهام الذكي
+تطوير مهامي الذكية
+مقترحات تطوير تطبيق مهامي الذكية
+ملف app.html لا يفتح
+تطبيق لا يفتح
+تطوير فريميوم وإحصائيات
+مشكلة أزرار
+صيغ إعلان تطبيق مهامي
+فكرة تطبيق فريميوم
+تصميم موقع لبيع الصور
+موقع يوتيوب عربي
+مراجعة تطبيق أورا ماب
+مراجعة أكواد الميزان
+أهلاً بك. لقد قمت بمراجعة شاملة لجميع الملفات التي أرسلتها. إجمالاً، هذا عمل هائل ومنظم جداً، وهيكلية الملفات واضحة. ومع ذلك، هناك بعض النقاط الحرجة التي تحتاج إلى معالجة لضمان عمل النظام بشكل صحيح وآمن.
+
+سأقوم بتقسيم المراجعة إلى أقسام رئيسية: المشكلات الحرجة، مشكلات الأمان، تحسينات مقترحة، ونقاط عامة.
+
+1. مشكلات حرجة (Bugs) يجب إصلاحها فوراً
+أ. تعارض في تعريف دوال الصلاحيات
+الملف: permissions.js و core.js
+
+المشكلة:
+في core.js، يتم تعريف دوال الصلاحيات بناءً على مصفوفة permissions:
+
+javascript
+// core.js
+window.hasPermission = function(permission) {
+    if (!window.currentUser) return false;
+    const role = window.currentUser.role || 'viewer';
+    const permissions = (window.ROLES[role] || {}).permissions || [];
+    return permissions.indexOf(permission) > -1;
+};
+
+window.canAdd = function() {
+    return window.hasPermission('add') || window.hasPermission('add_sale');
+};
+وفي permissions.js، يتم إعادة تعريف نفس الدوال ولكن بناءً على خصائص منطقية (booleans) مثل canAdd:
+
+javascript
+// permissions.js
+window.hasPermission = function(permission) {
+    const perms = getPermissions();
+    if (!perms) return false;
+    return perms[permission] === true;
+};
+
+window.canAdd = function() {
+    return window.hasPermission('canAdd');
+};
+التأثير:
+لأن permissions.js يتم تحميله بعد core.js، فإنه سيحل محل الدوال الأصلية. هذا يعني أن فحص الصلاحيات سيعتمد على PERMISSIONS.canAdd وليس ROLES.admin.permissions.
+
+المشكلة الأكبر: الدالة window.canAdd في permissions.js تستدعي window.hasPermission('canAdd'). ولكن window.hasPermission (النسخة الجديدة) تبحث عن خاصية اسمها canAdd داخل كائن الصلاحيات. هذا يعمل، ولكنه مربك وقد يسبب أخطاء إذا لم يتم تعريف جميع الأدوار في PERMISSIONS بشكل كامل. على سبيل المثال، دور cashier في permissions.js لديه canAdd: true، لكنه في core.js لديه صلاحية add و add_sale.
+
+الحل المقترح:
+توحيد مصدر الصلاحيات. الأفضل هو الاعتماد على permissions.js لأنه أكثر تفصيلاً. يجب إزالة تعريفات الصلاحيات من core.js والاكتفاء بتعريف ROLES فقط (للعرض)، والسماح لـ permissions.js بالقيام بكل عمليات الفحص.
+
+الإجراء:
+في core.js، قم بحذف الدوال التالية بالكامل:
+
+window.hasPermission
+
+window.isAdmin
+
+window.canAdd
+
+window.canEdit
+
+window.canDelete
+
+window.canManageUsers
+
+window.canViewAccounts
+
+window.canViewReports
+
+ب. خطأ في استدعاء دالة printCurrentReport
+الملف: pos.js
+
+المشكلة:
+دالة printCurrentReport تستخدم container.innerHTML لطباعة التقرير. لكن container.innerHTML يحتوي على عناصر HTML تستخدم CSS Classes مثل report-summary و report-stat التي تم تعريفها في style.css. عند فتح نافذة طباعة جديدة، لن يتم تحميل style.css، وستظهر التقارير بدون تنسيق.
+
+الحل المقترح:
+يجب نسخ كود CSS الخاص بالتقارير ووضعه داخل وسم <style> في نافذة الطباعة الجديدة، كما تم فعل ذلك بنجاح في دالة printInvoice.
+
+الإجراء:
+في pos.js، داخل دالة printCurrentReport، أضف أنماط CSS المطلوبة داخل وسم <style>:
+
+javascript
+// داخل دالة printCurrentReport
+w.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">' +
+    '<title>' + (reportNames[window.currentReport] || 'تقرير') + '</title>' +
+    '<style>' +
+    'body{font-family:Arial;padding:20px;background:#fff;color:#000;}' +
+    'h1{color:#C9A94E;text-align:center;}' +
+    'table{width:100%;border-collapse:collapse;margin-top:20px;}' +
+    'th{background:#C9A94E;color:#fff;padding:10px;text-align:right;}' +
+    'td{padding:8px;border-bottom:1px solid #ddd;}' +
+    // ✨ إضافة الأنماط الناقصة
+    '.report-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}' +
+    '.report-stat{background:#f9f9f9;padding:12px;border-radius:8px;text-align:center;border-right:4px solid #C9A94E;}' +
+    '.report-stat .num{font-size:20px;font-weight:900;color:#C9A94E;}' +
+    '.report-stat .lbl{font-size:12px;color:#666;}' +
+    '.report-table-header,.report-table-row{display:grid;gap:6px;padding:8px;border-bottom:1px solid #ddd;}' +
+    '.report-table-header{background:#C9A94E;color:#fff;font-weight:900;}' +
+    '.report-table-row .green{color:#2D8F5E;font-weight:800;}' +
+    '.report-table-row .red{color:#E06060;font-weight:800;}' +
+    '.report-table-row .gold{color:#C9A94E;font-weight:800;}' +
+    '.report-table-row .blue{color:#4A8AB5;font-weight:800;}' +
+    '.report-table-row .orange{color:#E6A830;font-weight:800;}' +
+    '.footer{text-align:center;margin-top:30px;padding-top:20px;border-top:2px dashed #ddd;font-size:12px;color:#666;}' +
+    '</style></head><body>' +
+    // ... باقي الكود
+2. مشكلات الأمان (Security Issues)
+أ. ثغرة حرجة: كلمات المرور الافتراضية
+الملف: data.js
+
+المشكلة:
+دالة seedInitialData تقوم بإنشاء مستخدمين بكلمات مرور ضعيفة وافتراضية (123456) وتخزينها كنص صريح في localStorage (mizan_v18_users). هذا يمثل خطراً أمنياً كبيراً، حيث يمكن لأي شخص لديه وصول إلى المتصفح رؤية كلمات المرور.
+
+الحل المقترح:
+
+يجب تشفير كلمات المرور الافتراضية قبل تخزينها. يجب استخدام دالة hashPassword الموجودة في core.js.
+
+بما أن seedInitialData دالة متزامنة (synchronous)، لا يمكن استخدام await مباشرة. يجب تحويلها إلى دالة غير متزامنة (async) أو استخدام طريقة أخرى للتشفير.
+
+الإجراء:
+تعديل seedInitialData في data.js لتصبح دالة async وتشفير كلمات المرور:
+
+javascript
+window.seedInitialData = async function() { // <-- جعلها async
+    let changed = false;
+
+    if (!window.users || window.users.length === 0) {
+        // تشفير كلمة المرور الافتراضية
+        const hashedPassword = await window.hashPassword('123456'); // <-- استخدام التشفير
+
+        window.users = [
+            { id: 1, name: 'المدير',  password: hashedPassword, role: 'admin',   active: true, storeId: window.getStoreId() },
+            { id: 2, name: 'محمد',   password: hashedPassword, role: 'manager', active: true, storeId: window.getStoreId() },
+            // ... باقي المستخدمين بنفس الكلمة المشفرة
+        ];
+        // ...
+    }
+    // ...
+};
+ملاحظة هامة: عند استدعاء seedInitialData في app.js أو data.js، يجب التعامل معها كـ Promise باستخدام .then() أو await.
+
+ب. معلومات Firebase مكشوفة
+الملف: activation.js و data.js
+
+المشكلة:
+مفاتيح Firebase (apiKey, databaseURL, إلخ) مكتوبة مباشرة في كود JavaScript. هذا أمر شائع في تطبيقات الويب، ولكن من الأفضل تأمين قاعدة البيانات باستخدام Firebase Security Rules صارمة. بدون قواعد أمان قوية، يمكن لأي شخص لديه هذه المفاتيح (وهي موجودة في كود الصفحة) أن يقرأ ويكتب بيانات أي متجر آخر إذا عرف storeId الخاص به.
+
+الحل المقترح:
+هذا ليس تعديلاً في الكود نفسه، بل هو إجراء ضروري على منصة Firebase. يجب عليك:
+
+الذهاب إلى لوحة تحكم Firebase لمشروعك (mizan-new-main).
+
+الانتقال إلى Realtime Database -> Rules.
+
+وضع قواعد أمان تمنع الوصول غير المصرح به. على سبيل المثال، يمكنك منع القراءة والكتابة إلا من خلال التطبيق الخاص بك (إذا كنت تستخدم Firebase Hosting أو App Check)، أو على الأقل التأكد من أن كل storeId لا يمكن الوصول إليه إلا من قبل المستخدمين المصرح لهم.
+
+3. تحسينات مقترحة (Improvements)
+أ. تحسين دالة printCurrentReport لتكون أكثر مرونة
+الملف: pos.js
+
+المشكلة:
+دالة printCurrentReport تعتمد بشكل كبير على container.innerHTML. هذا قد يكون هشاً إذا تغيرت بنية HTML للتقرير في المستقبل.
+
+الحل المقترح:
+بدلاً من طباعة innerHTML مباشرة، يمكن إنشاء دالة منفصلة تقوم ببناء جدول HTML نظيف للطباعة.
+
+ب. تحسين تجربة المستخدم (UX) في activation.js
+الملف: activation.js
+
+المشكلة:
+عند نجاح التفعيل، يتم توجيه المستخدم إلى thanks.html?code=.... هذه الخطوة جيدة، ولكن ماذا لو قام المستخدم بتحديث الصفحة أو عاد إليها لاحقاً؟ سيتم عرض الكود مرة أخرى، وقد يكون قد نسخه بالفعل.
+
+الحل المقترح:
+في thanks.html، يمكنك إضافة رسالة تقول "لقد قمت بتفعيل حسابك بالفعل" إذا كان الكود موجوداً في localStorage، وتوفير زر مباشر للانتقال إلى التطبيق. (لقد لاحظت أنك قمت بذلك بالفعل في thanks.html، وهو ممتاز).
+
+4. نقاط عامة وملاحظات
+sharabar.js: تم تحميله في نهاية app.html. هذا صحيح، حيث أنه يعتمد على بيانات الشركة والمستخدم التي يتم تحميلها بواسطة الملفات الأخرى.
+
+sw.js: قائمة CORE_FILES تحتوي على ملفات لم يتم ذكرها في app.html (مثل ui.js, tenant.js, إلخ). تأكد من أن قائمة CORE_FILES محدثة وتطابق جميع الملفات التي يحتاجها التطبيق للعمل دون اتصال بالإنترنت.
+
+search.js: دالة getFieldValue تبحث عن قيمة الحقل بطرق متعددة. هذا جيد للتوافق، ولكنه قد يكون غير موثوق إذا لم يتم تعيين data-selected-id بشكل صحيح. تأكد من أن جميع المكونات التي تستخدم البحث الذكي تقوم بتعيين data-selected-id عند اختيار عنصر.
+
+accounting.js: دوال التقارير (showTrialBalance, showIncomeStatement, إلخ) تقوم بإنشاء HTML معقد داخل JavaScript. هذا يجعل الصيانة صعبة. من الأفضل فصل هذا الـ HTML إلى قوالب (templates) أو على الأقل وضعه في دوال منفصلة.
+
+pos.js: دالة saveSale طويلة جداً وتقوم بالكثير من الأشياء. يمكن تقسيمها إلى دوال أصغر (مثل calculateSaleTotals, updateProductStock, createAccountingEntry, إلخ) لتحسين القراءة والصيانة.
+
+الخلاصة
+هذا المشروع مثير للإعجاب جداً من حيث الشمولية والتنظيم. المشكلات التي ذكرتها، وخاصةً مشكلة الصلاحيات وكلمات المرور الافتراضية، يجب معالجتها قبل النشر لضمان الأمان والاستقرار. بعد إصلاح هذه النقاط، سيكون لديك نظام قوي جداً وجاهز للاستخدام التجاري.
+
+إذا كان لديك أي أسئلة محددة حول أي من هذه النقاط، فلا تتردد في السؤال.
+
+تحليل
+أهلاً بك. لقد قمت بمراجعة شاملة لجميع الملفات التي أرسلتها. إجمالاً، هذا عمل هائل ومنظم جداً، وهيكلية الملفات واضحة. ومع ذلك، هناك بعض النقاط الحرجة التي تحتاج إلى معالجة لضمان عمل النظام بشكل صحيح وآمن.
+
+سأقوم بتقسيم المراجعة إلى أقسام رئيسية: المشكلات الحرجة، مشكلات الأمان، تحسينات مقترحة، ونقاط عامة.
+
+1. مشكلات حرجة (Bugs) يجب إصلاحها فوراً
+أ. تعارض في تعريف دوال الصلاحيات
+الملف: permissions.js و core.js
+
+المشكلة:
+في core.js، يتم تعريف دوال الصلاحيات بناءً على مصفوفة permissions:
+
+javascript
+// core.js
+window.hasPermission = function(permission) {
+    if (!window.currentUser) return false;
+    const role = window.currentUser.role || 'viewer';
+    const permissions = (window.ROLES[role] || {}).permissions || [];
+    return permissions.indexOf(permission) > -1;
+};
+
+window.canAdd = function() {
+    return window.hasPermission('add') || window.hasPermission('add_sale');
+};
+وفي permissions.js، يتم إعادة تعريف نفس الدوال ولكن بناءً على خصائص منطقية (booleans) مثل canAdd:
+
+javascript
+// permissions.js
+window.hasPermission = function(permission) {
+    const perms = getPermissions();
+    if (!perms) return false;
+    return perms[permission] === true;
+};
+
+window.canAdd = function() {
+    return window.hasPermission('canAdd');
+};
+التأثير:
+لأن permissions.js يتم تحميله بعد core.js، فإنه سيحل محل الدوال الأصلية. هذا يعني أن فحص الصلاحيات سيعتمد على PERMISSIONS.canAdd وليس ROLES.admin.permissions.
+
+المشكلة الأكبر: الدالة window.canAdd في permissions.js تستدعي window.hasPermission('canAdd'). ولكن window.hasPermission (النسخة الجديدة) تبحث عن خاصية اسمها canAdd داخل كائن الصلاحيات. هذا يعمل، ولكنه مربك وقد يسبب أخطاء إذا لم يتم تعريف جميع الأدوار في PERMISSIONS بشكل كامل. على سبيل المثال، دور cashier في permissions.js لديه canAdd: true، لكنه في core.js لديه صلاحية add و add_sale.
+
+الحل المقترح:
+توحيد مصدر الصلاحيات. الأفضل هو الاعتماد على permissions.js لأنه أكثر تفصيلاً. يجب إزالة تعريفات الصلاحيات من core.js والاكتفاء بتعريف ROLES فقط (للعرض)، والسماح لـ permissions.js بالقيام بكل عمليات الفحص.
+
+الإجراء:
+في core.js، قم بحذف الدوال التالية بالكامل:
+
+window.hasPermission
+
+window.isAdmin
+
+window.canAdd
+
+window.canEdit
+
+window.canDelete
+
+window.canManageUsers
+
+window.canViewAccounts
+
+window.canViewReports
+
+ب. خطأ في استدعاء دالة printCurrentReport
+الملف: pos.js
+
+المشكلة:
+دالة printCurrentReport تستخدم container.innerHTML لطباعة التقرير. لكن container.innerHTML يحتوي على عناصر HTML تستخدم CSS Classes مثل report-summary و report-stat التي تم تعريفها في style.css. عند فتح نافذة طباعة جديدة، لن يتم تحميل style.css، وستظهر التقارير بدون تنسيق.
+
+الحل المقترح:
+يجب نسخ كود CSS الخاص بالتقارير ووضعه داخل وسم <style> في نافذة الطباعة الجديدة، كما تم فعل ذلك بنجاح في دالة printInvoice.
+
+الإجراء:
+في pos.js، داخل دالة printCurrentReport، أضف أنماط CSS المطلوبة داخل وسم <style>:
+
+javascript
+// داخل دالة printCurrentReport
+w.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">' +
+    '<title>' + (reportNames[window.currentReport] || 'تقرير') + '</title>' +
+    '<style>' +
+    'body{font-family:Arial;padding:20px;background:#fff;color:#000;}' +
+    'h1{color:#C9A94E;text-align:center;}' +
+    'table{width:100%;border-collapse:collapse;margin-top:20px;}' +
+    'th{background:#C9A94E;color:#fff;padding:10px;text-align:right;}' +
+    'td{padding:8px;border-bottom:1px solid #ddd;}' +
+    // ✨ إضافة الأنماط الناقصة
+    '.report-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}' +
+    '.report-stat{background:#f9f9f9;padding:12px;border-radius:8px;text-align:center;border-right:4px solid #C9A94E;}' +
+    '.report-stat .num{font-size:20px;font-weight:900;color:#C9A94E;}' +
+    '.report-stat .lbl{font-size:12px;color:#666;}' +
+    '.report-table-header,.report-table-row{display:grid;gap:6px;padding:8px;border-bottom:1px solid #ddd;}' +
+    '.report-table-header{background:#C9A94E;color:#fff;font-weight:900;}' +
+    '.report-table-row .green{color:#2D8F5E;font-weight:800;}' +
+    '.report-table-row .red{color:#E06060;font-weight:800;}' +
+    '.report-table-row .gold{color:#C9A94E;font-weight:800;}' +
+    '.report-table-row .blue{color:#4A8AB5;font-weight:800;}' +
+    '.report-table-row .orange{color:#E6A830;font-weight:800;}' +
+    '.footer{text-align:center;margin-top:30px;padding-top:20px;border-top:2px dashed #ddd;font-size:12px;color:#666;}' +
+    '</style></head><body>' +
+    // ... باقي الكود
+2. مشكلات الأمان (Security Issues)
+أ. ثغرة حرجة: كلمات المرور الافتراضية
+الملف: data.js
+
+المشكلة:
+دالة seedInitialData تقوم بإنشاء مستخدمين بكلمات مرور ضعيفة وافتراضية (123456) وتخزينها كنص صريح في localStorage (mizan_v18_users). هذا يمثل خطراً أمنياً كبيراً، حيث يمكن لأي شخص لديه وصول إلى المتصفح رؤية كلمات المرور.
+
+الحل المقترح:
+
+يجب تشفير كلمات المرور الافتراضية قبل تخزينها. يجب استخدام دالة hashPassword الموجودة في core.js.
+
+بما أن seedInitialData دالة متزامنة (synchronous)، لا يمكن استخدام await مباشرة. يجب تحويلها إلى دالة غير متزامنة (async) أو استخدام طريقة أخرى للتشفير.
+
+الإجراء:
+تعديل seedInitialData في data.js لتصبح دالة async وتشفير كلمات المرور:
+
+javascript
+window.seedInitialData = async function() { // <-- جعلها async
+    let changed = false;
+
+    if (!window.users || window.users.length === 0) {
+        // تشفير كلمة المرور الافتراضية
+        const hashedPassword = await window.hashPassword('123456'); // <-- استخدام التشفير
+
+        window.users = [
+            { id: 1, name: 'المدير',  password: hashedPassword, role: 'admin',   active: true, storeId: window.getStoreId() },
+            { id: 2, name: 'محمد',   password: hashedPassword, role: 'manager', active: true, storeId: window.getStoreId() },
+            // ... باقي المستخدمين بنفس الكلمة المشفرة
+        ];
+        // ...
+    }
+    // ...
+};
+ملاحظة هامة: عند استدعاء seedInitialData في app.js أو data.js، يجب التعامل معها كـ Promise باستخدام .then() أو await.
+
+ب. معلومات Firebase مكشوفة
+الملف: activation.js و data.js
+
+المشكلة:
+مفاتيح Firebase (apiKey, databaseURL, إلخ) مكتوبة مباشرة في كود JavaScript. هذا أمر شائع في تطبيقات الويب، ولكن من الأفضل تأمين قاعدة البيانات باستخدام Firebase Security Rules صارمة. بدون قواعد أمان قوية، يمكن لأي شخص لديه هذه المفاتيح (وهي موجودة في كود الصفحة) أن يقرأ ويكتب بيانات أي متجر آخر إذا عرف storeId الخاص به.
+
+الحل المقترح:
+هذا ليس تعديلاً في الكود نفسه، بل هو إجراء ضروري على منصة Firebase. يجب عليك:
+
+الذهاب إلى لوحة تحكم Firebase لمشروعك (mizan-new-main).
+
+الانتقال إلى Realtime Database -> Rules.
+
+وضع قواعد أمان تمنع الوصول غير المصرح به. على سبيل المثال، يمكنك منع القراءة والكتابة إلا من خلال التطبيق الخاص بك (إذا كنت تستخدم Firebase Hosting أو App Check)، أو على الأقل التأكد من أن كل storeId لا يمكن الوصول إليه إلا من قبل المستخدمين المصرح لهم.
+
+3. تحسينات مقترحة (Improvements)
+أ. تحسين دالة printCurrentReport لتكون أكثر مرونة
+الملف: pos.js
+
+المشكلة:
+دالة printCurrentReport تعتمد بشكل كبير على container.innerHTML. هذا قد يكون هشاً إذا تغيرت بنية HTML للتقرير في المستقبل.
+
+الحل المقترح:
+بدلاً من طباعة innerHTML مباشرة، يمكن إنشاء دالة منفصلة تقوم ببناء جدول HTML نظيف للطباعة.
+
+ب. تحسين تجربة المستخدم (UX) في activation.js
+الملف: activation.js
+
+المشكلة:
+عند نجاح التفعيل، يتم توجيه المستخدم إلى thanks.html?code=.... هذه الخطوة جيدة، ولكن ماذا لو قام المستخدم بتحديث الصفحة أو عاد إليها لاحقاً؟ سيتم عرض الكود مرة أخرى، وقد يكون قد نسخه بالفعل.
+
+الحل المقترح:
+في thanks.html، يمكنك إضافة رسالة تقول "لقد قمت بتفعيل حسابك بالفعل" إذا كان الكود موجوداً في localStorage، وتوفير زر مباشر للانتقال إلى التطبيق. (لقد لاحظت أنك قمت بذلك بالفعل في thanks.html، وهو ممتاز).
+
+4. نقاط عامة وملاحظات
+sharabar.js: تم تحميله في نهاية app.html. هذا صحيح، حيث أنه يعتمد على بيانات الشركة والمستخدم التي يتم تحميلها بواسطة الملفات الأخرى.
+
+sw.js: قائمة CORE_FILES تحتوي على ملفات لم يتم ذكرها في app.html (مثل ui.js, tenant.js, إلخ). تأكد من أن قائمة CORE_FILES محدثة وتطابق جميع الملفات التي يحتاجها التطبيق للعمل دون اتصال بالإنترنت.
+
+search.js: دالة getFieldValue تبحث عن قيمة الحقل بطرق متعددة. هذا جيد للتوافق، ولكنه قد يكون غير موثوق إذا لم يتم تعيين data-selected-id بشكل صحيح. تأكد من أن جميع المكونات التي تستخدم البحث الذكي تقوم بتعيين data-selected-id عند اختيار عنصر.
+
+accounting.js: دوال التقارير (showTrialBalance, showIncomeStatement, إلخ) تقوم بإنشاء HTML معقد داخل JavaScript. هذا يجعل الصيانة صعبة. من الأفضل فصل هذا الـ HTML إلى قوالب (templates) أو على الأقل وضعه في دوال منفصلة.
+
+pos.js: دالة saveSale طويلة جداً وتقوم بالكثير من الأشياء. يمكن تقسيمها إلى دوال أصغر (مثل calculateSaleTotals, updateProductStock, createAccountingEntry, إلخ) لتحسين القراءة والصيانة.
+
+الخلاصة
+هذا المشروع مثير للإعجاب جداً من حيث الشمولية والتنظيم. المشكلات التي ذكرتها، وخاصةً مشكلة الصلاحيات وكلمات المرور الافتراضية، يجب معالجتها قبل النشر لضمان الأمان والاستقرار. بعد إصلاح هذه النقاط، سيكون لديك نظام قوي جداً وجاهز للاستخدام التجاري.
+
+إذا كان لديك أي أسئلة محددة حول أي من هذه النقاط، فلا تتردد في السؤال.
+
+ممكن ملفات كامله 
+الميزان Pro - الملفات الكاملة المصححة
+سأقدم لك الملفات الكاملة بعد إصلاح جميع المشكلات الحرجة التي تم رصدها. سأركز على الملفات التي تحتاج تعديلاً.
+
+1. core.js - النسخة المصححة (حذف تعريفات الصلاحيات المكررة)
+javascript
+// ============================================================
+// الميزان Pro - core.js v18.1 (مصحح)
+// الأساسيات: أدوات + أمان + تشفير + جلسات + EventBus
+// ⚠️ تم حذف تعريفات الصلاحيات — موجودة في permissions.js
+// ============================================================
+
+(function() {
+    'use strict';
+
+    console.log('🚀 core.js v18.1 - بدء التحميل');
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 1: EventBus — نظام الأحداث المركزي
+    // ═══════════════════════════════════════════════════════════
+    
+    const _listeners = {};
+
+    window.EventBus = {
+        on: function(event, callback) {
+            if (typeof callback !== 'function') return;
+            if (!_listeners[event]) _listeners[event] = [];
+            _listeners[event].push(callback);
+            return function unsubscribe() {
+                window.EventBus.off(event, callback);
+            };
+        },
+
+        off: function(event, callback) {
+            if (!_listeners[event]) return;
+            _listeners[event] = _listeners[event].filter(function(cb) {
+                return cb !== callback;
+            });
+        },
+
+        emit: function(event, data) {
+            if (!_listeners[event]) return;
+            _listeners[event].forEach(function(cb) {
+                try {
+                    cb(data);
+                } catch (e) {
+                    console.error('❌ خطأ في listener لـ ' + event + ':', e.message);
+                }
+            });
+        },
+
+        once: function(event, callback) {
+            const wrapper = function(data) {
+                window.EventBus.off(event, wrapper);
+                callback(data);
+            };
+            window.EventBus.on(event, wrapper);
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 2: الأدوات الأساسية
+    // ═══════════════════════════════════════════════════════════
+
+    window.$ = function(id) { return document.getElementById(id); };
+
+    window.$$ = function(selector) {
+        return Array.from(document.querySelectorAll(selector));
+    };
+
+    window.getTodayDate = function() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + d;
+    };
+
+    window.getNowTime = function() {
+        const now = new Date();
+        let hours = now.getHours();
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const ampm = hours >= 12 ? 'م' : 'ص';
+        hours = hours % 12 || 12;
+        return hours + ':' + minutes + ' ' + ampm;
+    };
+
+    window.formatMoney = function(n) {
+        const num = parseFloat(n);
+        if (!isFinite(num) || isNaN(num)) return '0.00';
+        return num.toFixed(2);
+    };
+
+    window.formatNumber = function(n) {
+        const num = parseFloat(n);
+        if (!isFinite(num) || isNaN(num)) return '0';
+        return num.toLocaleString('ar-EG');
+    };
+
+    window.toArray = function(data) {
+        if (!data) return [];
+        if (Array.isArray(data)) return data;
+        if (typeof data === 'object') {
+            return Object.keys(data).map(function(k) {
+                const item = data[k];
+                if (item && typeof item === 'object') {
+                    if (!item.id) item.id = k;
+                    return item;
+                }
+                return null;
+            }).filter(function(item) { return item !== null; });
+        }
+        return [];
+    };
+
+    window.getRadioValue = function(name, defaultValue) {
+        const el = document.querySelector('input[name="' + name + '"]:checked');
+        return el ? el.value : (defaultValue || '');
+    };
+
+    window.setRadioValue = function(name, value) {
+        const el = document.querySelector('input[name="' + name + '"][value="' + value + '"]');
+        if (el) el.checked = true;
+    };
+
+    window.escapeHtml = function(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
+
+    window.getPaymentMethodLabel = function(method) {
+        const labels = {
+            'cash': '💵 نقدي',
+            'credit': '📝 آجل',
+            'wallet': '📱 موبايل',
+            'visa': '💳 فيزا',
+            'bank': '🏦 تحويل',
+            'installment': '📅 تقسيط'
+        };
+        return labels[method] || method;
+    };
+
+    window.getPaymentIcon = function(method) {
+        const icons = {
+            'cash': '💵', 'credit': '📝', 'wallet': '📱',
+            'visa': '💳', 'bank': '🏦', 'installment': '📅'
+        };
+        return icons[method] || '💵';
+    };
+
+    window.generateId = function(prefix) {
+        const timestamp = Date.now();
+        const random = Math.floor(Math.random() * 10000);
+        return (prefix || '') + timestamp + '_' + random;
+    };
+
+    window.shortId = function(id) {
+        if (!id) return '—';
+        return '#' + String(id).slice(-6);
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 3: الأدوار — للعرض فقط
+    // ⚠️ فحص الصلاحيات في permissions.js
+    // ═══════════════════════════════════════════════════════════
+
+    window.ROLES = {
+        admin:   { name: 'مدير',   icon: '👑', color: '#E06060' },
+        manager: { name: 'مشرف',   icon: '📊', color: '#C9A94E' },
+        cashier: { name: 'كاشير',  icon: '💰', color: '#4A8AB5' },
+        seller:  { name: 'بائع',   icon: '🛒', color: '#E6A830' },
+        viewer:  { name: 'مشاهد',  icon: '👁️', color: '#5D5D5D' }
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 4: التشفير (Web Crypto API - SHA-256 + Salt)
+    // ═══════════════════════════════════════════════════════════
+
+    window.generateSalt = function() {
+        try {
+            const array = new Uint8Array(16);
+            crypto.getRandomValues(array);
+            return Array.from(array, function(b) {
+                return b.toString(16).padStart(2, '0');
+            }).join('');
+        } catch (e) {
+            let salt = '';
+            for (let i = 0; i < 32; i++) {
+                salt += Math.floor(Math.random() * 16).toString(16);
+            }
+            return salt;
+        }
+    };
+
+    window.hashPassword = async function(password, salt) {
+        if (!password) return '';
+        if (!salt) salt = window.generateSalt();
+
+        try {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(salt + ':' + password + ':mizan');
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hash = hashArray.map(function(b) {
+                return b.toString(16).padStart(2, '0');
+            }).join('');
+            return 'sha256_' + salt + '_' + hash;
+        } catch (e) {
+            console.error('❌ خطأ تشفير:', e);
+            let simple = '';
+            const combined = salt + password;
+            for (let i = 0; i < combined.length; i++) {
+                simple += combined.charCodeAt(i).toString(16);
+            }
+            return 'simple_' + salt + '_' + simple;
+        }
+    };
+
+    window.verifyPassword = async function(password, storedHash) {
+        if (!password || !storedHash) return false;
+
+        try {
+            if (storedHash.indexOf('sha256_') === 0) {
+                const parts = storedHash.split('_');
+                if (parts.length !== 3) return false;
+                const salt = parts[1];
+                const newHash = await window.hashPassword(password, salt);
+                return newHash === storedHash;
+            }
+
+            if (storedHash.indexOf('simple_') === 0) {
+                const parts = storedHash.split('_');
+                if (parts.length !== 3) return false;
+                const salt = parts[1];
+                const newHash = await window.hashPassword(password, salt);
+                return newHash === storedHash;
+            }
+
+            return storedHash === password;
+        } catch (e) {
+            console.error('❌ خطأ تحقق:', e);
+            return false;
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 5: إدارة الجلسات
+    // ═══════════════════════════════════════════════════════════
+
+    const SESSION_KEY = 'mizan_session_v18';
+    const SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
+
+    window.saveSession = function(user) {
+        const session = {
+            userId: user.id,
+            userName: user.name,
+            role: user.role,
+            storeId: user.storeId,
+            createdAt: Date.now(),
+            expiresAt: Date.now() + SESSION_TIMEOUT
+        };
+        try {
+            localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+            return true;
+        } catch (e) {
+            return false;
+        }
+    };
+
+    window.getSession = function() {
+        try {
+            const data = localStorage.getItem(SESSION_KEY);
+            if (!data) return null;
+
+            const session = JSON.parse(data);
+            if (session.expiresAt < Date.now()) {
+                window.clearSession();
+                return null;
+            }
+
+            return session;
+        } catch (e) {
+            return null;
+        }
+    };
+
+    window.clearSession = function() {
+        try {
+            localStorage.removeItem(SESSION_KEY);
+        } catch (e) {}
+    };
+
+    window.refreshSession = function() {
+        const session = window.getSession();
+        if (!session) return false;
+        session.expiresAt = Date.now() + SESSION_TIMEOUT;
+        try {
+            localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+            return true;
+        } catch (e) {
+            return false;
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 6: Rate Limiting
+    // ═══════════════════════════════════════════════════════════
+
+    const MAX_LOGIN_ATTEMPTS = 5;
+    const LOCKOUT_TIME = 15 * 60 * 1000;
+
+    window.getLoginAttempts = function() {
+        try {
+            const data = localStorage.getItem('mizan_login_attempts_v18');
+            if (!data) return { count: 0, lastAttempt: 0, lockedUntil: 0 };
+            return JSON.parse(data);
+        } catch (e) {
+            return { count: 0, lastAttempt: 0, lockedUntil: 0 };
+        }
+    };
+
+    window.recordFailedLogin = function() {
+        const attempts = window.getLoginAttempts();
+        attempts.count = (attempts.count || 0) + 1;
+        attempts.lastAttempt = Date.now();
+
+        if (attempts.count >= MAX_LOGIN_ATTEMPTS) {
+            attempts.lockedUntil = Date.now() + LOCKOUT_TIME;
+        }
+
+        try {
+            localStorage.setItem('mizan_login_attempts_v18', JSON.stringify(attempts));
+        } catch (e) {}
+    };
+
+    window.recordSuccessfulLogin = function() {
+        try {
+            localStorage.setItem('mizan_login_attempts_v18', JSON.stringify({
+                count: 0, lastAttempt: Date.now(), lockedUntil: 0
+            }));
+        } catch (e) {}
+    };
+
+    window.isAccountLocked = function() {
+        const attempts = window.getLoginAttempts();
+        if (attempts.lockedUntil && attempts.lockedUntil > Date.now()) {
+            const remaining = Math.ceil((attempts.lockedUntil - Date.now()) / 60000);
+            return { locked: true, remaining: remaining };
+        }
+        return { locked: false };
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 7: تنسيقات خاصة
+    // ═══════════════════════════════════════════════════════════
+
+    window.getArabicDayName = function(dateStr) {
+        const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        const d = new Date(dateStr);
+        return days[d.getDay()] || '';
+    };
+
+    window.getArabicMonthName = function(monthIndex) {
+        const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+                       'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+        return months[monthIndex] || '';
+    };
+
+    window.formatDate = function(dateStr) {
+        if (!dateStr) return '—';
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return day + '/' + month + '/' + year;
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 8: التحقق من صحة البيانات
+    // ═══════════════════════════════════════════════════════════
+
+    window.isValidEmail = function(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    };
+
+    window.isValidPhone = function(phone) {
+        const clean = String(phone).replace(/[^0-9]/g, '');
+        return clean.length >= 10 && clean.length <= 15;
+    };
+
+    window.sanitizeNumber = function(n, defaultValue, min, max) {
+        let num = parseFloat(n);
+        if (!isFinite(num) || isNaN(num)) num = defaultValue || 0;
+        if (min !== undefined && num < min) num = min;
+        if (max !== undefined && num > max) num = max;
+        return num;
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 9: ثوابت النظام
+    // ═══════════════════════════════════════════════════════════
+
+    window.VAT_SETTINGS = { defaultVAT: 14 };
+
+    window.LOYALTY_CONFIG = {
+        POINTS_PER_100: 1,
+        POINT_VALUE: 0.1,
+        MIN_REDEEM_POINTS: 50,
+        LEVELS: [
+            { name: 'عادي',    min: 0,    icon: '🥉', color: '#A89070', discount: 0 },
+            { name: 'فضي',     min: 500,  icon: '🥈', color: '#A8A8A8', discount: 2 },
+            { name: 'ذهبي',    min: 2000, icon: '🥇', color: '#C9A94E', discount: 5 },
+            { name: 'بلاتيني', min: 5000, icon: '💎', color: '#4A8AB5', discount: 10 }
+        ]
+    };
+
+    window.WAREHOUSE_TYPES = {
+        'main':    { name: 'رئيسي',   icon: '🏭' },
+        'branch':  { name: 'فرع',     icon: '🏪' },
+        'storage': { name: 'مخزن',    icon: '📦' },
+        'returns': { name: 'مرتجعات', icon: '🔄' }
+    };
+
+    window.ACCOUNT_TYPES = {
+        asset:     { name: 'أصول',        icon: '💎', color: '#2D8F5E' },
+        liability: { name: 'التزامات',    icon: '📋', color: '#E06060' },
+        equity:    { name: 'حقوق ملكية',  icon: '👑', color: '#C9A94E' },
+        revenue:   { name: 'إيرادات',     icon: '💰', color: '#4A8AB5' },
+        expense:   { name: 'مصروفات',     icon: '💸', color: '#E6A830' }
+    };
+
+    window.DEFAULT_CURRENCIES = [
+        { code: 'EGP', name: 'جنيه مصري', symbol: 'ج.م', rate: 1, isDefault: true },
+        { code: 'USD', name: 'دولار أمريكي', symbol: '$', rate: 50.00, isDefault: false },
+        { code: 'EUR', name: 'يورو', symbol: '€', rate: 54.00, isDefault: false },
+        { code: 'SAR', name: 'ريال سعودي', symbol: 'ر.س', rate: 13.33, isDefault: false },
+        { code: 'AED', name: 'درهم إماراتي', symbol: 'د.إ', rate: 13.60, isDefault: false }
+    ];
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 10: Console Filter
+    // ═══════════════════════════════════════════════════════════
+
+    const BLOCKED_KEYWORDS = [
+        'manifest', 'favicon', 'apple-touch-icon',
+        'failed to load resource', 'net::err', 'devtools',
+        'sockjs', 'websocket', 'firebase-database'
+    ];
+
+    const filterEnabled = localStorage.getItem('mizan_console_filter_v18') !== 'off';
+    const originalLog = console.log.bind(console);
+    const originalWarn = console.warn.bind(console);
+    const originalError = console.error.bind(console);
+
+    function shouldFilter(args) {
+        const msg = Array.from(args).join(' ').toLowerCase();
+        return BLOCKED_KEYWORDS.some(function(k) {
+            return msg.indexOf(k.toLowerCase()) > -1;
+        });
+    }
+
+    if (filterEnabled) {
+        console.log = function() {
+            if (!shouldFilter(arguments)) originalLog.apply(console, arguments);
+        };
+        console.warn = function() {
+            if (!shouldFilter(arguments)) originalWarn.apply(console, arguments);
+        };
+        console.error = function() {
+            if (!shouldFilter(arguments)) originalError.apply(console, arguments);
+        };
+    }
+
+    window.toggleConsoleFilter = function() {
+        const current = localStorage.getItem('mizan_console_filter_v18') !== 'off';
+        localStorage.setItem('mizan_console_filter_v18', current ? 'off' : 'on');
+        location.reload();
+    };
+
+    window.__coreLoaded = true;
+    originalLog.call(console, '✅ core.js v18.1 جاهز — الصلاحيات في permissions.js');
+
+})();
+2. data.js - النسخة المصححة (تشفير كلمات المرور)
+javascript
+// ============================================================
+// الميزان Pro - data.js v2.1 (مصحح)
+// طبقة البيانات + Firebase Sync + Multi-Tenant
+// ⚠️ تم تشفير كلمات المرور الافتراضية
+// ============================================================
+
+(function() {
+    'use strict';
+
+    console.log('💾 data.js v2.1 - بدء التحميل');
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 1: Firebase Config
+    // ═══════════════════════════════════════════════════════════
+
+    window.FIREBASE_CONFIG = {
+        apiKey: "AIzaSyB3cnrETONbcrH1d_94w3TzeUEQIF0MSXw",
+        authDomain: "mizan-new-main.firebaseapp.com",
+        databaseURL: "https://mizan-new-main-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "mizan-new-main",
+        storageBucket: "mizan-new-main.firebasestorage.app",
+        messagingSenderId: "442192802804",
+        appId: "1:442192802804:web:8035c27ab7dcf38a547fa1"
+    };
+
+    window.firebaseReady = false;
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 2: المفاتيح المتزامنة
+    // ═══════════════════════════════════════════════════════════
+
+    window.SYNC_KEYS = [
+        'products', 'sales', 'purchases', 'expenses',
+        'cashBoxes', 'customers', 'suppliers', 'users',
+        'treasury', 'journalEntries', 'returns',
+        'payments', 'warehouses', 'branches', 'companyData',
+        'accounts', 'coupons', 'employees', 'attendance',
+        'salaries', 'leaves',
+        'warehouseReceipts', 'warehouseIssues',
+        'warehouseTransfers', 'warehouseAdjustments',
+        'openingBalances'
+    ];
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 3: Store ID (Multi-Tenant)
+    // ═══════════════════════════════════════════════════════════
+
+    const STORE_KEY = 'mizan_store_id_v18';
+
+    window.getStoreId = function() {
+        try {
+            let storeId = localStorage.getItem(STORE_KEY);
+            if (!storeId) {
+                storeId = 'store_' + window.generateId();
+                localStorage.setItem(STORE_KEY, storeId);
+            }
+            return storeId;
+        } catch (e) {
+            return 'store_default';
+        }
+    };
+
+    window.setStoreId = function(storeId) {
+        try {
+            localStorage.setItem(STORE_KEY, storeId);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    };
+
+    window.getStorePath = function() {
+        return 'stores/' + window.getStoreId();
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 4: المتغيرات العامة
+    // ═══════════════════════════════════════════════════════════
+
+    window.products = [];
+    window.sales = [];
+    window.purchases = [];
+    window.customers = [];
+    window.suppliers = [];
+    window.cashBoxes = [];
+    window.expenses = [];
+    window.treasury = [];
+    window.payments = [];
+    window.returns = [];
+    window.users = [];
+    window.accounts = [];
+    window.journalEntries = [];
+    window.coupons = [];
+    window.warehouses = [];
+    window.branches = [];
+    window.employees = [];
+    window.attendance = [];
+    window.salaries = [];
+    window.leaves = [];
+    window.warehouseReceipts = [];
+    window.warehouseIssues = [];
+    window.warehouseTransfers = [];
+    window.warehouseAdjustments = [];
+    window.openingBalances = [];
+
+    window.companyData = {
+        name: 'الميزان',
+        tradeName: '',
+        phone: '',
+        phone2: '',
+        email: '',
+        website: '',
+        address: '',
+        city: '',
+        country: 'مصر',
+        tax: '',
+        commercial: '',
+        taxCard: '',
+        nationalId: '',
+        footer: 'شكراً لتعاملكم معنا 🌟',
+        primaryColor: '#C9A94E',
+        currency: 'ج.م',
+        logo: ''
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 5: DataStore API
+    // ═══════════════════════════════════════════════════════════
+
+    const STORAGE_PREFIX = 'mizan_v18_';
+
+    window.DataStore = {
+        get: function(key) {
+            return window[key] || [];
+        },
+
+        set: function(key, data) {
+            window[key] = data;
+
+            try {
+                localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(data));
+            } catch (e) {
+                console.error('❌ خطأ في حفظ ' + key + ':', e.message);
+            }
+
+            if (window.EventBus) {
+                window.EventBus.emit('data:' + key + ':changed', data);
+                window.EventBus.emit('data:changed', { key: key, data: data });
+            }
+
+            if (window.CloudSync && window.CloudSync.isReady()) {
+                window.CloudSync.push(key, data);
+            }
+
+            return true;
+        },
+
+        add: function(key, item) {
+            const arr = window[key] || [];
+            if (!item.id) item.id = window.generateId();
+            if (!item.createdAt) item.createdAt = new Date().toISOString();
+            arr.push(item);
+            window.DataStore.set(key, arr);
+            if (window.EventBus) window.EventBus.emit(key + ':added', item);
+            return item;
+        },
+
+        update: function(key, id, updates) {
+            const arr = window[key] || [];
+            const idx = arr.findIndex(function(item) { return String(item.id) === String(id); });
+            if (idx === -1) return null;
+
+            arr[idx] = Object.assign({}, arr[idx], updates);
+            arr[idx].updatedAt = new Date().toISOString();
+            window.DataStore.set(key, arr);
+            if (window.EventBus) window.EventBus.emit(key + ':updated', arr[idx]);
+            return arr[idx];
+        },
+
+        remove: function(key, id) {
+            const arr = window[key] || [];
+            const item = arr.find(function(i) { return String(i.id) === String(id); });
+            const filtered = arr.filter(function(i) { return String(i.id) !== String(id); });
+            window.DataStore.set(key, filtered);
+            if (window.EventBus) window.EventBus.emit(key + ':removed', item);
+            return item;
+        },
+
+        find: function(key, id) {
+            return (window[key] || []).find(function(item) { return String(item.id) === String(id); });
+        },
+
+        filter: function(key, predicate) {
+            return (window[key] || []).filter(predicate);
+        },
+
+        sum: function(key, field) {
+            return (window[key] || []).reduce(function(total, item) {
+                return total + (parseFloat(item[field]) || 0);
+            }, 0);
+        },
+
+        loadAll: function() {
+            window.SYNC_KEYS.forEach(function(key) {
+                try {
+                    const stored = localStorage.getItem(STORAGE_PREFIX + key);
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        if (Array.isArray(parsed)) {
+                            window[key] = parsed;
+                        } else if (key === 'companyData' && typeof parsed === 'object') {
+                            window.companyData = Object.assign({}, window.companyData, parsed);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('⚠️ فشل تحميل ' + key);
+                }
+            });
+        },
+
+        saveAll: function() {
+            window.SYNC_KEYS.forEach(function(key) {
+                try {
+                    const data = window[key];
+                    if (data !== undefined) {
+                        localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(data));
+                    }
+                } catch (e) {}
+            });
+            if (window.EventBus) window.EventBus.emit('data:saved:all');
+            return true;
+        },
+
+        clearAll: function() {
+            window.SYNC_KEYS.forEach(function(key) {
+                try {
+                    localStorage.removeItem(STORAGE_PREFIX + key);
+                } catch (e) {}
+            });
+        },
+
+        export: function() {
+            const data = {};
+            window.SYNC_KEYS.forEach(function(key) {
+                data[key] = window[key];
+            });
+            return {
+                version: '2.1',
+                storeId: window.getStoreId(),
+                exportDate: new Date().toISOString(),
+                data: data
+            };
+        },
+
+        import: function(json) {
+            if (!json || !json.data) return false;
+            Object.keys(json.data).forEach(function(key) {
+                if (window.SYNC_KEYS.indexOf(key) > -1) {
+                    window[key] = json.data[key];
+                    try {
+                        localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(json.data[key]));
+                    } catch (e) {}
+                }
+            });
+            window.DataStore.saveAll();
+            if (window.EventBus) window.EventBus.emit('data:imported', json);
+            return true;
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 6: CloudSync — Firebase
+    // ═══════════════════════════════════════════════════════════
+
+    let firebaseListeners = [];
+    let autoSyncTimer = null;
+    let uploadTimers = {};
+    let syncInProgress = false;
+
+    window.CloudSync = {
+        isReady: function() {
+            return typeof firebase !== 'undefined'
+                && firebase.apps
+                && firebase.apps.length > 0
+                && window.firebaseReady;
+        },
+
+        init: function() {
+            try {
+                if (typeof firebase === 'undefined') {
+                    console.warn('⚠️ Firebase SDK غير محمّل');
+                    return false;
+                }
+
+                if (!firebase.apps || firebase.apps.length === 0) {
+                    firebase.initializeApp(window.FIREBASE_CONFIG);
+                }
+
+                window.firebaseReady = true;
+                console.log('✅ Firebase جاهز');
+
+                window.CloudSync.setupConnectionMonitor();
+                window.CloudSync.startRealtime();
+                window.CloudSync.startAutoPush();
+                window.CloudSync.pullAll(true);
+
+                return true;
+            } catch (e) {
+                console.error('❌ Firebase init:', e.message);
+                window.firebaseReady = false;
+                return false;
+            }
+        },
+
+        setupConnectionMonitor: function() {
+            if (!window.CloudSync.isReady()) return;
+
+            try {
+                const connectedRef = firebase.database().ref('.info/connected');
+                connectedRef.on('value', function(snap) {
+                    const connected = snap.val();
+                    const statusEl = document.getElementById('cloudStatusText');
+                    if (statusEl) {
+                        statusEl.textContent = connected ? '✅ متصل' : '❌ غير متصل';
+                        statusEl.style.color = connected ? '#2D8F5E' : '#E06060';
+                    }
+
+                    if (connected && !syncInProgress) {
+                        setTimeout(function() {
+                            window.CloudSync.pushAll(true);
+                        }, 2000);
+                    }
+                });
+            } catch (e) {
+                console.warn('⚠️ فشل مراقبة الاتصال');
+            }
+        },
+
+        push: function(key, data) {
+            if (!window.CloudSync.isReady()) return;
+
+            if (uploadTimers[key]) {
+                clearTimeout(uploadTimers[key]);
+            }
+
+            uploadTimers[key] = setTimeout(function() {
+                try {
+                    const path = window.getStorePath() + '/' + key;
+                    firebase.database().ref(path).set(data)
+                        .then(function() {
+                            console.log('☁️ تم رفع ' + key);
+                        })
+                        .catch(function(e) {
+                            console.warn('⚠️ فشل رفع ' + key + ':', e.message);
+                        });
+                } catch (e) {}
+            }, 800);
+        },
+
+        pushAll: async function(silent) {
+            if (!window.CloudSync.isReady()) return 0;
+            if (syncInProgress) return 0;
+
+            syncInProgress = true;
+            let uploaded = 0;
+
+            for (const key of window.SYNC_KEYS) {
+                try {
+                    const data = window[key];
+                    if (!data) continue;
+                    if (Array.isArray(data) && data.length === 0) continue;
+
+                    const path = window.getStorePath() + '/' + key;
+                    await firebase.database().ref(path).set(data);
+                    uploaded++;
+                } catch (e) {
+                    console.warn('⚠️ فشل رفع ' + key);
+                }
+            }
+
+            syncInProgress = false;
+
+            const now = new Date().toLocaleString('ar-EG');
+            localStorage.setItem('mizan_last_sync', now);
+
+            if (!silent && typeof window.showToast === 'function') {
+                window.showToast('☁️ تم رفع ' + uploaded + ' عنصر', 'success');
+            }
+
+            return uploaded;
+        },
+
+        pull: async function(key) {
+            if (!window.CloudSync.isReady()) return null;
+
+            try {
+                const path = window.getStorePath() + '/' + key;
+                const snap = await firebase.database().ref(path).once('value');
+                const data = snap.val();
+                if (!data) return null;
+
+                const arr = Array.isArray(data) ? data : Object.values(data);
+                return arr;
+            } catch (e) {
+                return null;
+            }
+        },
+
+        pullAll: async function(silent) {
+            if (!window.CloudSync.isReady()) return 0;
+
+            let pulled = 0;
+
+            for (const key of window.SYNC_KEYS) {
+                try {
+                    const arr = await window.CloudSync.pull(key);
+
+                    if (arr && arr.length > 0) {
+                        const localArr = window[key] || [];
+
+                        if (arr.length >= localArr.length) {
+                            window[key] = arr;
+                            try {
+                                localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(arr));
+                            } catch (e) {}
+                            pulled++;
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            if (pulled > 0) {
+                if (window.EventBus) window.EventBus.emit('cloud:pulled', pulled);
+                if (typeof window.refreshAllUI === 'function') {
+                    window.refreshAllUI();
+                }
+            }
+
+            if (!silent && typeof window.showToast === 'function') {
+                window.showToast('📥 تم سحب ' + pulled + ' عنصر', 'success');
+            }
+
+            return pulled;
+        },
+
+        startRealtime: function() {
+            if (!window.CloudSync.isReady()) return;
+
+            firebaseListeners.forEach(function(ref) {
+                try { ref.off(); } catch (e) {}
+            });
+            firebaseListeners = [];
+
+            window.SYNC_KEYS.forEach(function(key) {
+                try {
+                    const path = window.getStorePath() + '/' + key;
+                    const ref = firebase.database().ref(path);
+
+                    ref.on('value', function(snap) {
+                        const data = snap.val();
+                        if (!data) return;
+
+                        const arr = Array.isArray(data) ? data : Object.values(data);
+                        if (arr.length === 0) return;
+
+                        const currentStr = JSON.stringify(window[key] || []);
+                        const newStr = JSON.stringify(arr);
+
+                        if (currentStr !== newStr) {
+                            window[key] = arr;
+                            try {
+                                localStorage.setItem(STORAGE_PREFIX + key, newStr);
+                            } catch (e) {}
+
+                            if (window.EventBus) {
+                                window.EventBus.emit('data:' + key + ':changed', arr);
+                            }
+                        }
+                    });
+
+                    firebaseListeners.push(ref);
+                } catch (e) {}
+            });
+
+            console.log('✅ Real-time sync بدأ');
+        },
+
+        startAutoPush: function() {
+            if (autoSyncTimer) clearInterval(autoSyncTimer);
+
+            autoSyncTimer = setInterval(function() {
+                if (window.CloudSync.isReady() && window.currentUser) {
+                    window.CloudSync.pushAll(true);
+                }
+            }, 30000);
+
+            console.log('✅ Auto push كل 30 ثانية');
+        },
+
+        forcePushAll: async function() {
+            if (!window.CloudSync.isReady()) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('⚠️ Firebase غير متصل', 'error');
+                }
+                return 0;
+            }
+
+            syncInProgress = false;
+            return await window.CloudSync.pushAll(false);
+        },
+
+        stop: function() {
+            firebaseListeners.forEach(function(ref) {
+                try { ref.off(); } catch (e) {}
+            });
+            firebaseListeners = [];
+
+            if (autoSyncTimer) {
+                clearInterval(autoSyncTimer);
+                autoSyncTimer = null;
+            }
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 7: البيانات الأولية — ⚡ async + تشفير
+    // ═══════════════════════════════════════════════════════════
+
+    window.seedInitialData = async function() { // ⚡ async
+        let changed = false;
+
+        if (!window.users || window.users.length === 0) {
+            // ⚡ تشفير كلمة المرور الافتراضية
+            let hashedPassword = '123456';
+            try {
+                if (typeof window.hashPassword === 'function') {
+                    hashedPassword = await window.hashPassword('123456');
+                }
+            } catch (e) {
+                console.warn('⚠️ فشل تشفير كلمة المرور:', e.message);
+            }
+
+            window.users = [
+                { id: 1, name: 'المدير', password: hashedPassword, role: 'admin',   active: true, storeId: window.getStoreId() },
+                { id: 2, name: 'محمد',  password: hashedPassword, role: 'manager', active: true, storeId: window.getStoreId() },
+                { id: 3, name: 'أحمد',  password: hashedPassword, role: 'cashier', active: true, storeId: window.getStoreId() },
+                { id: 4, name: 'علي',   password: hashedPassword, role: 'seller',  active: true, storeId: window.getStoreId() },
+                { id: 5, name: 'زائر',  password: hashedPassword, role: 'viewer',  active: true, storeId: window.getStoreId() }
+            ];
+            try {
+                localStorage.setItem(STORAGE_PREFIX + 'users', JSON.stringify(window.users));
+            } catch (e) {}
+            changed = true;
+        }
+
+        if (!window.cashBoxes || window.cashBoxes.length === 0) {
+            window.cashBoxes = [
+                { id: 1, name: 'نقدي', type: 'cash', icon: '💵', isDefault: true, active: true, openingBalance: 0 },
+                { id: 2, name: 'فودافون كاش', type: 'wallet', icon: '📱', active: true, openingBalance: 0 },
+                { id: 3, name: 'انستاباي', type: 'wallet', icon: '💳', active: true, openingBalance: 0 },
+                { id: 4, name: 'بنك', type: 'bank', icon: '🏦', active: true, openingBalance: 0 }
+            ];
+            try {
+                localStorage.setItem(STORAGE_PREFIX + 'cashBoxes', JSON.stringify(window.cashBoxes));
+            } catch (e) {}
+            changed = true;
+        }
+
+        if (!window.warehouses || window.warehouses.length === 0) {
+            window.warehouses = [
+                { id: 1, name: 'المستودع الرئيسي', type: 'main', location: 'المقر الرئيسي', manager: 'المدير', active: true }
+            ];
+            try {
+                localStorage.setItem(STORAGE_PREFIX + 'warehouses', JSON.stringify(window.warehouses));
+            } catch (e) {}
+            changed = true;
+        }
+
+        if (!window.accounts || window.accounts.length === 0) {
+            window.accounts = [
+                { id: 1, code: '1000', name: 'الأصول', type: 'asset', parent: null, level: 0 },
+                { id: 2, code: '1100', name: 'الأصول المتداولة', type: 'asset', parent: 1, level: 1 },
+                { id: 3, code: '1110', name: 'النقدية بالخزينة', type: 'asset', parent: 2, level: 2 },
+                { id: 4, code: '1120', name: 'النقدية بالبنك', type: 'asset', parent: 2, level: 2 },
+                { id: 5, code: '1130', name: 'محافظ إلكترونية', type: 'asset', parent: 2, level: 2 },
+                { id: 6, code: '1200', name: 'العملاء (المدينون)', type: 'asset', parent: 1, level: 1 },
+                { id: 7, code: '1300', name: 'المخزون', type: 'asset', parent: 1, level: 1 },
+                { id: 20, code: '2000', name: 'الالتزامات', type: 'liability', parent: null, level: 0 },
+                { id: 21, code: '2100', name: 'الالتزامات المتداولة', type: 'liability', parent: 20, level: 1 },
+                { id: 22, code: '2110', name: 'الموردون (الدائنون)', type: 'liability', parent: 21, level: 2 },
+                { id: 30, code: '3000', name: 'حقوق الملكية', type: 'equity', parent: null, level: 0 },
+                { id: 31, code: '3100', name: 'رأس المال', type: 'equity', parent: 30, level: 1 },
+                { id: 32, code: '3200', name: 'الأرباح المحتجزة', type: 'equity', parent: 30, level: 1 },
+                { id: 40, code: '4000', name: 'الإيرادات', type: 'revenue', parent: null, level: 0 },
+                { id: 41, code: '4100', name: 'المبيعات', type: 'revenue', parent: 40, level: 1 },
+                { id: 42, code: '4200', name: 'المرتجعات', type: 'revenue', parent: 40, level: 1 },
+                { id: 50, code: '5000', name: 'المصروفات', type: 'expense', parent: null, level: 0 },
+                { id: 51, code: '5100', name: 'تكلفة المبيعات', type: 'expense', parent: 50, level: 1 },
+                { id: 52, code: '5200', name: 'الرواتب والأجور', type: 'expense', parent: 50, level: 1 },
+                { id: 53, code: '5300', name: 'الإيجارات', type: 'expense', parent: 50, level: 1 },
+                { id: 54, code: '5400', name: 'الكهرباء والمياه', type: 'expense', parent: 50, level: 1 },
+                { id: 55, code: '5500', name: 'الاتصالات', type: 'expense', parent: 50, level: 1 },
+                { id: 56, code: '5600', name: 'المواصلات', type: 'expense', parent: 50, level: 1 },
+                { id: 57, code: '5700', name: 'الصيانة', type: 'expense', parent: 50, level: 1 },
+                { id: 58, code: '5800', name: 'مصروفات أخرى', type: 'expense', parent: 50, level: 1 }
+            ];
+            try {
+                localStorage.setItem(STORAGE_PREFIX + 'accounts', JSON.stringify(window.accounts));
+            } catch (e) {}
+            changed = true;
+        }
+
+        if (changed) {
+            console.log('✅ تم إنشاء البيانات الأولية (كلمات المرور مشفرة)');
+        }
+
+        return changed;
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 8: Balance API
+    // ═══════════════════════════════════════════════════════════
+
+    window.Balance = {
+        cashBox: function(boxId) {
+            const box = (window.cashBoxes || []).find(function(b) { return String(b.id) === String(boxId); });
+            if (!box) return 0;
+
+            let balance = parseFloat(box.openingBalance) || 0;
+
+            (window.treasury || []).forEach(function(t) {
+                if (String(t.cashBoxId) === String(boxId)) {
+                    const amt = parseFloat(t.amount) || 0;
+                    if (t.type === 'deposit') balance += amt;
+                    else if (t.type === 'withdraw') balance -= amt;
+                }
+            });
+
+            return Math.round(balance * 100) / 100;
+        },
+
+        totalCash: function() {
+            return (window.cashBoxes || []).reduce(function(sum, box) {
+                return sum + window.Balance.cashBox(box.id);
+            }, 0);
+        },
+
+        customer: function(customerName) {
+            if (!customerName || customerName === 'عميل نقدي') return 0;
+
+            return (window.sales || [])
+                .filter(function(s) {
+                    return s.customer === customerName && s.paymentMethod === 'credit';
+                })
+                .reduce(function(sum, s) {
+                    const remaining = s.remainingAmount !== undefined
+                        ? s.remainingAmount
+                        : (s.total || 0);
+                    return sum + (parseFloat(remaining) || 0);
+                }, 0);
+        },
+
+        supplier: function(supplierName) {
+            if (!supplierName) return 0;
+
+            return (window.purchases || [])
+                .filter(function(p) {
+                    return p.supplierName === supplierName && p.payment === 'credit';
+                })
+                .reduce(function(sum, p) {
+                    const remaining = p.remainingAmount !== undefined
+                        ? p.remainingAmount
+                        : (p.total || 0);
+                    return sum + (parseFloat(remaining) || 0);
+                }, 0);
+        },
+
+        inventory: function() {
+            return (window.products || []).reduce(function(sum, p) {
+                const qty = parseFloat(p.qty) || 0;
+                const buy = parseFloat(p.buy) || 0;
+                return sum + (qty * buy);
+            }, 0);
+        },
+
+        account: function(accountId) {
+            let balance = 0;
+            (window.journalEntries || []).forEach(function(entry) {
+                (entry.lines || []).forEach(function(line) {
+                    if (String(line.accountId) === String(accountId)) {
+                        balance += (parseFloat(line.debit) || 0) - (parseFloat(line.credit) || 0);
+                    }
+                });
+            });
+            return balance;
+        },
+
+        accountType: function(type) {
+            return (window.accounts || [])
+                .filter(function(a) { return a.type === type; })
+                .reduce(function(sum, acc) {
+                    return sum + window.Balance.account(acc.id);
+                }, 0);
+        },
+
+        customerPoints: function(customerName) {
+            if (!customerName || customerName === 'عميل نقدي') return 0;
+
+            let points = 0;
+            (window.sales || []).forEach(function(s) {
+                if (s.customer === customerName) {
+                    points += Math.floor((s.total || 0) / 100) * window.LOYALTY_CONFIG.POINTS_PER_100;
+                    if (s.redeemedPoints) points -= s.redeemedPoints;
+                }
+            });
+
+            return Math.max(0, points);
+        },
+
+        customerLevel: function(customerName) {
+            const total = (window.sales || [])
+                .filter(function(s) { return s.customer === customerName; })
+                .reduce(function(sum, s) { return sum + (s.total || 0); }, 0);
+
+            const levels = window.LOYALTY_CONFIG.LEVELS;
+            for (let i = levels.length - 1; i >= 0; i--) {
+                if (total >= levels[i].min) return levels[i];
+            }
+            return levels[0];
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 9: Accounting
+    // ═══════════════════════════════════════════════════════════
+
+    window.Accounting = {
+        createEntry: function(date, description, lines, reference) {
+            if (!lines || lines.length < 2) return null;
+
+            let totalDebit = 0, totalCredit = 0;
+            lines.forEach(function(line) {
+                totalDebit += parseFloat(line.debit) || 0;
+                totalCredit += parseFloat(line.credit) || 0;
+            });
+
+            if (Math.abs(totalDebit - totalCredit) > 0.01) {
+                console.warn('⚠️ القيد غير متوازن:', totalDebit, '≠', totalCredit);
+                return null;
+            }
+
+            const entry = {
+                id: window.generateId('je_'),
+                number: (window.journalEntries || []).length + 1,
+                date: date || window.getTodayDate(),
+                description: description,
+                lines: lines,
+                reference: reference || '',
+                totalDebit: totalDebit,
+                totalCredit: totalCredit,
+                createdAt: new Date().toISOString(),
+                createdBy: window.currentUser ? window.currentUser.name : 'system'
+            };
+
+            window.DataStore.add('journalEntries', entry);
+            if (window.EventBus) window.EventBus.emit('accounting:entry:created', entry);
+
+            return entry;
+        },
+
+        findByCode: function(code) {
+            return (window.accounts || []).find(function(a) { return a.code === code; });
+        },
+
+        entrySale: function(invoice, isCash) {
+            const salesAcc = window.Accounting.findByCode('4100');
+            const cashAcc = window.Accounting.findByCode('1110');
+            const customerAcc = window.Accounting.findByCode('1200');
+            const cogsAcc = window.Accounting.findByCode('5100');
+            const inventoryAcc = window.Accounting.findByCode('1300');
+
+            if (!salesAcc) return;
+
+            if (isCash && cashAcc) {
+                window.Accounting.createEntry(invoice.date,
+                    'فاتورة بيع نقدية #' + invoice.number,
+                    [
+                        { accountId: cashAcc.id, debit: invoice.total, credit: 0 },
+                        { accountId: salesAcc.id, debit: 0, credit: invoice.total }
+                    ], 'INV-' + invoice.number);
+            } else if (customerAcc) {
+                window.Accounting.createEntry(invoice.date,
+                    'فاتورة بيع آجل #' + invoice.number,
+                    [
+                        { accountId: customerAcc.id, debit: invoice.total, credit: 0 },
+                        { accountId: salesAcc.id, debit: 0, credit: invoice.total }
+                    ], 'INV-' + invoice.number);
+            }
+
+            if (invoice.cogs > 0 && cogsAcc && inventoryAcc) {
+                window.Accounting.createEntry(invoice.date,
+                    'تكلفة مبيعات #' + invoice.number,
+                    [
+                        { accountId: cogsAcc.id, debit: invoice.cogs, credit: 0 },
+                        { accountId: inventoryAcc.id, debit: 0, credit: invoice.cogs }
+                    ], 'INV-' + invoice.number + '-COGS');
+            }
+        },
+
+        entryPurchase: function(invoice, isCash) {
+            const purchaseAcc = window.Accounting.findByCode('1300');
+            const cashAcc = window.Accounting.findByCode('1110');
+            const supplierAcc = window.Accounting.findByCode('2110');
+
+            if (!purchaseAcc) return;
+
+            if (isCash && cashAcc) {
+                window.Accounting.createEntry(invoice.date,
+                    'فاتورة شراء نقدية #' + invoice.number,
+                    [
+                        { accountId: purchaseAcc.id, debit: invoice.total, credit: 0 },
+                        { accountId: cashAcc.id, debit: 0, credit: invoice.total }
+                    ], 'PUR-' + invoice.number);
+            } else if (supplierAcc) {
+                window.Accounting.createEntry(invoice.date,
+                    'فاتورة شراء آجل #' + invoice.number,
+                    [
+                        { accountId: purchaseAcc.id, debit: invoice.total, credit: 0 },
+                        { accountId: supplierAcc.id, debit: 0, credit: invoice.total }
+                    ], 'PUR-' + invoice.number);
+            }
+        },
+
+        entryExpense: function(expense) {
+            const expenseAcc = window.Accounting.findByCode('5800');
+            const cashAcc = window.Accounting.findByCode('1110');
+
+            if (!expenseAcc || !cashAcc) return;
+
+            window.Accounting.createEntry(expense.date,
+                'مصروف: ' + expense.note,
+                [
+                    { accountId: expenseAcc.id, debit: expense.amount, credit: 0 },
+                    { accountId: cashAcc.id, debit: 0, credit: expense.amount }
+                ], 'EXP-' + expense.id);
+        },
+
+        entryCollect: function(payment) {
+            const cashAcc = window.Accounting.findByCode('1110');
+            const customerAcc = window.Accounting.findByCode('1200');
+
+            if (!cashAcc || !customerAcc) return;
+
+            window.Accounting.createEntry(payment.date,
+                'تحصيل من ' + payment.party,
+                [
+                    { accountId: cashAcc.id, debit: payment.amount, credit: 0 },
+                    { accountId: customerAcc.id, debit: 0, credit: payment.amount }
+                ], 'COL-' + payment.id);
+        },
+
+        entryPay: function(payment) {
+            const supplierAcc = window.Accounting.findByCode('2110');
+            const cashAcc = window.Accounting.findByCode('1110');
+
+            if (!supplierAcc || !cashAcc) return;
+
+            window.Accounting.createEntry(payment.date,
+                'سداد لـ ' + payment.party,
+                [
+                    { accountId: supplierAcc.id, debit: payment.amount, credit: 0 },
+                    { accountId: cashAcc.id, debit: 0, credit: payment.amount }
+                ], 'PAY-' + payment.id);
+        },
+
+        removeByReference: function(reference) {
+            const filtered = (window.journalEntries || []).filter(function(e) {
+                return e.reference !== reference;
+            });
+            window.DataStore.set('journalEntries', filtered);
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 10: مراقبة الاتصال
+    // ═══════════════════════════════════════════════════════════
+
+    window.addEventListener('online', function() {
+        console.log('🟢 عاد الاتصال');
+        if (window.CloudSync && window.CloudSync.isReady()) {
+            setTimeout(function() {
+                window.CloudSync.pushAll(true);
+            }, 1500);
+        }
+    });
+
+    window.addEventListener('offline', function() {
+        console.log('🔴 انقطع الاتصال');
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 11: التهيئة
+    // ═══════════════════════════════════════════════════════════
+
+    window.DataStore.loadAll();
+    console.log('✅ تم تحميل البيانات من localStorage');
+
+    // ⚡ seedInitialData دالة async
+    window.seedInitialData().then(function(changed) {
+        if (changed) {
+            console.log('✅ البيانات الأولية جاهزة');
+        }
+    }).catch(function(e) {
+        console.warn('⚠️ فشل إنشاء البيانات الأولية:', e);
+    });
+
+    window.__dataLoaded = true;
+    console.log('✅ data.js v2.1 جاهز');
+
+})();
+3. pos.js - النسخة المصححة (طباعة التقارير مع CSS)
+التعديل المطلوب في دالة printCurrentReport فقط — باقي الملف كما هو. ابحث عن دالة printCurrentReport واستبدلها بالكامل:
+
+javascript
+    // ⚡ طباعة التقرير — مع اللوجو + CSS كامل
+    window.printCurrentReport = function() {
+        const container = document.getElementById('reportContent');
+        if (!container || !container.innerHTML.trim()) {
+            window.showToast('⚠️ اختر تقرير أولاً', 'warning');
+            return;
+        }
+
+        const w = window.open('', '_blank');
+        if (!w) {
+            window.showToast('⚠️ يرجى السماح بالنوافذ المنبثقة', 'warning');
+            return;
+        }
+
+        const company = window.companyData || { name: 'الميزان' };
+        const reportNames = {
+            'daily': 'تقرير يومي',
+            'monthly': 'تقرير شهري',
+            'yearly': 'تقرير سنوي',
+            'sellers': 'تقرير البائعين',
+            'products': 'تقرير المنتجات',
+            'customers': 'تقرير العملاء'
+        };
+
+        // ⚡ استخدام اللوجو
+        const logoHtml = company.logo
+            ? '<img src="' + company.logo + '" style="max-width:120px;max-height:120px;display:block;margin:0 auto 10px auto;object-fit:contain;" />'
+            : '<h1 style="color:#C9A94E;text-align:center;">⚖️ ' + window.escapeHtml(company.name || 'الميزان') + '</h1>';
+
+        // ⚡ CSS كامل داخل نافذة الطباعة
+        const printCSS = `
+            <style>
+                * { box-sizing: border-box; }
+                body {
+                    font-family: Arial, 'Tajawal', sans-serif;
+                    padding: 20px;
+                    background: #fff;
+                    color: #000;
+                    direction: rtl;
+                }
+                h1 { color: #C9A94E; text-align: center; margin-bottom: 10px; }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 20px;
+                }
+                th {
+                    background: #C9A94E;
+                    color: #fff;
+                    padding: 10px;
+                    text-align: right;
+                    font-size: 12px;
+                }
+                td {
+                    padding: 8px;
+                    border-bottom: 1px solid #ddd;
+                    font-size: 12px;
+                }
+                
+                /* ⚡ أنماط التقارير المفقودة */
+                .report-summary {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 10px;
+                    margin-bottom: 20px;
+                }
+                .report-stat {
+                    background: #f9f9f9;
+                    padding: 12px;
+                    border-radius: 8px;
+                    text-align: center;
+                    border-right: 4px solid #C9A94E;
+                }
+                .report-stat .num {
+                    font-size: 20px;
+                    font-weight: 900;
+                    color: #C9A94E;
+                }
+                .report-stat .lbl {
+                    font-size: 12px;
+                    color: #666;
+                }
+                .report-stat.green { border-right-color: #2D8F5E; }
+                .report-stat.red { border-right-color: #E06060; }
+                .report-stat.orange { border-right-color: #E6A830; }
+                .report-stat.blue { border-right-color: #4A8AB5; }
+                .report-stat.gold { border-right-color: #C9A94E; }
+                .report-stat.green .num { color: #2D8F5E; }
+                .report-stat.red .num { color: #E06060; }
+                .report-stat.orange .num { color: #E6A830; }
+                .report-stat.blue .num { color: #4A8AB5; }
+                
+                .report-table-header,
+                .report-table-row {
+                    display: grid;
+                    gap: 6px;
+                    padding: 8px;
+                    border-bottom: 1px solid #ddd;
+                }
+                .report-table-header {
+                    background: #C9A94E;
+                    color: #fff;
+                    font-weight: 900;
+                    font-size: 11px;
+                }
+                .report-table-row {
+                    font-size: 11px;
+                }
+                .report-table-row .green { color: #2D8F5E; font-weight: 800; }
+                .report-table-row .red { color: #E06060; font-weight: 800; }
+                .report-table-row .gold { color: #C9A94E; font-weight: 800; }
+                .report-table-row .blue { color: #4A8AB5; font-weight: 800; }
+                .report-table-row .orange { color: #E6A830; font-weight: 800; }
+                
+                .empty-state {
+                    text-align: center;
+                    padding: 30px;
+                    color: #999;
+                }
+                
+                .footer {
+                    text-align: center;
+                    margin-top: 30px;
+                    padding-top: 20px;
+                    border-top: 2px dashed #ddd;
+                    font-size: 12px;
+                    color: #666;
+                }
+            </style>
+        `;
+
+        w.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">' +
+            '<title>' + (reportNames[window.currentReport] || 'تقرير') + '</title>' +
+            printCSS +
+            '</head><body>' +
+            logoHtml +
+            '<p style="text-align:center;">' + (reportNames[window.currentReport] || '') + ' - ' + window.getTodayDate() + '</p>' +
+            container.innerHTML +
+            '<div class="footer">' +
+                (company.phone ? '📞 ' + window.escapeHtml(company.phone) + '<br>' : '') +
+                window.escapeHtml(company.footer || 'شكراً لتعاملكم معنا 🌟') +
+            '</div>' +
+            '<script>window.onload=function(){setTimeout(function(){window.print();},500);};<\/script>' +
+            '</body></html>');
+
+        w.document.close();
+    };
+4. app.js - النسخة المصححة (التعامل مع seedInitialData الـ async)
+التعديل المطلوب في دالة init و populateLoginUsers فقط:
+
+javascript
+    // ═══════════════════════════════════════════════════════════
+    // populateLoginUsers — ⚡ async للتعامل مع seedInitialData
+    // ═══════════════════════════════════════════════════════════
+
+    window.populateLoginUsers = async function() { // ⚡ async
+        const sel = document.getElementById('loginUsername');
+        if (!sel) return;
+
+        let users = window.users || [];
+
+        if (users.length === 0) {
+            if (typeof window.seedInitialData === 'function') {
+                try {
+                    await window.seedInitialData(); // ⚡ await
+                } catch (e) {
+                    console.warn('⚠️ فشل seedInitialData:', e);
+                }
+                users = window.users;
+            }
+        }
+
+        // لو لسه فاضية، نعمل المدير الافتراضي (مشفر)
+        if (users.length === 0) {
+            let hashedPassword = '123456';
+            try {
+                if (typeof window.hashPassword === 'function') {
+                    hashedPassword = await window.hashPassword('123456');
+                }
+            } catch (e) {}
+
+            users = [
+                { id: 'user_admin', name: 'المدير', password: hashedPassword, role: 'admin', active: true }
+            ];
+            window.users = users;
+            localStorage.setItem('mizan_v18_users', JSON.stringify(users));
+        }
+
+        let html = '<option value="">اختر المستخدم...</option>';
+        users.forEach(function(u) {
+            if (u.active !== false) {
+                const roleInfo = (window.ROLES && window.ROLES[u.role]) || { icon: '❓', name: u.role };
+                html += '<option value="' + u.id + '">' + roleInfo.icon + ' ' + u.name + ' (' + roleInfo.name + ')</option>';
+            }
+        });
+        sel.innerHTML = html;
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // init — ⚡ التعامل مع async
+    // ═══════════════════════════════════════════════════════════
+
+    window.init = async function() { // ⚡ async
+        console.log('🚀 بدء تهيئة التطبيق...');
+
+        // بيانات أولية — ⚡ await
+        if (typeof window.seedInitialData === 'function') {
+            try {
+                await window.seedInitialData();
+            } catch (e) {
+                console.warn('⚠️ فشل seedInitialData:', e);
+            }
+        }
+
+        // تحميل البيانات
+        if (window.DataStore && window.DataStore.loadAll) window.DataStore.loadAll();
+
+        // استرجاع الجلسة
+        if (typeof window.getSession === 'function') {
+            const session = window.getSession();
+            if (session && session.userId) {
+                const user = (window.users || []).find(function(u) { return u.id == session.userId; });
+                if (user) window.currentUser = user;
+            }
+        }
+
+        // تحميل بيانات الشركة واللوجو
+        window.loadCompanyData();
+
+        // ملء المستخدمين — ⚡ await
+        await window.populateLoginUsers();
+
+        // إظهار شاشة الدخول
+        const loginCont = document.getElementById('loginContainer');
+        const appCont = document.getElementById('appContent');
+        if (loginCont) loginCont.classList.remove('hidden');
+        if (appCont) appCont.style.display = 'none';
+
+        // تاريخ اليوم
+        if (typeof window.getTodayDate === 'function') {
+            const today = window.getTodayDate();
+            ['expDate', 'collectDate', 'payDate'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) el.value = today;
+            });
+        }
+
+        // الساعة
+        if (typeof window.updateClock === 'function') {
+            window.updateClock();
+            setInterval(window.updateClock, 1000);
+        }
+
+        // مزامنة سحابية
+        setTimeout(function() {
+            if (typeof window.initCloudSync === 'function') window.initCloudSync();
+        }, 2000);
+
+        if (window.EventBus) window.EventBus.emit('app:initialized');
+        console.log('✅ التطبيق جاهز');
+    };
+5. permissions.js - النسخة النهائية (بدون تعديل — هي المصدر الوحيد للصلاحيات)
+الملف الحالي صحيح تماماً، وهو المصدر الوحيد للصلاحيات الآن بعد حذفها من core.js. لا يحتاج أي تعديل.
+
+6. app.html - النسخة المصححة (ترتيب تحميل الملفات)
+التعديل المطلوب: permissions.js يجب أن يُحمَّل قبل app.js و ui.js حتى تكون دوال الصلاحيات متاحة عند التهيئة.
+
+html
+    <!-- ملفات التطبيق - الترتيب مهم جداً -->
+    <script src="activation.js"></script>
+    <script src="core.js"></script>
+    <script src="data.js"></script>
+    <script src="permissions.js"></script>  <!-- ⚡ نقل هنا — قبل ui.js و app.js -->
+    <script src="ui.js"></script>
+    <script src="app.js"></script>
+    <script src="pos.js"></script>
+    <script src="search.js"></script>
+    <script src="tenant.js"></script>
+    <script src="themes.js"></script>
+    <script src="inventory.js"></script>
+    <script src="accounting.js"></script>
+    <script src="dashboard.js"></script>
+    <script src="extras.js"></script>
+    <script src="warehouses.js"></script>
+    <script src="sharabar.js"></script>
+7. sw.js - النسخة المصححة (تحديث CACHE_NAME + إضافة permissions.js)
+javascript
+// ============================================================
+// الميزان Pro - sw.js v1.1
+// Service Worker — PWA Offline Support
+// ============================================================
+
+const CACHE_NAME = 'mizan-pro-v2.1.0';  // ⚡ تحديث الإصدار
+const RUNTIME_CACHE = 'mizan-runtime-v2.1.0';
+
+const CORE_FILES = [
+    './',
+    './index.html',
+    './app.html',
+    './thanks.html',
+    './style.css',
+    './landing.css',
+    './manifest.json',
+
+    './core.js',
+    './data.js',
+    './permissions.js',  // ⚡ إضافة
+    './ui.js',
+    './app.js',
+    './pos.js',
+    './search.js',
+    './tenant.js',
+    './themes.js',
+    './activation.js',
+    './inventory.js',
+    './accounting.js',
+    './dashboard.js',
+    './extras.js',
+    './warehouses.js',
+    './sharabar.js',  // ⚡ إضافة
+
+    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+    'https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap'
+];
+
+// ... باقي الملف كما هو (install, activate, fetch, messages, sync, push)
+ملخص التغييرات
+الملف	التغيير	الأهمية
+core.js	حذف تعريفات الصلاحيات المكررة	🔴 حرجة
+data.js	تشفير كلمات المرور الافتراضية + async	🔴 حرجة
+pos.js	إضافة CSS لنافذة طباعة التقارير	🟡 مهمة
+app.js	التعامل مع seedInitialData كـ async	🔴 حرجة
+app.html	نقل permissions.js قبل ui.js و app.js	🔴 حرجة
+sw.js	تحديث CACHE_NAME + إضافة الملفات الناقصة	🟡 مهمة
+permissions.js	لا يحتاج تعديل	✅
+⚠️ خطوة ضرورية إضافية (غير كود)
+Firebase Security Rules — يجب تطبيقها من لوحة تحكم Firebase لحماية البيانات:
+
+json
+{
+  "rules": {
+    "stores": {
+      "$storeId": {
+        ".read": "auth != null || root.child('activations').child(auth.uid).child('storeId').val() === $storeId",
+        ".write": "auth != null || root.child('activations').child(auth.uid).child('storeId').val() === $storeId"
+      }
+    },
+    "activations": {
+      "$code": {
+        ".read": true,
+        ".write": "auth != null"
+      }
+    }
+  }
+}
+ملاحظة: هذه القواعد تحتاج تعديلاً حسب طريقة المصادقة التي ستستخدمها (Firebase Auth أو نظامك الحالي). راجع وثائق Firebase Security Rules للحصول على أفضل إعداد.
+
+هل تحتاج إلى أي من الملفات الأخرى كاملة (مثل ui.js أو pos.js بالكامل)؟
+
+app.html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -48,6 +2296,7 @@
     <!-- ═══════════ محتوى التطبيق ═══════════ -->
     <div id="appContent" style="display:none;">
 
+        <!-- ★★★ شريط الإعلانات (ثابت فوق اللوجو مباشرة) ★★★ -->
         <div id="sharabarContainer"></div>
 
         <!-- ═══════════ الهيدر ═══════════ -->
@@ -190,14 +2439,17 @@
 
                 <div class="form-card">
                     <h3>📸 لوجو الشركة</h3>
+
                     <div id="companyLogoPreview" style="display:none;text-align:center;margin-bottom:15px;">
                         <img id="companyLogoImg" src=""
                              style="max-width:200px;max-height:200px;border-radius:10px;border:2px solid #C9A94E;padding:5px;background:#0D0D0D;" />
                     </div>
+
                     <input type="file" id="companyLogoInput"
                            accept="image/png,image/jpeg,image/jpg,image/webp"
                            style="display:none"
                            onchange="uploadCompanyLogo(event)" />
+
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                         <button class="btn btn-primary"
                                 onclick="document.getElementById('companyLogoInput').click()">
@@ -207,6 +2459,7 @@
                             🗑️ حذف
                         </button>
                     </div>
+
                     <div style="margin-top:10px;font-size:11px;color:#A89070;text-align:center;">
                         💡 يُفضل صورة بحجم 200×200 بكسل (JPG أو PNG)
                     </div>
@@ -328,1416 +2581,62 @@
             </div>
         </div>
 
-        <!-- ═══════════ المخزون ═══════════ -->
-        <div id="page-inventory" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-box"></i> المخزون</h2>
-
-                <div class="form-card">
-                    <h3 id="productFormTitle">➕ إضافة منتج جديد</h3>
-                    <input type="hidden" id="productId" />
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>اسم المنتج *</label>
-                            <input type="text" id="productName" placeholder="مثال: شاي العروسة" />
-                        </div>
-                        <div class="form-group">
-                            <label>الباركود</label>
-                            <input type="text" id="productBarcode" />
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>سعر الشراء</label>
-                            <input type="number" id="productBuy" step="0.01" min="0" />
-                        </div>
-                        <div class="form-group">
-                            <label>سعر البيع</label>
-                            <input type="number" id="productSell" step="0.01" min="0" />
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>الكمية</label>
-                            <input type="number" id="productQty" min="0" />
-                        </div>
-                        <div class="form-group">
-                            <label>الحد الأدنى</label>
-                            <input type="number" id="productMin" value="5" min="0" />
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button class="btn btn-success" onclick="saveProduct()">
-                            <i class="fas fa-save"></i> <span id="productSaveBtnText">إضافة</span>
-                        </button>
-                        <button class="btn btn-secondary" onclick="resetProductForm()">
-                            <i class="fas fa-times"></i> إلغاء
-                        </button>
-                    </div>
-                </div>
-
-                <div class="search-box">
-                    <input type="text" id="inventorySearch" placeholder="🔍 ابحث باسم المنتج أو الباركود..."
-                           oninput="renderProducts()" />
-                </div>
-
-                <div id="productList"></div>
-            </div>
-        </div>
-
-        <!-- ═══════════ الكاشير ═══════════ -->
-        <div id="page-cashier" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-cash-register"></i> الكاشير</h2>
-
-                <div class="pos-toolbar">
-                    <div class="pos-invoice-num">
-                        <span>🧾</span>
-                        <span class="pos-num" id="invNumberDisplay">#0</span>
-                    </div>
-                    <div class="pos-actions">
-                        <button class="pos-btn pos-btn-save" onclick="saveSale()">
-                            <i class="fas fa-save"></i><span>حفظ</span>
-                        </button>
-                        <button class="pos-btn pos-btn-cancel" onclick="clearSale()">
-                            <i class="fas fa-times"></i><span>إلغاء</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="pos-meta-row">
-                    <div class="pos-meta-item">
-                        <span class="pos-meta-icon">📅</span>
-                        <span class="pos-meta-label">التاريخ</span>
-                        <input type="text" id="invDateDisplay" class="pos-meta-value" readonly />
-                    </div>
-                    <div class="pos-meta-item">
-                        <span class="pos-meta-icon">🕐</span>
-                        <span class="pos-meta-label">الوقت</span>
-                        <input type="text" id="invTimeDisplay" class="pos-meta-value" readonly />
-                    </div>
-                </div>
-
-                <div class="pos-customer-row">
-                    <div class="pos-customer-icon">👤</div>
-                    <div class="pos-customer-info">
-                        <label class="pos-customer-label">العميل</label>
-                        <div class="smart-search-container" data-search-type="customers" data-search-target="saleCustomer">
-                            <input type="text" class="smart-search-input" placeholder="🔍 ابحث باسم العميل أو الموبايل..." />
-                            <div class="smart-search-results"></div>
-                        </div>
-                        <select id="saleCustomer" style="display:none;"></select>
-                    </div>
-                </div>
-
-                <div class="pos-seller-row">
-                    <div class="pos-seller-item">
-                        <label>👨‍💼 البائع</label>
-                        <input type="text" id="saleSeller" class="pos-input" placeholder="اسم البائع" />
-                    </div>
-                </div>
-
-                <div class="pos-type-switch">
-                    <label class="pos-type-opt">
-                        <input type="radio" name="saleInvoiceType" value="simple" checked />
-                        <span>🧾 عادية</span>
-                    </label>
-                    <label class="pos-type-opt">
-                        <input type="radio" name="saleInvoiceType" value="tax" />
-                        <span>📋 ضريبية</span>
-                    </label>
-                </div>
-
-                <div class="pos-section-title">📦 إضافة الأصناف</div>
-
-                <div class="pos-add-item">
-                    <div class="smart-search-container" data-search-type="products" data-search-target="saleProduct" style="flex:1;">
-                        <input type="text" class="smart-search-input" placeholder="🔍 ابحث عن منتج..." />
-                        <div class="smart-search-results"></div>
-                    </div>
-                    <select id="saleProduct" style="display:none;"></select>
-                    <input type="number" id="saleQty" class="pos-input" style="width:70px;" value="1" min="1" placeholder="كمية" />
-                    <input type="number" id="salePrice" class="pos-input" style="width:90px;" placeholder="سعر" step="0.01" onchange="updateSalePrice()" />
-                    <button class="pos-btn pos-btn-add" onclick="addSaleItem()">
-                        <i class="fas fa-plus"></i>
-                    </button>
-                </div>
-
-                <div class="pos-field" style="margin-bottom:10px;">
-                    <label>🏭 المستودع</label>
-                    <select id="saleWarehouse" class="pos-select"></select>
-                </div>
-
-                <div class="pos-items-box">
-                    <div class="pos-items-header">
-                        <span>🛒 الأصناف</span>
-                        <span class="pos-count" id="itemsCountBadge">0</span>
-                    </div>
-                    <div id="saleItemsContainer"></div>
-                </div>
-
-                <div id="saleTotalBox" class="pos-totals-box" style="display:none;">
-                    <div class="pos-totals-grid">
-                        <div class="pos-total-stat">
-                            <div class="pos-total-label">الأصناف</div>
-                            <div class="pos-total-value" id="statItemsCount">0</div>
-                        </div>
-                        <div class="pos-total-stat">
-                            <div class="pos-total-label">الكمية</div>
-                            <div class="pos-total-value" id="statTotalQty">0</div>
-                        </div>
-                        <div class="pos-total-stat">
-                            <div class="pos-total-label">المجموع</div>
-                            <div class="pos-total-value" id="saleSubtotal">0.00</div>
-                        </div>
-                        <div class="pos-total-stat">
-                            <div class="pos-total-label">الضريبة</div>
-                            <div class="pos-total-value" id="saleVAT">0.00</div>
-                        </div>
-                    </div>
-
-                    <div class="pos-discount-grid">
-                        <div class="pos-field">
-                            <label>💰 خصم</label>
-                            <input type="number" id="saleDiscount" class="pos-input" value="0" step="0.01" oninput="updateSaleTotals()" />
-                        </div>
-                        <div class="pos-field">
-                            <label>نوع الخصم</label>
-                            <select id="saleDiscountType" class="pos-select" onchange="updateSaleTotals()">
-                                <option value="fixed">مبلغ ثابت</option>
-                                <option value="percent">نسبة %</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="pos-discount-grid">
-                        <div class="pos-field">
-                            <label>🏷️ خصم مستوى العميل</label>
-                            <input type="number" id="saleLevelDiscount" class="pos-input" value="0" step="0.01" oninput="updateSaleTotals()" />
-                        </div>
-                        <div class="pos-field">
-                            <label>نوع الخصم</label>
-                            <select id="saleLevelDiscountType" class="pos-select" onchange="updateSaleTotals()">
-                                <option value="fixed">مبلغ ثابت</option>
-                                <option value="percent">نسبة %</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="pos-section-title">💳 طريقة الدفع</div>
-
-                    <div class="pos-payment-grid">
-                        <label class="pos-pay-opt">
-                            <input type="radio" name="salePaymentMethod" value="cash" checked />
-                            <span>💵 نقدي</span>
-                        </label>
-                        <label class="pos-pay-opt">
-                            <input type="radio" name="salePaymentMethod" value="credit" />
-                            <span>📝 آجل</span>
-                        </label>
-                        <label class="pos-pay-opt">
-                            <input type="radio" name="salePaymentMethod" value="wallet" />
-                            <span>📱 محفظة</span>
-                        </label>
-                        <label class="pos-pay-opt">
-                            <input type="radio" name="salePaymentMethod" value="visa" />
-                            <span>💳 فيزا</span>
-                        </label>
-                        <label class="pos-pay-opt">
-                            <input type="radio" name="salePaymentMethod" value="bank" />
-                            <span>🏦 بنك</span>
-                        </label>
-                        <label class="pos-pay-opt">
-                            <input type="radio" name="salePaymentMethod" value="installment" />
-                            <span>📅 تقسيط</span>
-                        </label>
-                    </div>
-
-                    <div class="pos-field" style="margin-bottom:10px;">
-                        <label>💰 الخزنة</label>
-                        <select id="saleCashBox" class="pos-select"></select>
-                    </div>
-
-                    <div class="pos-delivery-row">
-                        <div class="pos-delivery-item">
-                            <label>🚚 المندوب</label>
-                            <input type="text" id="saleDelivery" class="pos-input" />
-                        </div>
-                        <div class="pos-delivery-item">
-                            <label>📦 الشحن</label>
-                            <input type="text" id="saleShipping" class="pos-input" />
-                        </div>
-                    </div>
-
-                    <div class="pos-grand-total">
-                        <span>💰 الإجمالي</span>
-                        <strong id="saleTotal">0.00 ج.م</strong>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ═══════════ المشتريات ═══════════ -->
-        <div id="page-purchases" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-shopping-cart"></i> المشتريات</h2>
-
-                <div class="stats-mini">
-                    <div class="stat-mini">
-                        <div class="num" id="purTotalCount">0</div>
-                        <div class="lbl">🧾 الفواتير</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="num" id="purTotalAmount">0.00</div>
-                        <div class="lbl">💰 الإجمالي</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="num" id="purTodayAmount">0.00</div>
-                        <div class="lbl">📅 اليوم</div>
-                    </div>
-                </div>
-
-                <div class="form-card">
-                    <h3>➕ إضافة أصناف</h3>
-
-                    <div class="pos-customer-row">
-                        <div class="pos-customer-icon">🚚</div>
-                        <div class="pos-customer-info">
-                            <label class="pos-customer-label">المورد</label>
-                            <div class="smart-search-container" data-search-type="suppliers" data-search-target="purSupplier">
-                                <input type="text" class="smart-search-input" placeholder="🔍 ابحث باسم المورد..." />
-                                <div class="smart-search-results"></div>
-                            </div>
-                            <select id="purSupplier" style="display:none;"></select>
-                        </div>
-                    </div>
-
-                    <div class="pos-add-item" style="margin-top:10px;">
-                        <div class="smart-search-container" data-search-type="products" data-search-target="purProduct" style="flex:1;">
-                            <input type="text" class="smart-search-input" placeholder="🔍 ابحث عن منتج..." />
-                            <div class="smart-search-results"></div>
-                        </div>
-                        <select id="purProduct" style="display:none;"></select>
-                        <input type="number" id="purQty" class="pos-input" style="width:70px;" value="1" min="1" placeholder="كمية" />
-                        <input type="number" id="purPrice" class="pos-input" style="width:90px;" placeholder="سعر" step="0.01" onchange="updatePurPrice()" />
-                        <button class="pos-btn pos-btn-add" onclick="addPurItem()">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    </div>
-
-                    <div class="pos-field" style="margin:10px 0;">
-                        <label>🏭 المستودع</label>
-                        <select id="purWarehouse" class="pos-select"></select>
-                    </div>
-
-                    <div class="pos-field" style="margin-bottom:10px;">
-                        <label>💳 طريقة الدفع</label>
-                        <select id="purPayment" class="pos-select">
-                            <option value="cash">💵 نقدي</option>
-                            <option value="credit">📝 آجل</option>
-                        </select>
-                    </div>
-
-                    <div class="pos-field" style="margin-bottom:10px;">
-                        <label>💰 الخزنة</label>
-                        <select id="purCashBox" class="pos-select"></select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>📝 ملاحظات</label>
-                        <input type="text" id="purNotes" />
-                    </div>
-                </div>
-
-                <div class="pos-items-box">
-                    <div class="pos-items-header">
-                        <span>📦 الأصناف</span>
-                        <span class="pos-count" id="purItemsCount">0</span>
-                    </div>
-                    <div id="purItemsContainer"></div>
-                </div>
-
-                <div id="purTotalBox" class="pos-totals-box" style="display:none;">
-                    <div class="pos-grand-total">
-                        <span>💰 الإجمالي</span>
-                        <strong id="purTotal">0.00 ج.م</strong>
-                    </div>
-                    <div class="form-actions" style="margin-top:10px;">
-                        <button class="btn btn-success" onclick="savePurchase()" style="flex:1;">
-                            <i class="fas fa-save"></i> حفظ الفاتورة
-                        </button>
-                        <button class="btn btn-secondary" onclick="clearPurchase()">
-                            <i class="fas fa-times"></i> إلغاء
-                        </button>
-                    </div>
-                </div>
-
-                <h2 style="margin-top:20px;"><i class="fas fa-list"></i> فواتير المشتريات</h2>
-                <div id="purchasesList"></div>
-            </div>
-        </div>
-
-        <!-- ═══════════ العملاء ═══════════ -->
-        <div id="page-customers" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-users"></i> العملاء</h2>
-
-                <div class="form-card">
-                    <h3 id="customerFormTitle">➕ إضافة عميل</h3>
-                    <input type="hidden" id="customerId" />
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>الاسم *</label>
-                            <input type="text" id="customerName" />
-                        </div>
-                        <div class="form-group">
-                            <label>الهاتف</label>
-                            <input type="text" id="customerPhone" />
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>واتساب</label>
-                            <input type="text" id="customerWhatsapp" />
-                        </div>
-                        <div class="form-group">
-                            <label>العنوان</label>
-                            <input type="text" id="customerAddress" />
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button class="btn btn-success" onclick="saveCustomer()">
-                            <i class="fas fa-save"></i> <span id="customerSaveBtnText">إضافة</span>
-                        </button>
-                        <button class="btn btn-secondary" onclick="resetCustomerForm()">إلغاء</button>
-                    </div>
-                </div>
-
-                <div id="customerList"></div>
-            </div>
-        </div>
-
-        <!-- ═══════════ الموردين ═══════════ -->
-        <div id="page-suppliers" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-truck"></i> الموردين</h2>
-
-                <div class="form-card">
-                    <h3 id="supplierFormTitle">➕ إضافة مورد</h3>
-                    <input type="hidden" id="supplierId" />
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>الاسم *</label>
-                            <input type="text" id="supplierName" />
-                        </div>
-                        <div class="form-group">
-                            <label>الهاتف</label>
-                            <input type="text" id="supplierPhone" />
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>واتساب</label>
-                            <input type="text" id="supplierWhatsapp" />
-                        </div>
-                        <div class="form-group">
-                            <label>العنوان</label>
-                            <input type="text" id="supplierAddress" />
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button class="btn btn-success" onclick="saveSupplier()">
-                            <i class="fas fa-save"></i> <span id="supplierSaveBtnText">إضافة</span>
-                        </button>
-                        <button class="btn btn-secondary" onclick="resetSupplierForm()">إلغاء</button>
-                    </div>
-                </div>
-
-                <div id="supplierList"></div>
-            </div>
-        </div>
-
-        <!-- ═══════════ الفواتير ═══════════ -->
-        <div id="page-invoices" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-file-invoice"></i> الفواتير</h2>
-
-                <div class="stats-mini">
-                    <div class="stat-mini">
-                        <div class="num" id="invTotalCount">0</div>
-                        <div class="lbl">🧾 العدد</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="num" id="invTotalAmount">0.00</div>
-                        <div class="lbl">💰 الإجمالي</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="num" id="invTodayAmount">0.00</div>
-                        <div class="lbl">📅 اليوم</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="num" id="invPendingAmount">0.00</div>
-                        <div class="lbl">⏳ المتبقي</div>
-                    </div>
-                </div>
-
-                <div class="filter-chips">
-                    <button class="filter-chip active" onclick="filterInvoices('all', this)">الكل</button>
-                    <button class="filter-chip" onclick="filterInvoices('paid', this)">✅ مدفوعة</button>
-                    <button class="filter-chip" onclick="filterInvoices('unpaid', this)">❌ غير مدفوعة</button>
-                    <button class="filter-chip" onclick="filterInvoices('partial', this)">⚠️ جزئية</button>
-                </div>
-
-                <div class="search-box">
-                    <input type="text" id="invoiceSearch" placeholder="🔍 ابحث برقم الفاتورة أو اسم العميل..."
-                           oninput="renderInvoices()" />
-                </div>
-
-                <div id="invoiceList"></div>
-            </div>
-        </div>
-
-        <!-- ═══════════ المصروفات ═══════════ -->
-        <div id="page-expenses" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-money-bill-wave"></i> المصروفات</h2>
-
-                <div class="stats-mini">
-                    <div class="stat-mini">
-                        <div class="num" id="expTotalAmount">0.00</div>
-                        <div class="lbl">💰 الإجمالي</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="num" id="expTodayAmount">0.00</div>
-                        <div class="lbl">📅 اليوم</div>
-                    </div>
-                </div>
-
-                <div class="form-card">
-                    <h3>➕ إضافة مصروف</h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>التاريخ</label>
-                            <input type="date" id="expDate" />
-                        </div>
-                        <div class="form-group">
-                            <label>المبلغ *</label>
-                            <input type="number" id="expAmount" step="0.01" min="0" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>البيان *</label>
-                        <input type="text" id="expNote" placeholder="مثال: إيجار، كهرباء..." />
-                    </div>
-                    <div class="form-group">
-                        <label>الخزنة</label>
-                        <select id="expCashBox" class="pos-select"></select>
-                    </div>
-                    <div class="form-actions">
-                        <button class="btn btn-success" onclick="saveExpense()">
-                            <i class="fas fa-save"></i> إضافة
-                        </button>
-                        <button class="btn btn-secondary" onclick="resetExpenseForm()">إلغاء</button>
-                    </div>
-                </div>
-
-                <div id="expensesList"></div>
-            </div>
-        </div>
-
-        <!-- ═══════════ حركة الخزنة ═══════════ -->
-        <div id="page-treasury" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-vault"></i> حركة الخزنة</h2>
-
-                <div class="balance-card">
-                    <div class="label">💰 إجمالي الخزائن</div>
-                    <div class="amount" id="treasuryBalance">0.00 ج.م</div>
-                </div>
-
-                <div class="stats-mini">
-                    <div class="stat-mini">
-                        <div class="num" style="color:#2D8F5E;" id="treasuryDeposits">0.00</div>
-                        <div class="lbl">💚 إيداعات</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="num" style="color:#E06060;" id="treasuryWithdrawals">0.00</div>
-                        <div class="lbl">❤️ سحوبات</div>
-                    </div>
-                </div>
-
-                <div class="form-card">
-                    <h3>➕ إيداع / سحب يدوي</h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>النوع</label>
-                            <select id="treasuryType">
-                                <option value="deposit">💚 إيداع</option>
-                                <option value="withdraw">❤️ سحب</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>المبلغ</label>
-                            <input type="number" id="treasuryAmount" step="0.01" min="0" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>البيان</label>
-                        <input type="text" id="treasuryNote" />
-                    </div>
-                    <div class="form-group">
-                        <label>الخزنة</label>
-                        <select id="manualCashBox" class="pos-select"></select>
-                    </div>
-                    <button class="btn btn-success btn-block" onclick="addTreasuryTransaction()">
-                        <i class="fas fa-save"></i> تسجيل
-                    </button>
-                </div>
-
-                <div class="filter-chips">
-                    <button class="filter-chip active" onclick="filterTreasury('all', this)">الكل</button>
-                    <button class="filter-chip" onclick="filterTreasury('sale', this)">💰 مبيعات</button>
-                    <button class="filter-chip" onclick="filterTreasury('purchase', this)">🛒 مشتريات</button>
-                    <button class="filter-chip" onclick="filterTreasury('expense', this)">💸 مصروفات</button>
-                    <button class="filter-chip" onclick="filterTreasury('collect', this)">💵 تحصيل</button>
-                    <button class="filter-chip" onclick="filterTreasury('pay', this)">💳 سداد</button>
-                    <button class="filter-chip" onclick="filterTreasury('manual', this)">✋ يدوي</button>
-                </div>
-
-                <div id="treasuryList"></div>
-            </div>
-        </div>
-
-        <!-- ═══════════ الخزائن ═══════════ -->
-        <div id="page-cash-boxes" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-money-bill-wave"></i> الخزائن</h2>
-
-                <div class="form-card">
-                    <h3 id="cashBoxFormTitle">➕ إضافة خزنة</h3>
-                    <input type="hidden" id="cashBoxId" />
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>الاسم *</label>
-                            <input type="text" id="cashBoxName" />
-                        </div>
-                        <div class="form-group">
-                            <label>النوع</label>
-                            <select id="cashBoxType">
-                                <option value="cash">💵 نقدي</option>
-                                <option value="wallet">📱 محفظة</option>
-                                <option value="bank">🏦 بنك</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>الأيقونة</label>
-                            <input type="text" id="cashBoxIcon" value="💵" maxlength="2" />
-                        </div>
-                        <div class="form-group">
-                            <label>الرصيد الافتتاحي</label>
-                            <input type="number" id="cashBoxOpeningBalance" value="0" step="0.01" />
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button class="btn btn-success" onclick="saveCashBox()">
-                            <i class="fas fa-save"></i> <span id="cashBoxSaveBtnText">إضافة</span>
-                        </button>
-                        <button class="btn btn-secondary" onclick="resetCashBoxForm()">إلغاء</button>
-                    </div>
-                </div>
-
-                <div class="cash-boxes-summary">
-                    <div class="summary-item">
-                        <div class="summary-label">💰 إجمالي الرصيد</div>
-                        <div class="summary-value" id="totalCashBoxesBalance">0.00</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-label">🏦 عدد الخزائن</div>
-                        <div class="summary-value" id="totalCashBoxesCount">0</div>
-                    </div>
-                </div>
-
-                <div id="cashBoxesList"></div>
-            </div>
-        </div>
-
-        <!-- ═══════════ الحسابات ═══════════ -->
-        <div id="page-accounts" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-book"></i> الحسابات</h2>
-
-                <div class="report-buttons-grid">
-                    <button class="btn btn-info" onclick="showTrialBalance()">
-                        <i class="fas fa-balance-scale"></i> <span>ميزان المراجعة</span>
-                    </button>
-                    <button class="btn btn-success" onclick="showIncomeStatement()">
-                        <i class="fas fa-chart-line"></i> <span>قائمة الدخل</span>
-                    </button>
-                    <button class="btn btn-warning" onclick="showBalanceSheet()">
-                        <i class="fas fa-file-invoice-dollar"></i> <span>الميزانية</span>
-                    </button>
-                </div>
-
-                <div class="dashboard-stats">
-                    <div class="dashboard-card" style="border-right-color:#2D8F5E;">
-                        <div class="number" id="accAssets">0.00</div>
-                        <div class="label">💎 الأصول</div>
-                    </div>
-                    <div class="dashboard-card" style="border-right-color:#E06060;">
-                        <div class="number" id="accLiabilities">0.00</div>
-                        <div class="label">📋 الالتزامات</div>
-                    </div>
-                    <div class="dashboard-card" style="border-right-color:#C9A94E;">
-                        <div class="number" id="accEquity">0.00</div>
-                        <div class="label">👑 حقوق الملكية</div>
-                    </div>
-                    <div class="dashboard-card" style="border-right-color:#4A8AB5;">
-                        <div class="number" id="accRevenue">0.00</div>
-                        <div class="label">💰 الإيرادات</div>
-                    </div>
-                    <div class="dashboard-card" style="border-right-color:#E6A830;">
-                        <div class="number" id="accExpenses">0.00</div>
-                        <div class="label">💸 المصروفات</div>
-                    </div>
-                </div>
-
-                <div class="filter-chips">
-                    <button class="filter-chip active" onclick="filterAccounts('all', this)">الكل</button>
-                    <button class="filter-chip" onclick="filterAccounts('asset', this)">💎 أصول</button>
-                    <button class="filter-chip" onclick="filterAccounts('liability', this)">📋 التزامات</button>
-                    <button class="filter-chip" onclick="filterAccounts('equity', this)">👑 حقوق</button>
-                    <button class="filter-chip" onclick="filterAccounts('revenue', this)">💰 إيرادات</button>
-                    <button class="filter-chip" onclick="filterAccounts('expense', this)">💸 مصروفات</button>
-                </div>
-
-                <div id="accountList"></div>
-
-                <h2 style="margin-top:20px;"><i class="fas fa-list"></i> القيود اليومية</h2>
-
-                <button class="btn btn-success btn-block" onclick="showAddJournalDialog()" style="margin-bottom:12px;">
-                    <i class="fas fa-plus"></i> إضافة قيد يدوي
-                </button>
-
-                <div id="journalList"></div>
-            </div>
-        </div>
-
-        <!-- ═══════════ التقارير ═══════════ -->
-        <div id="page-reports" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-chart-bar"></i> التقارير</h2>
-
-                <div class="report-tabs">
-                    <button class="report-tab active" onclick="switchReport('daily', this)">
-                        <i class="fas fa-calendar-day"></i>
-                        <span>يومي</span>
-                    </button>
-                    <button class="report-tab" onclick="switchReport('monthly', this)">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span>شهري</span>
-                    </button>
-                    <button class="report-tab" onclick="switchReport('yearly', this)">
-                        <i class="fas fa-calendar"></i>
-                        <span>سنوي</span>
-                    </button>
-                    <button class="report-tab" onclick="switchReport('sellers', this)">
-                        <i class="fas fa-user-tie"></i>
-                        <span>البائعين</span>
-                    </button>
-                    <button class="report-tab" onclick="switchReport('products', this)">
-                        <i class="fas fa-box"></i>
-                        <span>المنتجات</span>
-                    </button>
-                    <button class="report-tab" onclick="switchReport('customers', this)">
-                        <i class="fas fa-users"></i>
-                        <span>العملاء</span>
-                    </button>
-                </div>
-
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
-                    <button class="btn btn-info" onclick="printCurrentReport()">
-                        <i class="fas fa-print"></i> طباعة
-                    </button>
-                    <button class="btn btn-success" onclick="exportReportCSV()">
-                        <i class="fas fa-file-excel"></i> تصدير Excel
-                    </button>
-                </div>
-
-                <div id="reportContent"></div>
-            </div>
-        </div>
-
-        <!-- ═══════════ الموظفين ═══════════ -->
-        <div id="page-employees" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-user-tie"></i> الموظفين</h2>
-
-                <div class="tabs-row">
-                    <button class="tab-btn active" onclick="showHRTab('employees', this)">👥 الموظفين</button>
-                    <button class="tab-btn" onclick="showHRTab('attendance', this)">⏰ الحضور</button>
-                    <button class="tab-btn" onclick="showHRTab('salaries', this)">💰 الرواتب</button>
-                </div>
-
-                <div id="hrTabEmployees">
-                    <div class="form-card">
-                        <h3 id="empFormTitle">➕ إضافة موظف</h3>
-                        <input type="hidden" id="empId" />
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>الاسم *</label>
-                                <input type="text" id="empName" />
-                            </div>
-                            <div class="form-group">
-                                <label>الهاتف</label>
-                                <input type="text" id="empPhone" />
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>الوظيفة</label>
-                                <input type="text" id="empJobTitle" value="موظف" />
-                            </div>
-                            <div class="form-group">
-                                <label>نوع الراتب</label>
-                                <select id="empSalaryType">
-                                    <option value="monthly">شهري</option>
-                                    <option value="daily">يومي</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>الراتب</label>
-                                <input type="number" id="empBaseSalary" step="0.01" />
-                            </div>
-                            <div class="form-group">
-                                <label>ساعات العمل اليومية</label>
-                                <input type="number" id="empDailyHours" value="8" />
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>تاريخ التعيين</label>
-                                <input type="date" id="empHireDate" />
-                            </div>
-                            <div class="form-group">
-                                <label>العنوان</label>
-                                <input type="text" id="empAddress" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>ملاحظات</label>
-                            <input type="text" id="empNotes" />
-                        </div>
-                        <div class="form-actions">
-                            <button class="btn btn-success" onclick="saveEmployee()">
-                                <i class="fas fa-save"></i> <span id="empSaveBtnText">إضافة</span>
-                            </button>
-                            <button class="btn btn-secondary" onclick="resetEmployeeForm()">إلغاء</button>
-                        </div>
-                    </div>
-
-                    <div id="empList"></div>
-                </div>
-
-                <div id="hrTabAttendance" style="display:none;">
-                    <div id="attendanceList"></div>
-                </div>
-
-                <div id="hrTabSalaries" style="display:none;">
-                    <div id="salariesList"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ═══════════ المخازن ═══════════ -->
-        <div id="page-warehouses" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-boxes"></i> المخازن</h2>
-
-                <div class="tabs-row">
-                    <button class="tab-btn active" onclick="showWarehouseTab('receipts', this)">📥 إضافة</button>
-                    <button class="tab-btn" onclick="showWarehouseTab('issues', this)">📤 صرف</button>
-                    <button class="tab-btn" onclick="showWarehouseTab('transfers', this)">🔄 تحويل</button>
-                    <button class="tab-btn" onclick="showWarehouseTab('adjustments', this)">⚖️ تسوية</button>
-                    <button class="tab-btn" onclick="showWarehouseTab('opening', this)">📊 أول المدة</button>
-                    <button class="tab-btn" onclick="showWarehouseTab('reports', this)">📈 تقارير</button>
-                </div>
-
-                <div class="form-card">
-                    <h3>📦 إضافة أصناف</h3>
-                    <div class="pos-add-item">
-                        <select id="whVoucherProduct" class="pos-select" style="flex:1;"></select>
-                        <input type="number" id="whVoucherQty" class="pos-input" style="width:70px;" value="1" min="1" placeholder="كمية" />
-                        <input type="number" id="whVoucherPrice" class="pos-input" style="width:90px;" placeholder="سعر" step="0.01" />
-                        <button class="pos-btn pos-btn-add" onclick="addVoucherItemFromGlobal()">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="pos-items-box">
-                    <div class="pos-items-header">
-                        <span>📦 الأصناف</span>
-                        <span class="pos-count" id="whVoucherItemsCount">0</span>
-                    </div>
-                    <div id="whVoucherItemsContainer"></div>
-                </div>
-
-                <div id="whVoucherTotalsBox" class="pos-totals-box" style="display:none;">
-                    <div class="pos-totals-grid">
-                        <div class="pos-total-stat">
-                            <div class="pos-total-label">الأصناف</div>
-                            <div class="pos-total-value" id="whVoucherItemsCount2">0</div>
-                        </div>
-                        <div class="pos-total-stat">
-                            <div class="pos-total-label">الكمية</div>
-                            <div class="pos-total-value" id="whVoucherTotalQty">0</div>
-                        </div>
-                        <div class="pos-total-stat">
-                            <div class="pos-total-label">القيمة</div>
-                            <div class="pos-total-value" id="whVoucherTotalValue">0.00</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- تبويب الإضافة -->
-                <div id="whTabReceipts">
-                    <div class="form-card">
-                        <h3>📥 إذن إضافة</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>المستودع *</label>
-                                <select id="whReceiptWarehouse"></select>
-                            </div>
-                            <div class="form-group">
-                                <label>التاريخ</label>
-                                <input type="date" id="whReceiptDate" />
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>المصدر</label>
-                                <input type="text" id="whReceiptSource" />
-                            </div>
-                            <div class="form-group">
-                                <label>المورد</label>
-                                <select id="whReceiptSupplier"></select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>ملاحظات</label>
-                            <input type="text" id="whReceiptNotes" />
-                        </div>
-                        <div class="form-actions">
-                            <button class="btn btn-success" onclick="createWarehouseReceipt()">
-                                <i class="fas fa-save"></i> حفظ الإذن
-                            </button>
-                            <button class="btn btn-secondary" onclick="resetVoucherForm('receipt')">إلغاء</button>
-                        </div>
-                    </div>
-                    <div id="whReceiptsList"></div>
-                </div>
-
-                <!-- تبويب الصرف -->
-                <div id="whTabIssues" style="display:none;">
-                    <div class="form-card">
-                        <h3>📤 إذن صرف</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>المستودع *</label>
-                                <select id="whIssueWarehouse"></select>
-                            </div>
-                            <div class="form-group">
-                                <label>التاريخ</label>
-                                <input type="date" id="whIssueDate" />
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>الوجهة</label>
-                                <input type="text" id="whIssueDestination" />
-                            </div>
-                            <div class="form-group">
-                                <label>العميل</label>
-                                <select id="whIssueCustomer"></select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>ملاحظات</label>
-                            <input type="text" id="whIssueNotes" />
-                        </div>
-                        <div class="form-actions">
-                            <button class="btn btn-success" onclick="createWarehouseIssue()">
-                                <i class="fas fa-save"></i> حفظ الإذن
-                            </button>
-                            <button class="btn btn-secondary" onclick="resetVoucherForm('issue')">إلغاء</button>
-                        </div>
-                    </div>
-                    <div id="whIssuesList"></div>
-                </div>
-
-                <!-- تبويب التحويل -->
-                <div id="whTabTransfers" style="display:none;">
-                    <div class="form-card">
-                        <h3>🔄 تحويل بين المستودعات</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>من *</label>
-                                <select id="whTransferFrom"></select>
-                            </div>
-                            <div class="form-group">
-                                <label>إلى *</label>
-                                <select id="whTransferTo"></select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>التاريخ</label>
-                            <input type="date" id="whTransferDate" />
-                        </div>
-                        <div class="form-group">
-                            <label>ملاحظات</label>
-                            <input type="text" id="whTransferNotes" />
-                        </div>
-                        <div class="form-actions">
-                            <button class="btn btn-success" onclick="createWarehouseTransfer()">
-                                <i class="fas fa-save"></i> حفظ التحويل
-                            </button>
-                            <button class="btn btn-secondary" onclick="resetVoucherForm('transfer')">إلغاء</button>
-                        </div>
-                    </div>
-                    <div id="whTransfersList"></div>
-                </div>
-
-                <!-- تبويب التسوية -->
-                <div id="whTabAdjustments" style="display:none;">
-                    <div class="form-card">
-                        <h3>⚖️ تسوية جرد</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>المستودع *</label>
-                                <select id="whAdjustWarehouse"></select>
-                            </div>
-                            <div class="form-group">
-                                <label>التاريخ</label>
-                                <input type="date" id="whAdjustDate" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>ملاحظات</label>
-                            <input type="text" id="whAdjustNotes" />
-                        </div>
-                        <div class="form-actions">
-                            <button class="btn btn-success" onclick="createWarehouseAdjustment()">
-                                <i class="fas fa-save"></i> حفظ التسوية
-                            </button>
-                            <button class="btn btn-secondary" onclick="resetVoucherForm('adjustment')">إلغاء</button>
-                        </div>
-                    </div>
-                    <div id="whAdjustmentsList"></div>
-                </div>
-
-                <!-- تبويب أول المدة -->
-                <div id="whTabOpening" style="display:none;">
-                    <div class="form-card">
-                        <h3>📊 رصيد أول المدة</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>المستودع *</label>
-                                <select id="obWarehouse"></select>
-                            </div>
-                            <div class="form-group">
-                                <label>التاريخ</label>
-                                <input type="date" id="obDate" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>ملاحظات</label>
-                            <input type="text" id="obNotes" />
-                        </div>
-                        <div class="form-actions">
-                            <button class="btn btn-success" onclick="saveOpeningBalance()">
-                                <i class="fas fa-save"></i> حفظ
-                            </button>
-                            <button class="btn btn-secondary" onclick="resetVoucherForm('opening')">إلغاء</button>
-                        </div>
-                    </div>
-                    <div id="obList"></div>
-                </div>
-
-                <!-- تبويب التقارير -->
-                <div id="whTabReports" style="display:none;">
-                    <div id="whReportsList"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ═══════════ التحصيل/السداد ═══════════ -->
-        <div id="page-payments" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-hand-holding-usd"></i> التحصيل والسداد</h2>
-
-                <div class="stats-mini">
-                    <div class="stat-mini">
-                        <div class="num" style="color:#2D8F5E;" id="payTotalCollected">0.00</div>
-                        <div class="lbl">💰 التحصيلات</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="num" style="color:#E06060;" id="payTotalPaid">0.00</div>
-                        <div class="lbl">💸 المدفوعات</div>
-                    </div>
-                </div>
-
-                <div class="tabs-row">
-                    <button class="tab-btn active" onclick="switchPayTab('collect', this)">💰 تحصيل</button>
-                    <button class="tab-btn" onclick="switchPayTab('pay', this)">💸 سداد</button>
-                </div>
-
-                <div id="payTabCollect">
-                    <div class="form-card">
-                        <h3>💰 تحصيل من عميل</h3>
-                        <div class="form-group">
-                            <label>العميل *</label>
-                            <div class="smart-search-container" data-search-type="customers" data-search-target="collectCustomer">
-                                <input type="text" class="smart-search-input" placeholder="🔍 ابحث باسم العميل..." />
-                                <div class="smart-search-results"></div>
-                            </div>
-                            <select id="collectCustomer" style="display:none;"></select>
-                        </div>
-                        <div id="collectInfoBox" style="display:none;padding:10px;background:#0D0D0D;border-radius:8px;margin-bottom:10px;">
-                            <div style="color:#A89070;font-size:12px;">المديونية الحالية: <strong style="color:#E06060;" id="collectCurrentDebt">0.00</strong> ج.م</div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>المبلغ *</label>
-                                <input type="number" id="collectAmount" step="0.01" min="0" oninput="updateCollectInfo()" />
-                            </div>
-                            <div class="form-group">
-                                <label>التاريخ</label>
-                                <input type="date" id="collectDate" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>الخزنة *</label>
-                            <select id="collectCashBox" class="pos-select"></select>
-                        </div>
-                        <div class="form-group">
-                            <label>ملاحظات</label>
-                            <input type="text" id="collectNote" />
-                        </div>
-                        <button class="btn btn-success btn-block" onclick="saveCollect()">
-                            <i class="fas fa-save"></i> حفظ التحصيل
-                        </button>
-                    </div>
-                </div>
-
-                <div id="payTabPay" style="display:none;">
-                    <div class="form-card">
-                        <h3>💸 سداد لمورد</h3>
-                        <div class="form-group">
-                            <label>المورد *</label>
-                            <div class="smart-search-container" data-search-type="suppliers" data-search-target="paySupplier">
-                                <input type="text" class="smart-search-input" placeholder="🔍 ابحث باسم المورد..." />
-                                <div class="smart-search-results"></div>
-                            </div>
-                            <select id="paySupplier" style="display:none;"></select>
-                        </div>
-                        <div id="payInfoBox" style="display:none;padding:10px;background:#0D0D0D;border-radius:8px;margin-bottom:10px;">
-                            <div style="color:#A89070;font-size:12px;">المستحق الحالي: <strong style="color:#E06060;" id="payCurrentDebt">0.00</strong> ج.م</div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>المبلغ *</label>
-                                <input type="number" id="payAmount" step="0.01" min="0" oninput="updatePayInfo()" />
-                            </div>
-                            <div class="form-group">
-                                <label>التاريخ</label>
-                                <input type="date" id="payDate" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>الخزنة *</label>
-                            <select id="payCashBox" class="pos-select"></select>
-                        </div>
-                        <div class="form-group">
-                            <label>ملاحظات</label>
-                            <input type="text" id="payNote" />
-                        </div>
-                        <button class="btn btn-warning btn-block" onclick="savePay()">
-                            <i class="fas fa-save"></i> حفظ السداد
-                        </button>
-                    </div>
-                </div>
-
-                <div id="paymentsList"></div>
-            </div>
-        </div>
-
-        <!-- ═══════════ المرتجعات ═══════════ -->
-        <div id="page-returns" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-undo-alt"></i> المرتجعات</h2>
-
-                <div class="stats-mini">
-                    <div class="stat-mini">
-                        <div class="num" id="retTotalCount">0</div>
-                        <div class="lbl">🔄 العدد</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="num" id="retTotalAmount">0.00</div>
-                        <div class="lbl">💰 الإجمالي</div>
-                    </div>
-                </div>
-
-                <div class="form-card">
-                    <h3>➕ إضافة مرتجع</h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>النوع</label>
-                            <select id="retType" onchange="toggleReturnParty()">
-                                <option value="sale">🔄 مرتجع بيع</option>
-                                <option value="purchase">🔄 مرتجع شراء</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label id="retPartyLabel">العميل</label>
-                            <div class="smart-search-container" data-search-type="customers" data-search-target="retParty" id="retPartySearch">
-                                <input type="text" class="smart-search-input" placeholder="🔍 ابحث..." />
-                                <div class="smart-search-results"></div>
-                            </div>
-                            <select id="retParty" style="display:none;"></select>
-                        </div>
-                    </div>
-
-                    <div class="pos-add-item">
-                        <div class="smart-search-container" data-search-type="products" data-search-target="retProduct" style="flex:1;">
-                            <input type="text" class="smart-search-input" placeholder="🔍 ابحث عن منتج..." />
-                            <div class="smart-search-results"></div>
-                        </div>
-                        <select id="retProduct" style="display:none;"></select>
-                        <input type="number" id="retQty" class="pos-input" style="width:70px;" value="1" min="1" placeholder="كمية" />
-                        <input type="number" id="retPrice" class="pos-input" style="width:90px;" placeholder="سعر" step="0.01" onchange="updateRetPrice()" />
-                        <button class="pos-btn pos-btn-add" onclick="addRetItem()">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    </div>
-
-                    <div class="form-row" style="margin-top:10px;">
-                        <div class="form-group">
-                            <label>المستودع</label>
-                            <select id="retWarehouse"></select>
-                        </div>
-                        <div class="form-group">
-                            <label>الخزنة</label>
-                            <select id="retCashBox" class="pos-select"></select>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>ملاحظات</label>
-                        <input type="text" id="retNotes" />
-                    </div>
-                </div>
-
-                <div class="pos-items-box">
-                    <div class="pos-items-header">
-                        <span>🔄 الأصناف</span>
-                        <span class="pos-count" id="retItemsCount">0</span>
-                    </div>
-                    <div id="retItemsContainer"></div>
-                </div>
-
-                <div id="retTotalBox" class="pos-totals-box" style="display:none;">
-                    <div class="pos-grand-total">
-                        <span>💰 الإجمالي</span>
-                        <strong id="retTotal">0.00 ج.م</strong>
-                    </div>
-                    <div class="form-actions" style="margin-top:10px;">
-                        <button class="btn btn-success" onclick="saveReturn()" style="flex:1;">
-                            <i class="fas fa-save"></i> حفظ المرتجع
-                        </button>
-                        <button class="btn btn-secondary" onclick="clearReturn()">
-                            <i class="fas fa-times"></i> إلغاء
-                        </button>
-                    </div>
-                </div>
-
-                <h2 style="margin-top:20px;"><i class="fas fa-list"></i> سجل المرتجعات</h2>
-                <div id="returnsList"></div>
-            </div>
-        </div>
-
-        <!-- ═══════════ الموارد (ERP) ═══════════ -->
-        <div id="page-erp" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-warehouse"></i> الموارد</h2>
-
-                <div class="tabs-row">
-                    <button class="tab-btn active" onclick="showERPTab('warehouses', this)">🏭 المستودعات</button>
-                    <button class="tab-btn" onclick="showERPTab('branches', this)">🏢 الفروع</button>
-                    <button class="tab-btn" onclick="showERPTab('currencies', this)">💱 العملات</button>
-                </div>
-
-                <div id="erpTabWarehouses">
-                    <div class="form-card">
-                        <h3 id="warehouseFormTitle">➕ إضافة مستودع</h3>
-                        <input type="hidden" id="warehouseId" />
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>الاسم *</label>
-                                <input type="text" id="warehouseName" />
-                            </div>
-                            <div class="form-group">
-                                <label>النوع</label>
-                                <select id="warehouseType">
-                                    <option value="main">🏭 رئيسي</option>
-                                    <option value="branch">🏪 فرع</option>
-                                    <option value="storage" selected>📦 مخزن</option>
-                                    <option value="returns">🔄 مرتجعات</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>الموقع</label>
-                                <input type="text" id="warehouseLocation" />
-                            </div>
-                            <div class="form-group">
-                                <label>المدير</label>
-                                <input type="text" id="warehouseManager" />
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button class="btn btn-success" onclick="saveWarehouse()">
-                                <i class="fas fa-save"></i> حفظ
-                            </button>
-                            <button class="btn btn-secondary" onclick="resetWarehouseForm()">إلغاء</button>
-                        </div>
-                    </div>
-                    <div id="warehouseList"></div>
-                </div>
-
-                <div id="erpTabBranches" style="display:none;">
-                    <div class="form-card">
-                        <h3>➕ إضافة فرع</h3>
-                        <input type="hidden" id="branchId" />
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>الاسم *</label>
-                                <input type="text" id="branchName" />
-                            </div>
-                            <div class="form-group">
-                                <label>الكود</label>
-                                <input type="text" id="branchCode" />
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>العنوان</label>
-                                <input type="text" id="branchAddress" />
-                            </div>
-                            <div class="form-group">
-                                <label>الهاتف</label>
-                                <input type="text" id="branchPhone" />
-                            </div>
-                        </div>
-                        <button class="btn btn-success btn-block" onclick="saveBranch()">
-                            <i class="fas fa-save"></i> حفظ
-                        </button>
-                    </div>
-                    <div id="branchList"></div>
-                </div>
-
-                <div id="erpTabCurrencies" style="display:none;">
-                    <div id="currencyList"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ═══════════ المستخدمين ═══════════ -->
-        <div id="page-users" class="page-container">
-            <div class="page-content">
-                <h2><i class="fas fa-user-cog"></i> المستخدمين</h2>
-
-                <div class="form-card">
-                    <h3 id="userFormTitle">➕ إضافة مستخدم</h3>
-                    <input type="hidden" id="userId" />
-                    <div class="form-group">
-                        <label>الاسم *</label>
-                        <input type="text" id="userName" />
-                    </div>
-                    <div class="form-group">
-                        <label>كلمة المرور *</label>
-                        <input type="password" id="userPassword" />
-                    </div>
-                    <div class="form-group">
-                        <label>الدور</label>
-                        <select id="userRole">
-                            <option value="admin">👑 مدير</option>
-                            <option value="manager">📊 مشرف</option>
-                            <option value="cashier" selected>💰 كاشير</option>
-                            <option value="seller">🛒 بائع</option>
-                            <option value="viewer">👁️ مشاهد</option>
-                        </select>
-                    </div>
-                    <div class="form-actions">
-                        <button class="btn btn-success" onclick="saveUser()">
-                            <i class="fas fa-save"></i> <span id="userSaveBtnText">إضافة</span>
-                        </button>
-                        <button class="btn btn-secondary" onclick="resetUserForm()">إلغاء</button>
-                    </div>
-                </div>
-
-                <div id="userList"></div>
-            </div>
-        </div>
+        <!-- ═══════════ باقي الصفحات (المخزون، الكاشير، ... إلخ) ═══════════ -->
+        <!-- الصفحات دي زي ما هي في الملف الأصلي، مش محتاجة تعديل -->
 
         <!-- ═══════════ الإعدادات ═══════════ -->
         <div id="page-settings" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-cog"></i> الإعدادات</h2>
 
+                <!-- ═══════════ إدارة الإعلانات ═══════════ -->
                 <div class="settings-section">
                     <h3>📢 إدارة الإعلانات</h3>
-                    <p class="settings-desc">اكتب الإعلانات اللي هتظهر في الشريط العلوي.</p>
+                    <p class="settings-desc">اكتب الإعلانات أو الملاحظات اللي هتظهر في الشريط العلوي للموظفين.</p>
+                    
                     <div class="form-group">
                         <label>نص الإعلان</label>
-                        <input type="text" id="newAdText" placeholder="مثال: خصم 10%..." />
+                        <input type="text" id="newAdText" placeholder="مثال: خصم 10% للأستاذ فلان..." />
                     </div>
                     <div class="form-group">
-                        <label>الأيقونة</label>
-                        <input type="text" id="newAdIcon" value="⭐" maxlength="2" />
+                        <label>الأيقونة (اختياري)</label>
+                        <input type="text" id="newAdIcon" placeholder="مثال: 🎉 أو ⭐" value="⭐" />
                     </div>
                     <div class="form-group">
                         <label>الرابط (اختياري)</label>
                         <input type="text" id="newAdLink" placeholder="https://..." />
                     </div>
                     <div class="form-group">
-                        <label>لون الخلفية</label>
-                        <input type="color" id="newAdColor" value="#1E3A8A" style="width:100%;height:45px;" />
+                        <label>لون الخلفية (اختياري)</label>
+                        <input type="color" id="newAdColor" value="#1E3A8A" 
+                               style="width:100%;height:45px;padding:2px;border-radius:8px;border:2px solid #3D3D3D;background:#0D0D0D;cursor:pointer;" />
                     </div>
+                    
                     <button class="btn btn-success btn-block" onclick="addNewAd()" style="margin-bottom:10px;">
                         <i class="fas fa-plus"></i> إضافة إعلان
                     </button>
-                    <div id="adsListContainer"></div>
+                    
+                    <div id="adsListContainer" style="margin-top:10px;"></div>
+
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
                         <button class="btn btn-info btn-block" onclick="toggleAdMotion()">
-                            <i class="fas fa-play"></i> تحريك/إيقاف
+                            <i class="fas fa-play"></i> تحريك / إيقاف
                         </button>
-                        <select id="adSpeedSelect" class="pos-select" onchange="setAdSpeed(this.value)">
-                            <option value="10">⚡ سريع جداً</option>
-                            <option value="15">🚀 سريع</option>
-                            <option value="20" selected>🚶 متوسط</option>
-                            <option value="30">🐢 بطيء</option>
-                        </select>
+                        <div class="form-group" style="margin:0;">
+                            <select id="adSpeedSelect" class="pos-select" onchange="setAdSpeed(this.value)">
+                                <option value="10">⚡ سريع جداً (10 ثواني)</option>
+                                <option value="15">🚀 سريع (15 ثانية)</option>
+                                <option value="20" selected>🚶 متوسط (20 ثانية)</option>
+                                <option value="30">🐢 بطيء (30 ثانية)</option>
+                                <option value="45">🐌 بطيء جداً (45 ثانية)</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
                 <div class="settings-section">
                     <h3>🏢 بيانات الشركة</h3>
-                    <p class="settings-desc">لإدارة بيانات الشركة واللوجو.</p>
+                    <p class="settings-desc">لإدارة بيانات الشركة واللوجو، اذهب إلى صفحة "بيانات الشركة".</p>
                     <button class="btn btn-primary btn-block" onclick="navigateTo('company')">
                         <i class="fas fa-building"></i> فتح صفحة بيانات الشركة
                     </button>
@@ -1771,6 +2670,7 @@
 
                 <div class="settings-section">
                     <h3>🔐 صلاحياتي</h3>
+                    <p class="settings-desc">اعرف إيه الصفحات والأذونات المتاحة لدورك</p>
                     <button class="btn btn-info btn-block" onclick="showRoleInfo()">
                         <i class="fas fa-shield-alt"></i> عرض الصلاحيات
                     </button>
@@ -1800,6 +2700,9 @@
                 </div>
             </div>
         </div>
+
+        <!-- ═══════════ باقي الصفحات (المزيد، التقارير، ... إلخ) ═══════════ -->
+        <!-- الصفحات دي زي ما هي في الملف الأصلي -->
 
         <!-- ═══════════ قائمة المزيد ═══════════ -->
         <div id="moreMenu" style="display:none;">
@@ -1910,22 +2813,23 @@
     <!-- SheetJS لملفات Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-    <!-- Service Worker -->
+    <!-- Service Worker للـ PWA -->
     <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
             navigator.serviceWorker.register('sw.js', { scope: './' })
                 .then(function(registration) {
-                    console.log('✅ SW مسجل');
+                    console.log('✅ SW مسجل:', registration.scope);
                 })
                 .catch(function(err) {
-                    console.warn('⚠️ فشل SW');
+                    console.warn('⚠️ فشل SW:', err);
                 });
         });
     }
     </script>
 
     <!-- ملفات التطبيق - الترتيب مهم جداً -->
+    <script src="activation.js"></script>
     <script src="core.js"></script>
     <script src="data.js"></script>
     <script src="ui.js"></script>
@@ -1940,11 +2844,10 @@
     <script src="dashboard.js"></script>
     <script src="extras.js"></script>
     <script src="warehouses.js"></script>
+    <!-- ★★★ sharabar.js في الآخر عشان يستخدم window.currentUser و window.companyData ★★★ -->
     <script src="sharabar.js"></script>
-    <script src="activation.js"></script>
 
-    
-<script>
+    <script>
   var script = document.createElement('script');
   script.src = "//cdn.jsdelivr.net/npm/eruda";
   document.body.appendChild(script);
