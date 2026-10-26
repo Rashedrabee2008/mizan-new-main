@@ -1,11 +1,9 @@
 // ============================================================
-// الميزان Pro - data.js v2.2 (إصلاح شامل)
+// الميزان Pro - data.js v4.0 (الحل النهائي للبيانات)
 // ============================================================
 
 (function() {
     'use strict';
-
-    console.log('💾 data.js v2.2 - بدء التحميل');
 
     window.FIREBASE_CONFIG = {
         apiKey: "AIzaSyB3cnrETONbcrH1d_94w3TzeUEQIF0MSXw",
@@ -25,10 +23,8 @@
         'treasury', 'journalEntries', 'returns',
         'payments', 'warehouses', 'branches', 'companyData',
         'accounts', 'coupons', 'employees', 'attendance',
-        'salaries', 'leaves',
-        'warehouseReceipts', 'warehouseIssues',
-        'warehouseTransfers', 'warehouseAdjustments',
-        'openingBalances'
+        'salaries', 'leaves', 'warehouseReceipts', 'warehouseIssues',
+        'warehouseTransfers', 'warehouseAdjustments', 'openingBalances'
     ];
 
     const STORE_KEY = 'mizan_store_id_v18';
@@ -37,11 +33,14 @@
         try {
             let storeId = localStorage.getItem(STORE_KEY);
             if (!storeId) {
-                const ts = Date.now();
-                const rnd = Math.random().toString(36).substring(2, 10);
-                storeId = 'store_' + ts + '_' + rnd;
+                storeId = sessionStorage.getItem(STORE_KEY);
+                if (storeId) localStorage.setItem(STORE_KEY, storeId);
+            }
+            if (!storeId) {
+                storeId = 'store_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
                 localStorage.setItem(STORE_KEY, storeId);
             }
+            sessionStorage.setItem(STORE_KEY, storeId);
             return storeId;
         } catch (e) {
             return 'store_default';
@@ -51,13 +50,12 @@
     window.setStoreId = function(storeId) {
         try {
             localStorage.setItem(STORE_KEY, storeId);
+            sessionStorage.setItem(STORE_KEY, storeId);
             return true;
         } catch (e) { return false; }
     };
 
-    window.getStorePath = function() {
-        return 'stores/' + window.getStoreId();
-    };
+    window.getStorePath = function() { return 'stores/' + window.getStoreId(); };
 
     window.products = [];
     window.sales = [];
@@ -84,605 +82,164 @@
     window.warehouseTransfers = [];
     window.warehouseAdjustments = [];
     window.openingBalances = [];
+    window.currencies = window.DEFAULT_CURRENCIES || [];
 
     window.companyData = {
-        name: 'الميزان', tradeName: '', phone: '', phone2: '',
-        email: '', website: '', address: '', city: '', country: 'مصر',
-        tax: '', commercial: '', taxCard: '', nationalId: '',
-        footer: 'شكراً لتعاملكم معنا 🌟', primaryColor: '#C9A94E',
-        currency: 'ج.م', logo: ''
+        name: 'الميزان', tradeName: '', phone: '', phone2: '', email: '', website: '',
+        address: '', city: '', country: 'مصر', tax: '', commercial: '', taxCard: '', nationalId: '',
+        footer: 'شكراً لتعاملكم معنا 🌟', primaryColor: '#C9A94E', currency: 'ج.م', logo: ''
     };
 
     const STORAGE_PREFIX = 'mizan_v18_';
 
     window.DataStore = {
-        get: function(key) {
-            return window[key] || [];
-        },
-
+        get: function(key) { return window[key] || []; },
         set: function(key, data) {
             window[key] = data;
-            try {
-                localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(data));
-            } catch (e) {
-                console.error('❌ خطأ في حفظ ' + key + ':', e.message);
-            }
-
+            try { localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(data)); } catch (e) {}
             if (window.EventBus) {
-                try {
-                    window.EventBus.emit('data:' + key + ':changed', data);
-                    window.EventBus.emit('data:changed', { key: key, data: data });
-                } catch (err) {}
+                window.EventBus.emit('data:' + key + ':changed', data);
+                window.EventBus.emit('data:changed', { key: key, data: data });
             }
-
-            try {
-                if (window.CloudSync && typeof window.CloudSync.isReady === 'function' && window.CloudSync.isReady()) {
-                    window.CloudSync.push(key, data);
-                }
-            } catch (err) {}
-
+            if (window.CloudSync && window.CloudSync.isReady()) { window.CloudSync.push(key, data); }
             return true;
         },
-
         add: function(key, item) {
             const arr = window[key] || [];
-            if (!item.id) {
-                item.id = (typeof window.generateId === 'function')
-                    ? window.generateId() : 'id_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
-            }
+            if (!item.id) item.id = window.generateId();
             if (!item.createdAt) item.createdAt = new Date().toISOString();
             arr.push(item);
             window.DataStore.set(key, arr);
-            if (window.EventBus) window.EventBus.emit(key + ':added', item);
             return item;
         },
-
-        update: function(key, id, updates) {
-            const arr = window[key] || [];
-            const idx = arr.findIndex(function(item) { return String(item.id) === String(id); });
-            if (idx === -1) return null;
-            arr[idx] = Object.assign({}, arr[idx], updates);
-            arr[idx].updatedAt = new Date().toISOString();
-            window.DataStore.set(key, arr);
-            if (window.EventBus) window.EventBus.emit(key + ':updated', arr[idx]);
-            return arr[idx];
-        },
-
         remove: function(key, id) {
             const arr = window[key] || [];
-            const item = arr.find(function(i) { return String(i.id) === String(id); });
             const filtered = arr.filter(function(i) { return String(i.id) !== String(id); });
             window.DataStore.set(key, filtered);
-            if (window.EventBus) window.EventBus.emit(key + ':removed', item);
-            return item;
         },
-
-        find: function(key, id) {
-            return (window[key] || []).find(function(item) { return String(item.id) === String(id); });
-        },
-
-        filter: function(key, predicate) {
-            return (window[key] || []).filter(predicate);
-        },
-
-        sum: function(key, field) {
-            return (window[key] || []).reduce(function(total, item) {
-                return total + (parseFloat(item[field]) || 0);
-            }, 0);
-        },
-
         loadAll: function() {
             window.SYNC_KEYS.forEach(function(key) {
                 try {
                     const stored = localStorage.getItem(STORAGE_PREFIX + key);
                     if (stored) {
                         const parsed = JSON.parse(stored);
-                        if (Array.isArray(parsed)) {
-                            window[key] = parsed;
-                        } else if (key === 'companyData' && typeof parsed === 'object') {
-                            window.companyData = Object.assign({}, window.companyData, parsed);
-                        }
+                        if (Array.isArray(parsed)) window[key] = parsed;
+                        else if (key === 'companyData' && typeof parsed === 'object') window.companyData = Object.assign({}, window.companyData, parsed);
                     }
                 } catch (e) {}
             });
         },
-
-        saveAll: function() {
-            window.SYNC_KEYS.forEach(function(key) {
-                try {
-                    const data = window[key];
-                    if (data !== undefined) {
-                        localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(data));
-                    }
-                } catch (e) {}
-            });
-            if (window.EventBus) window.EventBus.emit('data:saved:all');
-            return true;
-        },
-
         clearAll: function() {
             window.SYNC_KEYS.forEach(function(key) {
                 try { localStorage.removeItem(STORAGE_PREFIX + key); } catch (e) {}
             });
-        },
-
-        export: function() {
-            const data = {};
-            window.SYNC_KEYS.forEach(function(key) { data[key] = window[key]; });
-            return { version: '2.2', storeId: window.getStoreId(), exportDate: new Date().toISOString(), data: data };
-        },
-
-        import: function(json) {
-            if (!json || !json.data) return false;
-            Object.keys(json.data).forEach(function(key) {
-                if (window.SYNC_KEYS.indexOf(key) > -1) {
-                    window[key] = json.data[key];
-                    try { localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(json.data[key])); } catch (e) {}
-                }
-            });
-            window.DataStore.saveAll();
-            if (window.EventBus) window.EventBus.emit('data:imported', json);
-            return true;
         }
     };
-
-    let firebaseListeners = [];
-    let autoSyncTimer = null;
-    let uploadTimers = {};
-    let syncInProgress = false;
 
     window.CloudSync = {
-        isReady: function() {
-            try {
-                return typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0 && window.firebaseReady === true;
-            } catch (e) { return false; }
-        },
-
+        isReady: function() { return typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0 && window.firebaseReady; },
         init: function() {
             try {
-                if (typeof firebase === 'undefined') return false;
-                if (!firebase.apps || firebase.apps.length === 0) {
-                    firebase.initializeApp(window.FIREBASE_CONFIG);
-                }
+                if (!firebase.apps || firebase.apps.length === 0) firebase.initializeApp(window.FIREBASE_CONFIG);
                 window.firebaseReady = true;
-                window.CloudSync.setupConnectionMonitor();
                 window.CloudSync.startRealtime();
-                window.CloudSync.startAutoPush();
-                setTimeout(function() { window.CloudSync.pullAll(true); }, 1000);
+                window.CloudSync.pullAll(true);
                 return true;
-            } catch (e) {
-                window.firebaseReady = false;
-                return false;
-            }
+            } catch (e) { return false; }
         },
-
-        setupConnectionMonitor: function() {
-            if (!window.CloudSync.isReady()) return;
-            try {
-                const connectedRef = firebase.database().ref('.info/connected');
-                connectedRef.on('value', function(snap) {
-                    const connected = snap.val();
-                    const statusEl = document.getElementById('cloudStatusText');
-                    if (statusEl) {
-                        statusEl.textContent = connected ? '✅ متصل' : '❌ غير متصل';
-                        statusEl.style.color = connected ? '#2D8F5E' : '#E06060';
-                    }
-                });
-            } catch (e) {}
-        },
-
         push: function(key, data) {
             if (!window.CloudSync.isReady()) return;
-            if (uploadTimers[key]) clearTimeout(uploadTimers[key]);
-            uploadTimers[key] = setTimeout(function() {
-                try {
-                    const path = window.getStorePath() + '/' + key;
-                    firebase.database().ref(path).set(data).catch(function() {});
-                } catch (e) {}
-            }, 800);
-        },
-
-        pushAll: async function(silent) {
-            if (!window.CloudSync.isReady()) return 0;
-            if (syncInProgress) return 0;
-            syncInProgress = true;
-            let uploaded = 0;
-            for (let i = 0; i < window.SYNC_KEYS.length; i++) {
-                const key = window.SYNC_KEYS[i];
-                try {
-                    const data = window[key];
-                    if (!data) continue;
-                    if (Array.isArray(data) && data.length === 0) continue;
-                    if (key === 'companyData' && (!data || Object.keys(data).length === 0)) continue;
-                    const path = window.getStorePath() + '/' + key;
-                    await firebase.database().ref(path).set(data);
-                    uploaded++;
-                } catch (e) {}
-            }
-            syncInProgress = false;
-            if (!silent && typeof window.showToast === 'function') {
-                window.showToast('☁️ تم رفع ' + uploaded + ' عنصر', 'success');
-            }
-            return uploaded;
-        },
-
-        pull: async function(key) {
-            if (!window.CloudSync.isReady()) return null;
             try {
-                const path = window.getStorePath() + '/' + key;
-                const snap = await firebase.database().ref(path).once('value');
-                const data = snap.val();
-                if (!data) return null;
-                return Array.isArray(data) ? data : Object.values(data);
-            } catch (e) { return null; }
+                firebase.database().ref(window.getStorePath() + '/' + key).set(data);
+            } catch (e) {}
         },
-
-        pullAll: async function(silent) {
-            if (!window.CloudSync.isReady()) return 0;
-            let pulled = 0;
-            for (let i = 0; i < window.SYNC_KEYS.length; i++) {
-                const key = window.SYNC_KEYS[i];
-                try {
-                    const arr = await window.CloudSync.pull(key);
-                    if (arr && arr.length > 0) {
-                        const localArr = window[key] || [];
-                        if (arr.length >= localArr.length) {
-                            window[key] = arr;
-                            try { localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(arr)); } catch (e) {}
-                            pulled++;
-                        }
-                    }
-                } catch (e) {}
-            }
-            if (pulled > 0 && typeof window.refreshAllUI === 'function') window.refreshAllUI();
-            if (!silent && typeof window.showToast === 'function') {
-                window.showToast('📥 تم سحب ' + pulled + ' عنصر', 'success');
-            }
-            return pulled;
-        },
-
-        startRealtime: function() {
+        pullAll: async function() {
             if (!window.CloudSync.isReady()) return;
-            firebaseListeners.forEach(function(ref) { try { ref.off(); } catch (e) {} });
-            firebaseListeners = [];
-            window.SYNC_KEYS.forEach(function(key) {
+            for (const key of window.SYNC_KEYS) {
                 try {
-                    const path = window.getStorePath() + '/' + key;
-                    const ref = firebase.database().ref(path);
-                    ref.on('value', function(snap) {
-                        const data = snap.val();
-                        if (!data) return;
+                    const snap = await firebase.database().ref(window.getStorePath() + '/' + key).once('value');
+                    const data = snap.val();
+                    if (data) {
                         const arr = Array.isArray(data) ? data : Object.values(data);
-                        if (arr.length === 0) return;
-                        const currentStr = JSON.stringify(window[key] || []);
-                        const newStr = JSON.stringify(arr);
-                        if (currentStr !== newStr) {
+                        if (arr.length > 0) {
                             window[key] = arr;
-                            try { localStorage.setItem(STORAGE_PREFIX + key, newStr); } catch (e) {}
                             if (window.EventBus) window.EventBus.emit('data:' + key + ':changed', arr);
                         }
+                    }
+                } catch (e) {}
+            }
+        },
+        startRealtime: function() {
+            window.SYNC_KEYS.forEach(function(key) {
+                try {
+                    firebase.database().ref(window.getStorePath() + '/' + key).on('value', function(snap) {
+                        const data = snap.val();
+                        if (data) {
+                            const arr = Array.isArray(data) ? data : Object.values(data);
+                            if (arr.length > 0 && window.EventBus) window.EventBus.emit('data:' + key + ':changed', arr);
+                        }
                     });
-                    firebaseListeners.push(ref);
                 } catch (e) {}
             });
-        },
-
-        startAutoPush: function() {
-            if (autoSyncTimer) clearInterval(autoSyncTimer);
-            autoSyncTimer = setInterval(function() {
-                if (window.CloudSync.isReady() && window.currentUser) window.CloudSync.pushAll(true);
-            }, 30000);
-        },
-
-        forcePushAll: async function() {
-            if (!window.CloudSync.isReady()) {
-                if (typeof window.showToast === 'function') window.showToast('⚠️ Firebase غير متصل', 'error');
-                return 0;
-            }
-            syncInProgress = false;
-            return await window.CloudSync.pushAll(false);
-        },
-
-        stop: function() {
-            firebaseListeners.forEach(function(ref) { try { ref.off(); } catch (e) {} });
-            firebaseListeners = [];
-            if (autoSyncTimer) { clearInterval(autoSyncTimer); autoSyncTimer = null; }
         }
     };
 
     // ═══════════════════════════════════════════════════════════
-    // البيانات الأولية (تشتغل فوراً)
+    // ⚡ إصلاح جذري: دالة حفظ اللوجو
     // ═══════════════════════════════════════════════════════════
+    
+    window.saveCompanyData = function() {
+        const getVal = function(id) {
+            const el = document.getElementById(id);
+            return el ? el.value.trim() : '';
+        };
 
-    window.seedInitialData = function() {
-        let changed = false;
-        const sid = window.getStoreId();
+        const currentLogo = (window.companyData || {}).logo || '';
+        const newName = getVal('companyName') || 'الميزان';
 
-        if (!window.users || window.users.length === 0) {
-            window.users = [
-                { id: 1, name: 'المدير', password: '123456', role: 'admin',   active: true, storeId: sid },
-                { id: 2, name: 'محمد',  password: '123456', role: 'manager', active: true, storeId: sid },
-                { id: 3, name: 'أحمد',  password: '123456', role: 'cashier', active: true, storeId: sid },
-                { id: 4, name: 'علي',   password: '123456', role: 'seller',  active: true, storeId: sid },
-                { id: 5, name: 'زائر',  password: '123456', role: 'viewer',  active: true, storeId: sid }
-            ];
-            try { localStorage.setItem(STORAGE_PREFIX + 'users', JSON.stringify(window.users)); } catch (e) {}
-            changed = true;
-        }
+        window.companyData = {
+            name: newName,
+            tradeName: getVal('companyTradeName'),
+            phone: getVal('companyPhone'),
+            phone2: getVal('companyPhone2'),
+            email: getVal('companyEmail'),
+            website: getVal('companyWebsite'),
+            address: getVal('companyAddress'),
+            city: getVal('companyCity'),
+            country: getVal('companyCountry') || 'مصر',
+            tax: getVal('companyTax'),
+            commercial: getVal('companyCommercial'),
+            taxCard: getVal('companyTaxCard'),
+            nationalId: getVal('companyNationalId'),
+            footer: getVal('companyFooter') || 'شكراً لتعاملكم معنا 🌟',
+            primaryColor: getVal('companyPrimaryColor') || '#C9A94E',
+            currency: getVal('companyCurrency') || 'ج.م',
+            logo: currentLogo
+        };
 
-        if (!window.cashBoxes || window.cashBoxes.length === 0) {
-            window.cashBoxes = [
-                { id: 1, name: 'نقدي', type: 'cash', icon: '💵', isDefault: true, active: true, openingBalance: 0 },
-                { id: 2, name: 'فودافون كاش', type: 'wallet', icon: '📱', active: true, openingBalance: 0 },
-                { id: 3, name: 'انستاباي', type: 'wallet', icon: '💳', active: true, openingBalance: 0 },
-                { id: 4, name: 'بنك', type: 'bank', icon: '🏦', active: true, openingBalance: 0 }
-            ];
-            try { localStorage.setItem(STORAGE_PREFIX + 'cashBoxes', JSON.stringify(window.cashBoxes)); } catch (e) {}
-            changed = true;
-        }
+        // 1. الحفظ في الذاكرة المحلية
+        window.DataStore.set('companyData', window.companyData);
+        
+        // 2. الحفظ القوي في localStorage
+        try { localStorage.setItem('mizan_companyData', JSON.stringify(window.companyData)); } catch(e) {}
 
-        if (!window.warehouses || window.warehouses.length === 0) {
-            window.warehouses = [
-                { id: 1, name: 'المستودع الرئيسي', type: 'main', location: 'المقر الرئيسي', manager: 'المدير', active: true }
-            ];
-            try { localStorage.setItem(STORAGE_PREFIX + 'warehouses', JSON.stringify(window.warehouses)); } catch (e) {}
-            changed = true;
-        }
+        // 3. تحديث الواجهة
+        if (typeof window.applyLogoOnLoad === 'function') window.applyLogoOnLoad();
+        
+        // 4. تحديث الاسم في الهيدر
+        const headerCompany = document.getElementById('headerCompanyName');
+        if (headerCompany) headerCompany.textContent = newName;
 
-        if (!window.accounts || window.accounts.length === 0) {
-            window.accounts = [
-                { id: 1, code: '1000', name: 'الأصول', type: 'asset', parent: null, level: 0 },
-                { id: 2, code: '1100', name: 'الأصول المتداولة', type: 'asset', parent: 1, level: 1 },
-                { id: 3, code: '1110', name: 'النقدية بالخزينة', type: 'asset', parent: 2, level: 2 },
-                { id: 4, code: '1120', name: 'النقدية بالبنك', type: 'asset', parent: 2, level: 2 },
-                { id: 5, code: '1130', name: 'محافظ إلكترونية', type: 'asset', parent: 2, level: 2 },
-                { id: 6, code: '1200', name: 'العملاء (المدينون)', type: 'asset', parent: 1, level: 1 },
-                { id: 7, code: '1300', name: 'المخزون', type: 'asset', parent: 1, level: 1 },
-                { id: 20, code: '2000', name: 'الالتزامات', type: 'liability', parent: null, level: 0 },
-                { id: 21, code: '2100', name: 'الالتزامات المتداولة', type: 'liability', parent: 20, level: 1 },
-                { id: 22, code: '2110', name: 'الموردون (الدائنون)', type: 'liability', parent: 21, level: 2 },
-                { id: 30, code: '3000', name: 'حقوق الملكية', type: 'equity', parent: null, level: 0 },
-                { id: 31, code: '3100', name: 'رأس المال', type: 'equity', parent: 30, level: 1 },
-                { id: 32, code: '3200', name: 'الأرباح المحتجزة', type: 'equity', parent: 30, level: 1 },
-                { id: 40, code: '4000', name: 'الإيرادات', type: 'revenue', parent: null, level: 0 },
-                { id: 41, code: '4100', name: 'المبيعات', type: 'revenue', parent: 40, level: 1 },
-                { id: 42, code: '4200', name: 'المرتجعات', type: 'revenue', parent: 40, level: 1 },
-                { id: 50, code: '5000', name: 'المصروفات', type: 'expense', parent: null, level: 0 },
-                { id: 51, code: '5100', name: 'تكلفة المبيعات', type: 'expense', parent: 50, level: 1 },
-                { id: 52, code: '5200', name: 'الرواتب والأجور', type: 'expense', parent: 50, level: 1 },
-                { id: 53, code: '5300', name: 'الإيجارات', type: 'expense', parent: 50, level: 1 },
-                { id: 54, code: '5400', name: 'الكهرباء والمياه', type: 'expense', parent: 50, level: 1 },
-                { id: 55, code: '5500', name: 'الاتصالات', type: 'expense', parent: 50, level: 1 },
-                { id: 56, code: '5600', name: 'المواصلات', type: 'expense', parent: 50, level: 1 },
-                { id: 57, code: '5700', name: 'الصيانة', type: 'expense', parent: 50, level: 1 },
-                { id: 58, code: '5800', name: 'مصروفات أخرى', type: 'expense', parent: 50, level: 1 }
-            ];
-            try { localStorage.setItem(STORAGE_PREFIX + 'accounts', JSON.stringify(window.accounts)); } catch (e) {}
-            changed = true;
-        }
-
-        if (changed) console.log('✅ تم إنشاء البيانات الأولية');
-    };
-
-    window.Balance = {
-        cashBox: function(boxId) {
-            const box = (window.cashBoxes || []).find(function(b) { return String(b.id) === String(boxId); });
-            if (!box) return 0;
-            let balance = parseFloat(box.openingBalance) || 0;
-            (window.treasury || []).forEach(function(t) {
-                if (String(t.cashBoxId) === String(boxId)) {
-                    const amt = parseFloat(t.amount) || 0;
-                    if (t.type === 'deposit') balance += amt;
-                    else if (t.type === 'withdraw') balance -= amt;
-                }
-            });
-            return Math.round(balance * 100) / 100;
-        },
-
-        totalCash: function() {
-            return (window.cashBoxes || []).reduce(function(sum, box) { return sum + window.Balance.cashBox(box.id); }, 0);
-        },
-
-        customer: function(customerName) {
-            if (!customerName || customerName === 'عميل نقدي') return 0;
-            return (window.sales || []).filter(function(s) { return s.customer === customerName && s.paymentMethod === 'credit'; })
-                .reduce(function(sum, s) {
-                    const remaining = s.remainingAmount !== undefined ? s.remainingAmount : (s.total || 0);
-                    return sum + (parseFloat(remaining) || 0);
-                }, 0);
-        },
-
-        supplier: function(supplierName) {
-            if (!supplierName) return 0;
-            return (window.purchases || []).filter(function(p) { return p.supplierName === supplierName && p.payment === 'credit'; })
-                .reduce(function(sum, p) {
-                    const remaining = p.remainingAmount !== undefined ? p.remainingAmount : (p.total || 0);
-                    return sum + (parseFloat(remaining) || 0);
-                }, 0);
-        },
-
-        inventory: function() {
-            return (window.products || []).reduce(function(sum, p) {
-                return sum + ((parseFloat(p.qty) || 0) * (parseFloat(p.buy) || 0));
-            }, 0);
-        },
-
-        account: function(accountId) {
-            let balance = 0;
-            (window.journalEntries || []).forEach(function(entry) {
-                (entry.lines || []).forEach(function(line) {
-                    if (String(line.accountId) === String(accountId)) {
-                        balance += (parseFloat(line.debit) || 0) - (parseFloat(line.credit) || 0);
-                    }
-                });
-            });
-            return balance;
-        },
-
-        accountType: function(type) {
-            return (window.accounts || []).filter(function(a) { return a.type === type; })
-                .reduce(function(sum, acc) { return sum + window.Balance.account(acc.id); }, 0);
-        },
-
-        customerPoints: function(customerName) {
-            if (!customerName || customerName === 'عميل نقدي') return 0;
-            let points = 0;
-            (window.sales || []).forEach(function(s) {
-                if (s.customer === customerName) {
-                    points += Math.floor((s.total || 0) / 100) * (window.LOYALTY_CONFIG ? window.LOYALTY_CONFIG.POINTS_PER_100 : 1);
-                    if (s.redeemedPoints) points -= s.redeemedPoints;
-                }
-            });
-            return Math.max(0, points);
-        },
-
-        customerLevel: function(customerName) {
-            const total = (window.sales || []).filter(function(s) { return s.customer === customerName; })
-                .reduce(function(sum, s) { return sum + (s.total || 0); }, 0);
-            const levels = (window.LOYALTY_CONFIG && window.LOYALTY_CONFIG.LEVELS) || [];
-            for (let i = levels.length - 1; i >= 0; i--) {
-                if (total >= levels[i].min) return levels[i];
-            }
-            return levels[0] || { name: 'عادي', icon: '🥉', color: '#A89070', discount: 0 };
-        }
-    };
-
-    window.Accounting = {
-        createEntry: function(date, description, lines, reference) {
-            if (!lines || lines.length < 2) return null;
-            let totalDebit = 0, totalCredit = 0;
-            lines.forEach(function(line) {
-                totalDebit += parseFloat(line.debit) || 0;
-                totalCredit += parseFloat(line.credit) || 0;
-            });
-            if (Math.abs(totalDebit - totalCredit) > 0.01) return null;
-
-            const entry = {
-                id: (typeof window.generateId === 'function') ? window.generateId('je_') : 'je_' + Date.now(),
-                number: (window.journalEntries || []).length + 1,
-                date: date || window.getTodayDate(),
-                description: description, lines: lines, reference: reference || '',
-                totalDebit: totalDebit, totalCredit: totalCredit,
-                createdAt: new Date().toISOString(),
-                createdBy: window.currentUser ? window.currentUser.name : 'system'
-            };
-            window.DataStore.add('journalEntries', entry);
-            if (window.EventBus) window.EventBus.emit('accounting:entry:created', entry);
-            return entry;
-        },
-
-        findByCode: function(code) {
-            return (window.accounts || []).find(function(a) { return a.code === code; });
-        },
-
-        entrySale: function(invoice, isCash) {
-            const salesAcc = window.Accounting.findByCode('4100');
-            const cashAcc = window.Accounting.findByCode('1110');
-            const customerAcc = window.Accounting.findByCode('1200');
-            const cogsAcc = window.Accounting.findByCode('5100');
-            const inventoryAcc = window.Accounting.findByCode('1300');
-            if (!salesAcc) return;
-
-            if (isCash && cashAcc) {
-                window.Accounting.createEntry(invoice.date, 'فاتورة بيع نقدية #' + invoice.number,
-                    [
-                        { accountId: cashAcc.id, debit: invoice.total, credit: 0 },
-                        { accountId: salesAcc.id, debit: 0, credit: invoice.total }
-                    ], 'INV-' + invoice.number);
-            } else if (customerAcc) {
-                window.Accounting.createEntry(invoice.date, 'فاتورة بيع آجل #' + invoice.number,
-                    [
-                        { accountId: customerAcc.id, debit: invoice.total, credit: 0 },
-                        { accountId: salesAcc.id, debit: 0, credit: invoice.total }
-                    ], 'INV-' + invoice.number);
-            }
-
-            if (invoice.cogs > 0 && cogsAcc && inventoryAcc) {
-                window.Accounting.createEntry(invoice.date, 'تكلفة مبيعات #' + invoice.number,
-                    [
-                        { accountId: cogsAcc.id, debit: invoice.cogs, credit: 0 },
-                        { accountId: inventoryAcc.id, debit: 0, credit: invoice.cogs }
-                    ], 'INV-' + invoice.number + '-COGS');
-            }
-        },
-
-        entryPurchase: function(invoice, isCash) {
-            const purchaseAcc = window.Accounting.findByCode('1300');
-            const cashAcc = window.Accounting.findByCode('1110');
-            const supplierAcc = window.Accounting.findByCode('2110');
-            if (!purchaseAcc) return;
-
-            if (isCash && cashAcc) {
-                window.Accounting.createEntry(invoice.date, 'فاتورة شراء نقدية #' + invoice.number,
-                    [
-                        { accountId: purchaseAcc.id, debit: invoice.total, credit: 0 },
-                        { accountId: cashAcc.id, debit: 0, credit: invoice.total }
-                    ], 'PUR-' + invoice.number);
-            } else if (supplierAcc) {
-                window.Accounting.createEntry(invoice.date, 'فاتورة شراء آجل #' + invoice.number,
-                    [
-                        { accountId: purchaseAcc.id, debit: invoice.total, credit: 0 },
-                        { accountId: supplierAcc.id, debit: 0, credit: invoice.total }
-                    ], 'PUR-' + invoice.number);
-            }
-        },
-
-        entryExpense: function(expense) {
-            const expenseAcc = window.Accounting.findByCode('5800');
-            const cashAcc = window.Accounting.findByCode('1110');
-            if (!expenseAcc || !cashAcc) return;
-            window.Accounting.createEntry(expense.date, 'مصروف: ' + expense.note,
-                [
-                    { accountId: expenseAcc.id, debit: expense.amount, credit: 0 },
-                    { accountId: cashAcc.id, debit: 0, credit: expense.amount }
-                ], 'EXP-' + expense.id);
-        },
-
-        entryCollect: function(payment) {
-            const cashAcc = window.Accounting.findByCode('1110');
-            const customerAcc = window.Accounting.findByCode('1200');
-            if (!cashAcc || !customerAcc) return;
-            window.Accounting.createEntry(payment.date, 'تحصيل من ' + payment.party,
-                [
-                    { accountId: cashAcc.id, debit: payment.amount, credit: 0 },
-                    { accountId: customerAcc.id, debit: 0, credit: payment.amount }
-                ], 'COL-' + payment.id);
-        },
-
-        entryPay: function(payment) {
-            const supplierAcc = window.Accounting.findByCode('2110');
-            const cashAcc = window.Accounting.findByCode('1110');
-            if (!supplierAcc || !cashAcc) return;
-            window.Accounting.createEntry(payment.date, 'سداد لـ ' + payment.party,
-                [
-                    { accountId: supplierAcc.id, debit: payment.amount, credit: 0 },
-                    { accountId: cashAcc.id, debit: 0, credit: payment.amount }
-                ], 'PAY-' + payment.id);
-        },
-
-        removeByReference: function(reference) {
-            const filtered = (window.journalEntries || []).filter(function(e) { return e.reference !== reference; });
-            window.DataStore.set('journalEntries', filtered);
-        }
-    };
-
-    window.addEventListener('online', function() {
+        // 5. رفع للسحابة فوراً
         if (window.CloudSync && window.CloudSync.isReady()) {
-            setTimeout(function() { window.CloudSync.pushAll(true); }, 1500);
+            firebase.database().ref(window.getStorePath() + '/companyData').set(window.companyData);
         }
-    });
 
-    try {
-        window.DataStore.loadAll();
-        console.log('✅ تم تحميل البيانات من localStorage');
-    } catch (e) { console.error('❌ فشل تحميل البيانات:', e); }
+        if (typeof window.showToast === 'function') {
+            window.showToast('✅ تم حفظ بيانات الشركة بنجاح', 'success');
+        }
+    };
 
-    try {
-        window.seedInitialData();
-        console.log('✅ تم إنشاء البيانات الأولية');
-    } catch (e) { console.error('❌ فشل تهيئة البيانات الأولية:', e); }
-
-    window.__dataLoaded = true;
-    console.log('✅ data.js v2.2 جاهز');
-
+    window.addEventListener('online', function() {});
+    window.DataStore.loadAll();
 })();
