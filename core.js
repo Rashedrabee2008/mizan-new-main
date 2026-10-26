@@ -1,17 +1,17 @@
 // ============================================================
-// الميزان Pro - core.js v18.1 (مصحح)
+// الميزان Pro - core.js
 // الأساسيات: أدوات + أمان + تشفير + جلسات + EventBus
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🚀 core.js v18.1 - بدء التحميل');
+    console.log('🚀 core.js v18.0 - بدء التحميل');
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 1: EventBus
+    // الجزء 1: EventBus — نظام الأحداث المركزي
     // ═══════════════════════════════════════════════════════════
-
+    
     const _listeners = {};
 
     window.EventBus = {
@@ -52,11 +52,14 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 2: الأدوات
+    // الجزء 2: الأدوات الأساسية
     // ═══════════════════════════════════════════════════════════
 
     window.$ = function(id) { return document.getElementById(id); };
-    window.$$ = function(selector) { return Array.from(document.querySelectorAll(selector)); };
+
+    window.$$ = function(selector) {
+        return Array.from(document.querySelectorAll(selector));
+    };
 
     window.getTodayDate = function() {
         const now = new Date();
@@ -125,8 +128,12 @@
 
     window.getPaymentMethodLabel = function(method) {
         const labels = {
-            'cash': '💵 نقدي', 'credit': '📝 آجل', 'wallet': '📱 موبايل',
-            'visa': '💳 فيزا', 'bank': '🏦 تحويل', 'installment': '📅 تقسيط'
+            'cash': '💵 نقدي',
+            'credit': '📝 آجل',
+            'wallet': '📱 موبايل',
+            'visa': '💳 فيزا',
+            'bank': '🏦 تحويل',
+            'installment': '📅 تقسيط'
         };
         return labels[method] || method;
     };
@@ -139,19 +146,21 @@
         return icons[method] || '💵';
     };
 
+    // توليد ID فريد
     window.generateId = function(prefix) {
         const timestamp = Date.now();
         const random = Math.floor(Math.random() * 10000);
         return (prefix || '') + timestamp + '_' + random;
     };
 
+    // كود قصير للعرض
     window.shortId = function(id) {
         if (!id) return '—';
         return '#' + String(id).slice(-6);
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 3: الأدوار
+    // الجزء 3: الأدوار والصلاحيات
     // ═══════════════════════════════════════════════════════════
 
     window.ROLES = {
@@ -178,8 +187,14 @@
         return permissions.indexOf(permission) > -1;
     };
 
-    window.isAdmin = function() { return window.currentUser && window.currentUser.role === 'admin'; };
-    window.canAdd = function() { return window.hasPermission('add') || window.hasPermission('add_sale'); };
+    window.isAdmin = function() {
+        return window.currentUser && window.currentUser.role === 'admin';
+    };
+
+    window.canAdd = function() {
+        return window.hasPermission('add') || window.hasPermission('add_sale');
+    };
+
     window.canEdit = function() { return window.hasPermission('edit'); };
     window.canDelete = function() { return window.hasPermission('delete'); };
     window.canManageUsers = function() { return window.hasPermission('manage_users'); };
@@ -187,7 +202,7 @@
     window.canViewReports = function() { return window.hasPermission('view_reports'); };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 4: التشفير
+    // الجزء 4: التشفير (Web Crypto API - SHA-256 + Salt)
     // ═══════════════════════════════════════════════════════════
 
     window.generateSalt = function() {
@@ -220,6 +235,8 @@
             }).join('');
             return 'sha256_' + salt + '_' + hash;
         } catch (e) {
+            console.error('❌ خطأ تشفير:', e);
+            // fallback ضعيف
             let simple = '';
             const combined = salt + password;
             for (let i = 0; i < combined.length; i++) {
@@ -233,6 +250,7 @@
         if (!password || !storedHash) return false;
 
         try {
+            // SHA-256
             if (storedHash.indexOf('sha256_') === 0) {
                 const parts = storedHash.split('_');
                 if (parts.length !== 3) return false;
@@ -241,6 +259,7 @@
                 return newHash === storedHash;
             }
 
+            // Simple fallback
             if (storedHash.indexOf('simple_') === 0) {
                 const parts = storedHash.split('_');
                 if (parts.length !== 3) return false;
@@ -249,22 +268,26 @@
                 return newHash === storedHash;
             }
 
+            // Plain text (توافق مع البيانات القديمة)
             return storedHash === password;
         } catch (e) {
+            console.error('❌ خطأ تحقق:', e);
             return false;
         }
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 5: الجلسات
+    // الجزء 5: إدارة الجلسات
     // ═══════════════════════════════════════════════════════════
 
     const SESSION_KEY = 'mizan_session_v18';
-    const SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
+    const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 ساعة
 
     window.saveSession = function(user) {
         const session = {
-            userId: user.id, userName: user.name, role: user.role,
+            userId: user.id,
+            userName: user.name,
+            role: user.role,
             storeId: user.storeId,
             createdAt: Date.now(),
             expiresAt: Date.now() + SESSION_TIMEOUT
@@ -272,24 +295,32 @@
         try {
             localStorage.setItem(SESSION_KEY, JSON.stringify(session));
             return true;
-        } catch (e) { return false; }
+        } catch (e) {
+            return false;
+        }
     };
 
     window.getSession = function() {
         try {
             const data = localStorage.getItem(SESSION_KEY);
             if (!data) return null;
+
             const session = JSON.parse(data);
             if (session.expiresAt < Date.now()) {
                 window.clearSession();
                 return null;
             }
+
             return session;
-        } catch (e) { return null; }
+        } catch (e) {
+            return null;
+        }
     };
 
     window.clearSession = function() {
-        try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+        try {
+            localStorage.removeItem(SESSION_KEY);
+        } catch (e) {}
     };
 
     window.refreshSession = function() {
@@ -299,15 +330,17 @@
         try {
             localStorage.setItem(SESSION_KEY, JSON.stringify(session));
             return true;
-        } catch (e) { return false; }
+        } catch (e) {
+            return false;
+        }
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 6: Rate Limiting
+    // الجزء 6: Rate Limiting للحماية من التجربة المتكررة
     // ═══════════════════════════════════════════════════════════
 
     const MAX_LOGIN_ATTEMPTS = 5;
-    const LOCKOUT_TIME = 15 * 60 * 1000;
+    const LOCKOUT_TIME = 15 * 60 * 1000; // 15 دقيقة
 
     window.getLoginAttempts = function() {
         try {
@@ -323,9 +356,11 @@
         const attempts = window.getLoginAttempts();
         attempts.count = (attempts.count || 0) + 1;
         attempts.lastAttempt = Date.now();
+
         if (attempts.count >= MAX_LOGIN_ATTEMPTS) {
             attempts.lockedUntil = Date.now() + LOCKOUT_TIME;
         }
+
         try {
             localStorage.setItem('mizan_login_attempts_v18', JSON.stringify(attempts));
         } catch (e) {}
@@ -349,7 +384,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 7: تنسيقات
+    // الجزء 7: تنسيقات خاصة
     // ═══════════════════════════════════════════════════════════
 
     window.getArabicDayName = function(dateStr) {
@@ -375,7 +410,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 8: التحقق
+    // الجزء 8: التحقق من صحة البيانات
     // ═══════════════════════════════════════════════════════════
 
     window.isValidEmail = function(email) {
@@ -396,7 +431,7 @@
     };
 
     // ═══════════════════════════════════════════════════════════
-    // الجزء 9: ثوابت
+    // الجزء 9: ثوابت النظام
     // ═══════════════════════════════════════════════════════════
 
     window.VAT_SETTINGS = { defaultVAT: 14 };
@@ -436,7 +471,51 @@
         { code: 'AED', name: 'درهم إماراتي', symbol: 'د.إ', rate: 13.60, isDefault: false }
     ];
 
+    // ═══════════════════════════════════════════════════════════
+    // الجزء 10: Console Filter (تنظيف الرسائل المزعجة)
+    // ═══════════════════════════════════════════════════════════
+
+    const BLOCKED_KEYWORDS = [
+        'manifest', 'favicon', 'apple-touch-icon',
+        'failed to load resource', 'net::err', 'devtools',
+        'sockjs', 'websocket', 'firebase-database'
+    ];
+
+    const filterEnabled = localStorage.getItem('mizan_console_filter_v18') !== 'off';
+    const originalLog = console.log.bind(console);
+    const originalWarn = console.warn.bind(console);
+    const originalError = console.error.bind(console);
+
+    function shouldFilter(args) {
+        const msg = Array.from(args).join(' ').toLowerCase();
+        return BLOCKED_KEYWORDS.some(function(k) {
+            return msg.indexOf(k.toLowerCase()) > -1;
+        });
+    }
+
+    if (filterEnabled) {
+        console.log = function() {
+            if (!shouldFilter(arguments)) originalLog.apply(console, arguments);
+        };
+        console.warn = function() {
+            if (!shouldFilter(arguments)) originalWarn.apply(console, arguments);
+        };
+        console.error = function() {
+            if (!shouldFilter(arguments)) originalError.apply(console, arguments);
+        };
+    }
+
+    window.toggleConsoleFilter = function() {
+        const current = localStorage.getItem('mizan_console_filter_v18') !== 'off';
+        localStorage.setItem('mizan_console_filter_v18', current ? 'off' : 'on');
+        location.reload();
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // جاهز
+    // ═══════════════════════════════════════════════════════════
+
     window.__coreLoaded = true;
-    console.log('✅ core.js v18.1 جاهز');
+    originalLog.call(console, '✅ core.js v18.0 جاهز');
 
 })();
